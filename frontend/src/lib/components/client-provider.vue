@@ -12,6 +12,7 @@
 	import { VueReactiveObjectProvider, computedWithDeps } from "../utils/vue";
 	import type { SocketClientMapSubscription } from "facilmap-client/src/socket-client-map-subscription";
 	import { getMainAdminLink, type CRU, type MapData } from "facilmap-types";
+	import { createIdentity, getIdentityForMapId, getIdentityForMapSlugHash, getStorageSlugHash, storeIdentity } from "../utils/identity";
 
 	function isMapNotFoundError(fatalError: Error): boolean {
 		return (fatalError as any).status === 404;
@@ -42,6 +43,26 @@
 
 		const storage = new SocketClientStorage(client, {
 			reactiveObjectProvider: new VueReactiveObjectProvider()
+		});
+
+		client.on("emit", async (...args) => {
+			// When a change is made to the map, persist the identity in local storage. We don't persist it before
+			// because we don't need it and storing it is a privacy concern (since it persists which maps a user
+			// opened).
+			if (
+				(args[0].startsWith("create") || args[0].startsWith("update") || args[0].startsWith("delete") || args[0].startsWith("revert"))
+				&& typeof args[1] === "string"
+				&& client.mapSubscriptions[args[1]]?.options.identity != null
+				&& storage.maps[args[1]].mapData
+			) {
+				const mapId = storage.maps[args[1]].mapData!.id;
+				const mapLinkId = storage.maps[args[1]].mapData!.activeLink.id;
+				const identity = client.mapSubscriptions[args[1]].options.identity!;
+				const mapSlugHash = await getStorageSlugHash(args[1]);
+				if (storage.maps[args[1]].mapData) {
+					storeIdentity({ mapId, mapSlugHash, mapLinkId }, identity, true);
+				}
+			}
 		});
 
 		onCleanup(() => {
@@ -83,10 +104,23 @@
 		}
 
 		if (mapSlug && (!clientContext.value.map || clientContext.value.map.mapSlug !== mapSlug)) {
-			await setSubscription(clientContext.value.client.subscribeToMap({
-				mapSlug,
-				// identity: storage.identities?.[mapSlug]
-			}));
+			const mapSlugHash = await getStorageSlugHash(mapSlug);
+			const identity = getIdentityForMapSlugHash(mapSlugHash) ?? createIdentity();
+			const subscription = clientContext.value.client.subscribeToMap({ mapSlug, identity });
+			await setSubscription(subscription);
+
+			// Only now that we have the map ID we can tell wether we already have an identity for this
+			// map. Above we were only guessing by a map slug that we have previously recorded, but it
+			// is possible that we are opening a known map through an unknown slug, or that the slug
+			// now belongs to another map. If so, we need to update the identity of the subscription here.
+			const mapData = clientContext.value.storage.maps[mapSlug]?.mapData;
+			if (mapData) {
+				const identityByMapId = getIdentityForMapId(mapData.id);
+				storeIdentity({ mapId: mapData.id, mapSlugHash, mapLinkId: mapData.activeLink.id }, identityByMapId ?? identity, false);
+				if (identityByMapId != null && identityByMapId !== identity) {
+					await subscription.updateSubscription({ identity: identityByMapId });
+				}
+			}
 		}
 	}, { immediate: true });
 

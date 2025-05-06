@@ -1,5 +1,4 @@
 <script setup lang="ts">
-	import { ref, watchEffect } from "vue";
 	import { useI18n } from "../../utils/i18n";
 	import vTooltip from "../../utils/tooltip";
 	import Icon from "../ui/icon.vue";
@@ -8,15 +7,15 @@
 
 	const i18n = useI18n();
 
-	const props = defineProps<{
-		originalPassword: boolean;
-	}>();
-
-	const password = defineModel<boolean | string>("password", { required: true });
-	watchEffect(() => {
-		console.log("b", password.value);
+	const props = withDefaults(defineProps<{
+		originalPassword?: boolean;
+	}>(), {
+		originalPassword: undefined
 	});
-	const password2 = ref("");
+
+	// string must appear first, otherwise "" is cast to false, see https://vuejs.org/guide/components/props.html#boolean-casting
+	const password = defineModel<string | boolean>("password", { required: true });
+	const password2 = defineModel<string>("password2", { required: true });
 
 	const id = getUniqueId("fm-map-password-edit");
 
@@ -62,6 +61,7 @@
 							<template #default="slotProps">
 								<input
 									type="password"
+									autocomplete="new-password"
 									class="form-control"
 									v-model="password"
 									:ref="slotProps.inputRef"
@@ -106,6 +106,7 @@
 						<template #default="slotProps">
 							<input
 								type="password"
+								autocomplete="new-password"
 								class="form-control"
 								v-model="password2"
 								:ref="slotProps.inputRef"

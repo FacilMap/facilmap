@@ -172,6 +172,12 @@
 	function setInputRef(el: any | null): void {
 		inputRef.value = el as FormElement ?? undefined;
 	}
+
+	function handleInvalid(e: Event): void {
+		if (e.target instanceof HTMLElement) {
+			e.target.scrollIntoView({ behavior: "smooth", block: "nearest" });
+		}
+	}
 </script>
 
 <template>
@@ -180,6 +186,7 @@
 		:class="{
 			'was-validated': wasValidated
 		}"
+		@invalid.capture="handleInvalid($event)"
 	>
 		<slot
 			:isValidating="isValidating"

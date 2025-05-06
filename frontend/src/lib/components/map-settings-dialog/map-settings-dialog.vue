@@ -1,6 +1,6 @@
 <script setup lang="ts">
 	import { computed, ref, watch } from "vue";
-	import { ADMIN_LINK_COMMENT, getMainAdminLink, type CRU, type MapData } from "facilmap-types";
+	import { ADMIN_LINK_COMMENT, getMainAdminLink, type CRU, type MapData, type MergedUnion } from "facilmap-types";
 	import { deI18nMapLinkComments, generateRandomMapSlug, i18nMapLinkComments } from "facilmap-utils";
 	import { getUniqueId } from "../../utils/utils";
 	import { cloneDeep, isEqual } from "lodash-es";
@@ -14,7 +14,7 @@
 	import MapSettingsGeneral from "./map-settings-general.vue";
 	import MapSettingsLinks from "./map-settings-links.vue";
 	import MapSettingsDelete from "./map-settings-delete.vue";
-import { mergeMapData } from "./map-settings-utils";
+	import { mergeMapData } from "./map-settings-utils";
 
 	const context = injectContextRequired();
 	const clientContext = requireClientContext(context);
@@ -63,7 +63,7 @@ import { mergeMapData } from "./map-settings-utils";
 		defaultViewId: null
 	} : undefined;
 
-	const originalMapData = computed<MapData<CRU.CREATE> | Required<MapData<CRU.UPDATE>>>(() => {
+	const originalMapData = computed<MergedUnion<[MapData<CRU.CREATE>, Required<MapData<CRU.UPDATE>>]>>(() => {
 		if (props.isCreate) {
 			return initialMapData!;
 		} else if (clientSub.value) {
@@ -151,26 +151,26 @@ import { mergeMapData } from "./map-settings-utils";
 				</li>
 			</ul>
 
-			<template v-if="activeTab === 0">
+			<div v-show="activeTab === 0" @invalid.capture="activeTab = 0">
 				<MapSettingsGeneral
 					:mapData="mapData"
 				></MapSettingsGeneral>
-			</template>
+			</div>
 
-			<template v-if="activeTab === 1">
+			<div v-show="activeTab === 1" @invalid.capture="activeTab = 1">
 				<MapSettingsLinks
 					:mapData="mapData"
 				></MapSettingsLinks>
-			</template>
+			</div>
 
-			<template v-if="activeTab === 2">
+			<div v-show="activeTab === 2" @invalid.capture="activeTab = 2">
 				<MapSettingsDelete
 					:mapData="mapData"
 					:isSubmitting="modalRef?.formData?.isSubmitting"
 					@update:isDeleting="isDeleting = $event"
 					@deleted="modalRef?.modal.hide()"
 				></MapSettingsDelete>
-			</template>
+			</div>
 		</template>
 
 		<template #footer-left v-if="props.isCreate && !hasFavourite">

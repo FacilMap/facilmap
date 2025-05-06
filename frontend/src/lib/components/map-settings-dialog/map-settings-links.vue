@@ -1,15 +1,15 @@
+<!-- eslint-disable vue/no-mutating-props -->
 <script setup lang="ts">
-	import type { CRU, MapData, MapLink } from 'facilmap-types';
+	import type { CRU, MapData, MapLink, MergedUnion } from 'facilmap-types';
 	import { useI18n } from '../../utils/i18n';
 	import MapSlugEdit from "./map-slug-edit.vue";
 	import MapSettingsEditLinkDialog from "./map-settings-edit-link-dialog.vue";
-	import { overwriteObject } from "facilmap-utils";
 	import { useToasts } from "../ui/toasts/toasts.vue";
 	import { injectContextRequired } from "../facil-map-context-provider/facil-map-context-provider.vue";
 	import { ref } from "vue";
 
 	const props = defineProps<{
-		mapData: MapData<CRU.CREATE> | Required<MapData<CRU.UPDATE>>;
+		mapData: MergedUnion<[MapData<CRU.CREATE>, Required<MapData<CRU.UPDATE>>]>;
 	}>();
 
 	const i18n = useI18n();

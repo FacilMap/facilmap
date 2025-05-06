@@ -2,8 +2,7 @@ import { createHash, randomBytes, scrypt as scryptRaw, type BinaryLike, type Scr
 import { promisify } from "node:util";
 import { sign, verify } from "jsonwebtoken";
 import { type ID, type MapPermissions } from "facilmap-types";
-import { encodeBase64Url } from "./utils";
-import { base64ToNumber, base64UrlValidator, deserializeMapPermissions, numberToBase64, serializeMapPermissions } from "facilmap-utils";
+import { base64ToNumber, base64UrlValidator, deserializeMapPermissions, encodeBase64Url, numberToBase64, serializeMapPermissions } from "facilmap-utils";
 import { tupleWithOptional } from "zod-tuple-with-optional";
 
 const scrypt = promisify(scryptRaw) as (password: BinaryLike, salt: BinaryLike, keylen: number, options?: ScryptOptions) => Promise<Buffer>;

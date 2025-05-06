@@ -1,5 +1,5 @@
 <script setup lang="ts">
-	import { mapSlugValidator, type CRU, type MapData } from "facilmap-types";
+	import { mapSlugValidator, type CRU, type MapData, type MergedUnion } from "facilmap-types";
 	import { getZodValidator, validateRequired } from "../../utils/utils";
 	import { injectContextRequired } from "../facil-map-context-provider/facil-map-context-provider.vue";
 	import CopyToClipboardInput from "../ui/copy-to-clipboard-input.vue";
@@ -12,7 +12,7 @@
 	const i18n = useI18n();
 
 	const props = defineProps<{
-		mapData: MapData<CRU.CREATE> | Required<MapData<CRU.UPDATE>>;
+		mapData: MergedUnion<[MapData<CRU.CREATE>, Required<MapData<CRU.UPDATE>>]>;
 		readonly?: boolean;
 	}>();
 

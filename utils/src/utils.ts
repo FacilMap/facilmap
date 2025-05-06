@@ -487,3 +487,11 @@ export function numberToBase64(number: number): string {
 export function base64ToNumber(base64: string): number {
 	return base64.split("").reduce((s, v) => s * 64 + base64UrlChars.indexOf(v), 0);
 }
+
+export function encodeBase64Url(data: Uint8Array | string): string {
+	return btoa(typeof data === "string" ? unescape(encodeURIComponent(data)) : String.fromCharCode(...data)).replaceAll("=", "").replaceAll("+", "-").replaceAll("/", "_");
+}
+
+export function decodeBase64Url(data: string): Uint8Array {
+	return new Uint8Array([...atob(data.replaceAll("-", "+").replaceAll("_", "/"))].map((c) => c.charCodeAt(0)));
+}

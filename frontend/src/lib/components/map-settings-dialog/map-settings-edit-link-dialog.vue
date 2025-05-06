@@ -1,26 +1,19 @@
 <script setup lang="ts">
-	import { computed, ref, watch, watchEffect } from "vue";
-	import { type CRU, type MapData, type MapLink } from "facilmap-types";
+	import { computed, ref, watch } from "vue";
+	import { type CRU, type MapData, type MapLink, type MergedUnion } from "facilmap-types";
 	import { mergeObject } from "facilmap-utils";
 	import { getUniqueId } from "../../utils/utils";
 	import { cloneDeep, isEqual } from "lodash-es";
 	import ModalDialog from "../ui/modal-dialog.vue";
-	import { useToasts } from "../ui/toasts/toasts.vue";
-	import { injectContextRequired, requireClientContext, requireClientSub } from "../facil-map-context-provider/facil-map-context-provider.vue";
 	import { useI18n } from "../../utils/i18n";
 	import MapSlugEdit from "./map-slug-edit.vue";
 	import MapPasswordEdit from "./map-password-edit.vue";
 	import MapPermissionsEdit from "./map-permissions-edit.vue";
 
-	const context = injectContextRequired();
-	const clientContext = requireClientContext(context);
-	const clientSub = requireClientSub(context);
-
-	const toasts = useToasts();
 	const i18n = useI18n();
 
 	const props = defineProps<{
-		mapData: MapData<CRU.CREATE> | Required<MapData<CRU.UPDATE>>;
+		mapData: MergedUnion<[MapData<CRU.CREATE>, Required<MapData<CRU.UPDATE>>]>;
 	}>();
 
 	const emit = defineEmits<{
@@ -34,9 +27,14 @@
 
 	const mapLink = ref(cloneDeep(mapLinkModel.value));
 
+	const updatedMapData = computed(() => ({ ...props.mapData, links: props.mapData.links.map((l) => l === mapLinkModel.value ? mapLink.value : l) }));
+
 	const modalRef = ref<InstanceType<typeof ModalDialog>>();
 
-	const isModified = computed(() => !isEqual(mapLink.value, mapLinkModel.value));
+	const initialPassword2 = typeof mapLink.value.password === "string" ? mapLink.value.password : "";
+	const password2 = ref(initialPassword2);
+
+	const isModified = computed(() => !isEqual(mapLink.value, mapLinkModel.value) || password2.value !== initialPassword2);
 
 	watch(mapLinkModel, (newMapLink, oldMapLink) => {
 		mergeObject(oldMapLink, newMapLink, mapLink.value);
@@ -46,10 +44,6 @@
 		mapLinkModel.value = cloneDeep(mapLink.value);
 		modalRef.value?.modal.hide();
 	}
-
-	watchEffect(() => {
-		console.log("a", mapLink.value.password);
-	});
 </script>
 
 <template>
@@ -73,8 +67,9 @@
 			<label :for="`${id}-slug-input`" class="col-sm-3 col-form-label text-break">{{i18n.t("map-settings-edit-link-dialog.url")}}</label>
 			<div class="col-sm-9 position-relative">
 				<MapSlugEdit
-					:mapData="props.mapData"
+					:mapData="updatedMapData"
 					v-model="mapLink.slug"
+					:updatesMapData="false"
 				></MapSlugEdit>
 			</div>
 		</div>
@@ -84,7 +79,8 @@
 			<div class="col-sm-9 d-flex">
 				<MapPasswordEdit
 					v-model:password="mapLink.password"
-					:originalPassword="mapLinkModel.password"
+					v-model:password2="password2"
+					:originalPassword="typeof mapLinkModel.password === 'string' ? undefined : mapLinkModel.password"
 				></MapPasswordEdit>
 			</div>
 		</div>

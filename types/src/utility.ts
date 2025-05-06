@@ -43,6 +43,26 @@ export type DistributiveKeyOf<T> = T extends any ? keyof T : never;
 export type DistributivePick<T, K extends keyof any> = T extends any ? Pick<T, K & keyof T> : never;
 export type DistributiveOmit<T, K extends keyof any> = T extends any ? Omit<T, K> : never;
 
+type NonOptionalKeys<T> = { [K in keyof T]-?: undefined extends T[K] ? never : K }[keyof T];
+type OptionalKeys<T> = { [K in keyof T]-?: undefined extends T[K] ? K : never }[keyof T];
+type MergedUnionTwo<A, B> = (
+	A extends Array<infer T1> ? (B extends Array<infer T2> ? Array<T1 | T2> : A | B) :
+	A extends Record<any, any> ? (B extends Record<any, any> ? (
+		{
+			[K in Extract<NonOptionalKeys<A>, NonOptionalKeys<B>>]: MergedUnionTwo<A[K], B[K]>;
+		} & {
+			[K in Extract<OptionalKeys<A>, keyof B> | Extract<OptionalKeys<B>, keyof A>]?: MergedUnionTwo<A[K], B[K]>;
+		} & {
+			[K in Exclude<keyof A, keyof B>]?: A[K];
+		} & {
+			[K in Exclude<keyof B, keyof A>]?: B[K];
+		}
+	) : A | B) :
+	A | B
+);
+
+export type MergedUnion<A extends readonly [...any]> = A extends [infer L, ...infer R] ? ([any] extends R ? MergedUnionTwo<L, R[0]> : MergedUnionTwo<L, MergedUnion<R>>) : never;
+
 // https://stackoverflow.com/a/76176570/242365
 export function fromEntries<const T extends ReadonlyArray<readonly [PropertyKey, unknown]>>(entries: T): { [K in T[number] as K[0] extends `${infer N extends number}` ? N : K[0]]: K[1] } {
 	return Object.fromEntries(entries) as any;

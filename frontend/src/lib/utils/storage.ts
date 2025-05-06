@@ -1,5 +1,5 @@
-import { idValidator, mapSlugValidator, renameProperty } from "facilmap-types";
-import { overwriteObject } from "facilmap-utils";
+import { idValidator, mapSlugValidator, renameProperty, stringifiedIdValidator } from "facilmap-types";
+import { encodeBase64Url, overwriteObject } from "facilmap-utils";
 import { isEqual, omit } from "lodash-es";
 import { reactive, ref, toRaw, toRef, watch } from "vue";
 import * as z from "zod";
@@ -61,7 +61,23 @@ const storageValidator2 = z.record(z.any()).transform((val) => renameProperty(va
 		enabled: z.boolean().optional(),
 		idx: z.number().optional()
 	})).optional(),
-	identities: z.record(z.string()).optional()
+	salt: z.string().default(() => getStorageSalt()),
+	identities: z.record(stringifiedIdValidator, z.object({
+		links: z.array(z.object({
+			id: idValidator.optional(),
+			/**
+			 * A hash of the map slug that the map was opened with. We need this because when we subscribe to the map,
+			 * we need to pass the identity, but we don't know the map ID yet. By having the map slugs stored here, we
+			 * can at least predict the identity for cases where the map has previously been opened with the same slug
+			 * and where the slug has not changed.
+			 * We store a hash rather than the slug itself to improve privacy: This way, an intruder who gets access
+			 * to local storage can not find the map from it, and they can only prove that the user has used the map
+			 * if they already have access to the map (and thus know its map ID).
+			 */
+			slug: z.string()
+		})),
+		identity: z.string()
+	})).default(() => ({}))
 }));
 export const storageValidator = z.record(z.any()).catch(() => ({})).pipe(storageValidator2);
 
@@ -126,3 +142,7 @@ if (navigator.storage?.persisted) {
 	});
 }
 export const storagePersisted = toRef(() => persisted.value);
+
+function getStorageSalt(): string {
+	return encodeBase64Url(crypto.getRandomValues(new Uint8Array(15)));
+}

@@ -5,7 +5,7 @@
 	import { useToasts } from "../ui/toasts/toasts.vue";
 	import { getClientSub, injectContextRequired, requireClientContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
 	import { showConfirm } from "../ui/alert.vue";
-	import type { CRU, MapData } from "facilmap-types";
+	import type { CRU, MapData, MergedUnion } from "facilmap-types";
 
 	const i18n = useI18n();
 	const toasts = useToasts();
@@ -17,7 +17,7 @@
 	const id = getUniqueId("fm-map-settings-delete");
 
 	const props = defineProps<{
-		mapData: MapData<CRU.CREATE> | Required<MapData<CRU.UPDATE>>;
+		mapData: MergedUnion<[MapData<CRU.CREATE>, Required<MapData<CRU.UPDATE>>]>;
 		isSubmitting?: boolean;
 	}>();
 

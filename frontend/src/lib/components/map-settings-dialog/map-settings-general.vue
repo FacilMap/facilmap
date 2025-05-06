@@ -1,5 +1,5 @@
 <script setup lang="ts">
-	import { CRU, getMainAdminLink, mapDataValidator, type MapData } from 'facilmap-types';
+	import { CRU, getMainAdminLink, mapDataValidator, type MapData, type MergedUnion } from 'facilmap-types';
 	import MapSlugEdit from './map-slug-edit.vue';
 	import ValidatedField from '../ui/validated-form/validated-field.vue';
 	import { getUniqueId, getZodValidator } from '../../utils/utils';
@@ -9,7 +9,7 @@
 	const i18n = useI18n();
 
 	const props = defineProps<{
-		mapData: MapData<CRU.CREATE> | Required<MapData<CRU.UPDATE>>;
+		mapData: MergedUnion<[MapData<CRU.CREATE>, Required<MapData<CRU.UPDATE>>]>;
 	}>();
 
 	const id = getUniqueId("fm-map-settings-general");
