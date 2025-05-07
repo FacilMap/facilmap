@@ -8,7 +8,8 @@ import {
 	type StreamId, type FindOnMapResult, type HistoryEntry, type StreamToStreamId, type RouteParameters,
 	type LineToRouteRequest, type LineWithTrackPoints, type DeepReadonly, type SubscribeToMapOptions,
 	ApiVersion, type Api, type AllMapObjects, type LineTemplate, type AnyMapSlug, type Stripped,
-	getMainAdminLink, type MapPermissions, type ExportResult
+	getMainAdminLink, type MapPermissions, type ExportResult,
+	type AnyMapSlugWithoutIdentity
 } from "facilmap-types";
 import { deserializeError, serializeError } from "serialize-error";
 import { DefaultReactiveObjectProvider, _defineDynamicGetters, type ReactiveObjectProvider } from "./reactivity";
@@ -545,11 +546,11 @@ export class SocketClient extends EventEmitter<ClientEvents> implements Api<ApiV
 		return (await this._call("geoip")) ?? undefined;
 	}
 
-	async _subscribeToMap(mapSlug: AnyMapSlug, options?: DeepReadonly<SubscribeToMapOptions>): Promise<void> {
+	async _subscribeToMap(mapSlug: AnyMapSlugWithoutIdentity, options?: DeepReadonly<SubscribeToMapOptions>): Promise<void> {
 		await this._call("subscribeToMap", mapSlug, options);
 	}
 
-	subscribeToMap(anyMapSlug: AnyMapSlug, options?: SubscribeToMapOptions): SocketClientMapSubscription & BasicPromise<SocketClientMapSubscription> {
+	subscribeToMap(anyMapSlug: AnyMapSlugWithoutIdentity, options?: SubscribeToMapOptions): SocketClientMapSubscription & BasicPromise<SocketClientMapSubscription> {
 		const mapSlug = typeof anyMapSlug === "string" ? anyMapSlug : anyMapSlug.mapSlug;
 		if (this.hasActiveMapSubscription(mapSlug)) {
 			throw new Error(`There is already a subscription to map ${mapSlug}.`);

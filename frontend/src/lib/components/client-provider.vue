@@ -1,9 +1,9 @@
-<script lang="ts">
-	import { computed, onBeforeUnmount, reactive, shallowReactive, watch, type ComputedRef } from "vue";
+<script setup lang="ts">
+	import { computed, onBeforeUnmount, reactive, ref, shallowReactive, watch, type ComputedRef } from "vue";
 	import { ClientStateType, SocketClient, SocketClientStorage } from "facilmap-client";
 	import MapSettingsDialog from "./map-settings-dialog/map-settings-dialog.vue";
 	import storage from "../utils/storage";
-	import { type ToastAction } from "./ui/toasts/toasts.vue";
+	import { useToasts, type ToastAction } from "./ui/toasts/toasts.vue";
 	import Toast from "./ui/toasts/toast.vue";
 	import { ClientContextMapState, type ClientContext, type ClientContextMap } from "./facil-map-context-provider/client-context";
 	import { injectContextRequired } from "./facil-map-context-provider/facil-map-context-provider.vue";
@@ -11,17 +11,14 @@
 	import { getCurrentLanguage, getCurrentUnits } from "facilmap-utils";
 	import { VueReactiveObjectProvider, computedWithDeps } from "../utils/vue";
 	import type { SocketClientMapSubscription } from "facilmap-client/src/socket-client-map-subscription";
-	import { getMainAdminLink, type CRU, type MapData } from "facilmap-types";
+	import { getMainAdminLink, type CRU, type MapData, type MapSlug } from "facilmap-types";
 	import { createIdentity, getIdentityForMapId, getIdentityForMapSlugHash, getStorageSlugHash, storeIdentity } from "../utils/identity";
+	import ModalDialog from "./ui/modal-dialog.vue";
+	import type { CustomSubmitEvent } from "./ui/validated-form/validated-form.vue";
 
-	function isMapNotFoundError(fatalError: Error): boolean {
-		return (fatalError as any).status === 404;
-	}
-</script>
-
-<script setup lang="ts">
 	const context = injectContextRequired();
 	const i18n = useI18n();
+	const toasts = useToasts();
 
 	const props = defineProps<{
 		mapSlug: string | undefined;
@@ -104,23 +101,7 @@
 		}
 
 		if (mapSlug && (!clientContext.value.map || clientContext.value.map.mapSlug !== mapSlug)) {
-			const mapSlugHash = await getStorageSlugHash(mapSlug);
-			const identity = getIdentityForMapSlugHash(mapSlugHash) ?? createIdentity();
-			const subscription = clientContext.value.client.subscribeToMap({ mapSlug, identity });
-			await setSubscription(subscription);
-
-			// Only now that we have the map ID we can tell wether we already have an identity for this
-			// map. Above we were only guessing by a map slug that we have previously recorded, but it
-			// is possible that we are opening a known map through an unknown slug, or that the slug
-			// now belongs to another map. If so, we need to update the identity of the subscription here.
-			const mapData = clientContext.value.storage.maps[mapSlug]?.mapData;
-			if (mapData) {
-				const identityByMapId = getIdentityForMapId(mapData.id);
-				storeIdentity({ mapId: mapData.id, mapSlugHash, mapLinkId: mapData.activeLink.id }, identityByMapId ?? identity, false);
-				if (identityByMapId != null && identityByMapId !== identity) {
-					await subscription.updateSubscription({ identity: identityByMapId });
-				}
-			}
+			await subscribeToMap(mapSlug);
 		}
 	}, { immediate: true });
 
@@ -154,6 +135,26 @@
 		emit("update:mapSlug", mapSlug);
 	}
 
+	async function subscribeToMap(mapSlug: MapSlug, password?: string) {
+		const mapSlugHash = await getStorageSlugHash(mapSlug);
+		const identity = getIdentityForMapSlugHash(mapSlugHash) ?? createIdentity();
+		const subscription = clientContext.value.client.subscribeToMap({ mapSlug, password }, { identity });
+		await setSubscription(subscription);
+
+		// Only now that we have the map ID we can tell wether we already have an identity for this
+		// map. Above we were only guessing by a map slug that we have previously recorded, but it
+		// is possible that we are opening a known map through an unknown slug, or that the slug
+		// now belongs to another map. If so, we need to update the identity of the subscription here.
+		const mapData = clientContext.value.storage.maps[mapSlug]?.mapData;
+		if (mapData) {
+			const identityByMapId = getIdentityForMapId(mapData.id);
+			storeIdentity({ mapId: mapData.id, mapSlugHash, mapLinkId: mapData.activeLink.id }, identityByMapId ?? identity, false);
+			if (identityByMapId != null && identityByMapId !== identity) {
+				await subscription.updateSubscription({ identity: identityByMapId });
+			}
+		}
+	}
+
 	async function setSubscription(subscription: SocketClientMapSubscription) {
 		const mapObj = clientContext.value.map = reactive({
 			mapSlug: subscription.mapSlug,
@@ -171,8 +172,10 @@
 			await mapObj.subscription.subscribePromise;
 			mapObj.state = ClientContextMapState.OPEN;
 		} catch(err: any) {
-			if (context.settings.interactive && isMapNotFoundError(err)) {
+			if (context.settings.interactive && err.status === 404) {
 				mapObj.state = ClientContextMapState.CREATE;
+			} else if (err.status === 401) {
+				mapObj.state = ClientContextMapState.PASSWORD;
 			} else {
 				Object.assign(mapObj, {
 					state: ClientContextMapState.ERROR,
@@ -191,6 +194,49 @@
 	function handleCreateDialogHide() {
 		// If the dialog was canceled, we are still in CREATE state. Otherwise, we have already created and opened a map.
 		if (clientContext.value.map?.state === ClientContextMapState.CREATE) {
+			clientContext.value.openMap(undefined);
+		}
+	}
+
+	const password = ref("");
+	const enforcePasswordModal = ref(false);
+	const passwordModalRef = ref<InstanceType<typeof ModalDialog>>();
+
+	function handlePasswordDialogSubmit(e: CustomSubmitEvent) {
+		e.waitUntil((async () => {
+			toasts.hideToast("wrong-password");
+
+			if (clientContext.value.map) {
+				enforcePasswordModal.value = true;
+				await Promise.race([
+					subscribeToMap(clientContext.value.map.mapSlug, password.value),
+					new Promise<void>((resolve) => {
+						clientContext.value.client.once("mapData", () => {
+							resolve();
+						});
+					})
+				]);
+
+				if (clientContext.value.map?.state === ClientContextMapState.PASSWORD) {
+					toasts.showToast(
+						"wrong-password",
+						() => i18n.t("client-provider.wrong-password-title"),
+						() => i18n.t("client-provider.wrong-password-message"),
+						{ autoHide: true, variant: "danger" }
+					);
+				} else {
+					passwordModalRef.value?.modal.hide();
+				}
+			}
+		})());
+	}
+
+	function handlePasswordDialogHide() {
+		password.value = "";
+		enforcePasswordModal.value = false;
+
+		// If the dialog was canceled, we are still in PASSWORD state. Otherwise, we have already opened the map.
+		if (clientContext.value.map?.state === ClientContextMapState.PASSWORD) {
 			clientContext.value.openMap(undefined);
 		}
 	}
@@ -248,7 +294,7 @@
 		<MapSettingsDialog
 			isCreate
 			:proposedAdminId="clientContext.map.mapSlug"
-			@hide="handleCreateDialogHide"
+			@hidden="handleCreateDialogHide"
 		></MapSettingsDialog>
 	</template>
 	<template v-else-if="clientContext.map?.state === ClientContextMapState.DELETED">
@@ -269,5 +315,21 @@
 			noCloseButton
 			:actions="context.settings.interactive ? [closeMapAction] : []"
 		/>
+	</template>
+
+	<template v-if="enforcePasswordModal || clientContext.map?.state === ClientContextMapState.PASSWORD">
+		<ModalDialog
+			:title="i18n.t('client-provider.password-title')"
+			isCreate
+			noBackdropClick
+			size="sm"
+			:okLabel="i18n.t('client-provider.password-ok')"
+			@submit="handlePasswordDialogSubmit"
+			@hidden="handlePasswordDialogHide"
+			ref="passwordModalRef"
+		>
+			<p>{{i18n.t('client-provider.password-description')}}</p>
+			<input type="password" class="form-control" v-model="password" />
+		</ModalDialog>
 	</template>
 </template>

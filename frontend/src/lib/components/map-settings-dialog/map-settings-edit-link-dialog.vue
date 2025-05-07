@@ -52,6 +52,7 @@
 		class="fm-map-settings-edit-link"
 		:isModified="isModified"
 		ref="modalRef"
+		:okLabel="isModified ? i18n.t('common.ok') : undefined"
 		@submit="save()"
 		@hide="emit('hide')"
 		@hidden="emit('hidden')"

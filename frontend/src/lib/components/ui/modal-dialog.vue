@@ -19,6 +19,8 @@
 		isCreate?: boolean;
 		/** If false, a Close button will be shown instead of a Save button (except is isCreate is true). */
 		isModified?: boolean;
+		/** If true, clicking the back drop will not close the dialog. */
+		noBackdropClick?: boolean;
 		size?: "sm" | "default" | "lg" | "xl";
 		okLabel?: string;
 		okVariant?: ThemeColour;
@@ -52,7 +54,7 @@
 		onHidden: () => {
 			emit("hidden");
 		},
-		static: computed(() => isSubmitting.value || props.isBusy || props.noCancel || props.isModified),
+		static: computed(() => isSubmitting.value || props.isBusy || props.noCancel || props.isModified || props.noBackdropClick),
 		noEscape: computed(() => isSubmitting.value || props.isBusy || props.noCancel)
 	});
 

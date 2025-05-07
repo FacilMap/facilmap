@@ -1,6 +1,7 @@
 {
     "common": {
-        "coordinates": "Coordinates"
+        "coordinates": "Coordinates",
+        "ok": "OK"
     },
     "about-dialog": {
         "header": "About FacilMap {{version}}",
@@ -123,7 +124,12 @@
         "connection-error": "Error connecting to server",
         "open-map-error": "Error opening map",
         "disconnected-header": "Disconnected",
-        "disconnected": "The connection to the server was lost. Trying to reconnect…"
+        "disconnected": "The connection to the server was lost. Trying to reconnect…",
+        "password-title": "Password required",
+        "password-ok": "OK",
+        "password-description": "This map requires a password to open.",
+        "wrong-password-title": "Wrong password",
+        "wrong-password-message": "Wrong password, please try again."
     },
     "colour-picker": {
         "format-error": "Needs to be in 6-digit hex format, for example 0000ff."

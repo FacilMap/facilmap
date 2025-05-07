@@ -6,6 +6,7 @@ export enum ClientContextMapState {
 	OPENING = "opening",
 	OPEN = "open",
 	CREATE = "create",
+	PASSWORD = "password",
 	DELETED = "deleted",
 	ERROR = "error"
 };
@@ -14,9 +15,27 @@ export type ClientContextMap = {
 	mapSlug: MapSlug;
 	subscription: SocketClientMapSubscription;
 } & (
-	| { state: ClientContextMapState.OPENING | ClientContextMapState.CREATE | ClientContextMapState.DELETED; get data(): MapStorage | undefined; get activeLink(): ActiveMapLink | undefined; error?: undefined }
-	| { state: ClientContextMapState.OPEN; get data(): MapStorage & { mapData: NonNullable<MapStorage["mapData"]> }; get activeLink(): ActiveMapLink; error?: undefined }
-	| { state: ClientContextMapState.ERROR; get data(): MapStorage | undefined; get activeLink(): ActiveMapLink | undefined; error: Error }
+	{
+		state: ClientContextMapState.OPENING | ClientContextMapState.DELETED;
+		get data(): MapStorage | undefined;
+		get activeLink(): ActiveMapLink | undefined;
+		error?: undefined;
+	} | {
+		state: ClientContextMapState.CREATE | ClientContextMapState.PASSWORD;
+		get data(): undefined;
+		get activeLink(): undefined;
+		error?: undefined;
+	} | {
+		state: ClientContextMapState.OPEN;
+		get data(): MapStorage & { mapData: NonNullable<MapStorage["mapData"]> };
+		get activeLink(): ActiveMapLink;
+		error?: undefined;
+	} | {
+		state: ClientContextMapState.ERROR;
+		get data(): MapStorage | undefined;
+		get activeLink(): ActiveMapLink | undefined;
+		error: Error;
+	}
 );
 
 export type ClientContext = {

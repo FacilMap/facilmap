@@ -1,4 +1,4 @@
-import type { CRU, ID, Type } from "facilmap-types";
+import type { CRU, Type } from "facilmap-types";
 import { mergeArray, mergeObject } from "facilmap-utils";
 import { omit } from "lodash-es";
 import type { DeepReadonly } from "vue";
