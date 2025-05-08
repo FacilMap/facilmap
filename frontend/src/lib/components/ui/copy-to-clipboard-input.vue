@@ -10,6 +10,7 @@
 	import ValidatedField from "./validated-form/validated-field.vue";
 	import type { ThemeColour } from "../../utils/bootstrap";
 	import { useI18n } from "../../utils/i18n";
+import { useResizeObserver } from "../../utils/vue";
 
 	const toasts = useToasts();
 	const i18n = useI18n();
@@ -36,6 +37,11 @@
 
 	const fullUrl = computed(() => props.fullUrl ?? `${props.prefix ?? ""}${modelValue.value}`);
 
+	const prefixRef = ref<HTMLElement>();
+	const inputRef = ref<HTMLElement>();
+	const prefixSize = useResizeObserver(prefixRef);
+	const inputSize = useResizeObserver(inputRef);
+
 	function copy(): void {
 		copyToClipboard(fullUrl.value);
 		toasts.showToast(undefined, () => (props.copiedTitle ?? i18n.t("copy-to-clipboard-input.copied-fallback-title")), () => (props.copiedMessage ?? i18n.t("copy-to-clipboard-input.copied-fallback-message")), { variant: "success", autoHide: true });
@@ -50,24 +56,38 @@
 		class="fm-copy-to-clipboard-input"
 	>
 		<template #default="slotProps">
-			<div class="input-group has-validation">
-				<span v-if="props.prefix" class="input-group-text">{{props.prefix}}</span>
-				<template v-if="props.rows && props.rows > 1">
-					<textarea
-						class="form-control"
-						v-model="modelValue"
-						:readonly="props.readonly"
-						:rows="props.rows"
-						:ref="slotProps.inputRef"
-					></textarea>
+			<div class="input-group has-validation position-relative">
+				<template v-if="props.readonly">
+					<span class="input-group-text flex-grow-1">
+						<template v-if="props.prefix">
+							{{props.prefix}}<strong>{{modelValue}}</strong>
+						</template>
+						<template v-else>
+							{{modelValue}}
+						</template>
+					</span>
 				</template>
 				<template v-else>
-					<input
-						class="form-control"
-						v-model="modelValue"
-						:readonly="props.readonly"
-						:ref="slotProps.inputRef"
-					/>
+					<span
+						v-if="props.prefix"
+						class="input-group-text"
+						ref="prefixRef"
+					>{{props.prefix}}</span>
+					<template v-if="props.rows && props.rows > 1">
+						<textarea
+							class="form-control"
+							v-model="modelValue"
+							:rows="props.rows"
+							:ref="(el) => { slotProps.inputRef(el); inputRef = el as HTMLElement | null ?? undefined; }"
+						></textarea>
+					</template>
+					<template v-else>
+						<input
+							class="form-control"
+							v-model="modelValue"
+							:ref="(el) => { slotProps.inputRef(el); inputRef = el as HTMLElement | null ?? undefined; }"
+						/>
+					</template>
 				</template>
 				<slot name="after1"></slot>
 				<button
@@ -89,7 +109,13 @@
 					<Icon icon="qrcode" :alt="i18n.t('copy-to-clipboard-input.qr-code-alt')"></Icon>
 					<span v-if="!showQr" class="fm-copy-to-clipboard-input-qr-tooltip" v-tooltip="props.qrTooltip ?? i18n.t('copy-to-clipboard-input.qr-code-fallback-tooltip')"></span>
 				</button>
-				<div class="invalid-tooltip">
+				<div
+					class="invalid-tooltip"
+					:style="{
+						left: prefixSize && `${prefixSize.borderBoxSize[0].inlineSize}px`,
+						maxWidth: inputSize && `${inputSize.borderBoxSize[0].inlineSize}px`
+					}"
+				>
 					{{slotProps.validationError}}
 				</div>
 			</div>

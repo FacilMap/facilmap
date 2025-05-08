@@ -28,10 +28,10 @@
 
 	const readType = computed({
 		get: () => {
-			return permissions.value.read === "own" ? "own" : permissions.value.read ? "all" : "none";
+			return permissions.value.read === "own" ? "own" : permissions.value.read ? "all" : "hidden";
 		},
 		set: (type) => {
-			if (type === "none") {
+			if (type === "hidden") {
 				permissions.value.read = false;
 			} else if (type === "own") {
 				permissions.value.read = "own";
@@ -82,19 +82,12 @@
 					update: permissions.value.read === "own" || permissions.value.update === "own" ? "own" : true,
 					read: permissions.value.read === "own" ? "own" : true
 				});
-			} else if (level === "read") {
-				Object.assign(permissions.value, {
-					admin: false,
-					settings: false,
-					update: false,
-					read: permissions.value.read === "own" ? "own" : true
-				});
 			} else {
 				Object.assign(permissions.value, {
 					admin: false,
 					settings: false,
 					update: false,
-					read: false
+					read: permissions.value.read
 				});
 			}
 		}

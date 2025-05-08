@@ -95,7 +95,7 @@ export function stripStoredMapLink<L extends Optional<RawMapLink, "id" | "readTo
 	if (
 		canAdministrateMap(link.permissions)
 		|| (
-			isEqual(mergeMapPermissions(link.permissions, mapLink.permissions), link.permissions)
+			isEqual(mergeMapPermissions(link.permissions, mapLink.permissions), mapLink.permissions)
 			&& (!mapLink.password || link.password === mapLink.password)
 		)
 	) {

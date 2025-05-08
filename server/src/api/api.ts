@@ -2,7 +2,7 @@ import { ApiVersion } from "facilmap-types";
 import type Database from "../database/database";
 import { Router, type ErrorRequestHandler } from "express";
 import { ApiV3Backend, apiV3Impl } from "./api-v3";
-import { arrayStream, serializeJsonValue } from "json-stream-es";
+import { arrayStream, stringifyJsonStream } from "json-stream-es";
 import { writableToWeb } from "../utils/streams";
 import { serializeError } from "serialize-error";
 import bodyParser from "body-parser";
@@ -34,6 +34,7 @@ function getSingleApiMiddleware(version: ApiVersion, database: Database): Router
 
 			const api = new apiBackend[version](database, req.ip);
 			const result = await (api as any)[func](...params);
+			res.setHeader("Referrer-Policy", "origin"); // For results opened in the browser, such as table
 			if (sendResult === "empty") {
 				res.status(204).send();
 			} else if (sendResult === "json") {
@@ -41,11 +42,10 @@ function getSingleApiMiddleware(version: ApiVersion, database: Database): Router
 				res.json(result);
 			} else if (sendResult === "stream") {
 				res.header("Content-type", "application/json");
-				void serializeJsonValue({
+				void stringifyJsonStream({
 					results: arrayStream(result.results)
 				}, "\t").pipeTo(writableToWeb(res));
 			} else if (sendResult === "export") {
-				res.setHeader("Referrer-Policy", "origin"); // For exports opened in the browser, such as table
 				res.set("Content-type", result.type);
 				res.attachment(result.filename);
 				void result.data.pipeTo(writableToWeb(res));
@@ -66,7 +66,7 @@ function getSingleApiMiddleware(version: ApiVersion, database: Database): Router
 			res.set("X-FacilMap-Error", JSON.stringify(serializeError(err)));
 			res.status(err.status ?? err.statusCode ?? 500);
 			if (err.headers) {
-				res.setHeaders(err.headers);
+				res.setHeaders(new Headers(err.headers));
 			}
 			res.send(err.stack);
 		} else {

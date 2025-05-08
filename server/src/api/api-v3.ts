@@ -659,6 +659,7 @@ export const apiV3Impl: ApiImpl<ApiVersion.V3> = {
 		}).parse(req.query);
 		return [mapDataValidator.create.parse(req.body), { pick, bbox }];
 	}, (res, result) => {
+		res.header("Content-type", "application/json");
 		stringifyJsonStream(objectStream<SerializableJsonValue>(mapAsyncIterable(result, (obj) => {
 			if (obj.type === "mapData") {
 				return [obj.type, obj.data];
@@ -679,6 +680,7 @@ export const apiV3Impl: ApiImpl<ApiVersion.V3> = {
 		}).parse(req.query);
 		return [getRequestMapSlug(req), { pick, bbox }];
 	}, (res, result) => {
+		res.header("Content-type", "application/json");
 		stringifyJsonStream(objectStream<SerializableJsonValue>(mapAsyncIterable(result, (obj) => {
 			if (obj.type === "mapData") {
 				return [obj.type, obj.data];
