@@ -56,7 +56,7 @@ export class SocketConnectionV2 implements SocketConnection<SocketVersion.V2> {
 
 	routeAborts: Record<string, AbortController> = {};
 
-	constructor(emit: (...args: SocketServerToClientEmitArgs<SocketVersion.V2>) => void | Promise<void>, database: Database, remoteAddr: string) {
+	constructor(emit: (...args: SocketServerToClientEmitArgs<SocketVersion.V2>) => void, database: Database, remoteAddr: string) {
 		this.socketV3 = new SocketConnectionV3(async (...args) => {
 			if (args[0] === "type") {
 				this.types[args[2].id] = args[2];
@@ -75,16 +75,16 @@ export class SocketConnectionV2 implements SocketConnection<SocketVersion.V2> {
 			} else if (args[0] === "route") {
 				this.routes[args[1]] = args[2];
 			} else {
-				for (const ev of await this.prepareEvent(...args)) {
+				for (const ev of this.prepareEvent(...args)) {
 					if (!this.eventInterceptors.some((interceptor) => interceptor(...ev))) {
-						await emit(...ev);
+						emit(...ev);
 					}
 				}
 			}
 		}, database, remoteAddr);
 	}
 
-	async prepareEvent(...args: SocketServerToClientEmitArgs<SocketVersion.V3>): Promise<Array<SocketServerToClientEmitArgs<SocketVersion.V2>>> {
+	prepareEvent(...args: SocketServerToClientEmitArgs<SocketVersion.V3>): Array<SocketServerToClientEmitArgs<SocketVersion.V2>> {
 		if (args[0] === "marker") {
 			return [[args[0], currentMarkerToLegacyV2(args[2], this.types[args[2].typeId], this.readId!)]];
 		} else if (args[0] === "line") {

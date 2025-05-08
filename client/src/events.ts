@@ -24,10 +24,6 @@ export class EventEmitter<Events extends Record<string, any[]>> {
 		}
 	}
 
-	protected _hasListeners(eventName: EventName<Events>): boolean {
-		return !!this.listeners[eventName];
-	}
-
 	protected _emit<E extends EventName<Events>>(eventName: E, ...data: Events[E]): void {
 		const listeners = this.listeners[eventName] as Array<EventHandler<Events, E>> | undefined;
 		if(listeners) {

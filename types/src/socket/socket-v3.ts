@@ -56,7 +56,7 @@ export type SocketApiV3<Validated extends boolean = false> = ApiV3<Validated> & 
 	[K in keyof SocketV3Response]: (...args: DeepReadonlyParams<Validated extends true ? z.infer<typeof socketV3RequestValidators[K]> : z.input<typeof socketV3RequestValidators[K]>>) => Promise<SocketV3Response[K]>;
 };
 
-export interface MapEventsV3Interface {
+export interface SocketEventsV3Interface {
 	mapData: [MapSlug, Stripped<MapData>];
 	deleteMap: [MapSlug];
 	cancelMapSubscription: [MapSlug, Error & { status?: number }];
@@ -74,9 +74,9 @@ export interface MapEventsV3Interface {
 	route: [string, Route];
 	routePoints: [string, RoutePoints & { reset: boolean }];
 
-	streamChunks: [StreamId<any>, chunks: any[]];
+	streamChunk: [StreamId<any>, chunk: any];
 	streamDone: [StreamId<any>];
 	streamError: [StreamId<any>, error: Error];
 }
 
-export type MapEventsV3 = Pick<MapEventsV3Interface, keyof MapEventsV3Interface>; // Workaround for https://github.com/microsoft/TypeScript/issues/15300
+export type SocketEventsV3 = Pick<SocketEventsV3Interface, keyof SocketEventsV3Interface>; // Workaround for https://github.com/microsoft/TypeScript/issues/15300

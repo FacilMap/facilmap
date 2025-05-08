@@ -14,6 +14,7 @@
 
 	const props = defineProps<{
 		mapData: MergedUnion<[MapData<CRU.CREATE>, Required<MapData<CRU.UPDATE>>]>;
+		isCreate?: boolean;
 	}>();
 
 	const emit = defineEmits<{
@@ -27,7 +28,13 @@
 
 	const mapLink = ref(cloneDeep(mapLinkModel.value));
 
-	const updatedMapData = computed(() => ({ ...props.mapData, links: props.mapData.links.map((l) => l === mapLinkModel.value ? mapLink.value : l) }));
+	const updatedMapData = computed(() => ({
+		...props.mapData,
+		links: (
+			props.isCreate ? [...props.mapData.links, mapLink.value] :
+			props.mapData.links.map((l) => l === mapLinkModel.value ? mapLink.value : l)
+		)
+	}));
 
 	const modalRef = ref<InstanceType<typeof ModalDialog>>();
 
@@ -51,6 +58,7 @@
 		:title="i18n.t('map-settings-edit-link-dialog.title')"
 		class="fm-map-settings-edit-link"
 		:isModified="isModified"
+		:isCreate="props.isCreate"
 		ref="modalRef"
 		:okLabel="isModified ? i18n.t('common.ok') : undefined"
 		@submit="save()"

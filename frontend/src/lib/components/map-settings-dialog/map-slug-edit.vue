@@ -42,7 +42,7 @@
 			<button
 				type="button"
 				class="btn btn-secondary"
-				@click="value = generateRandomMapSlug(16)"
+				@click="value = generateRandomMapSlug()"
 				v-tooltip="i18n.t('map-slug-edit.random-tooltip')"
 			>
 				<Icon icon="shuffle" :alt="i18n.t('map-slug-edit.random-alt')"></Icon>

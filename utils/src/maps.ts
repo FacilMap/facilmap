@@ -2,7 +2,7 @@ import { ADMIN_LINK_COMMENT, CRU, READ_LINK_COMMENT, WRITE_LINK_COMMENT, type De
 import { getI18n } from "./i18n.js";
 
 const LETTERS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-const LENGTH = 12;
+const LENGTH = 16;
 
 export function generateRandomMapSlug(length: number = LENGTH): MapSlug {
 	let randomMapSlug = "";

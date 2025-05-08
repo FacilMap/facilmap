@@ -358,57 +358,57 @@ export function transformFromWeb(stream: TransformStream): Duplex {
  * A transform stream that aggregates all chunks that arrive within a tick and emits them as one concatenated chunk.
  */
 class AggregationTransformStream<T, R> extends TransformStream<T, R> {
-	constructor(
-		concat: (chunks: T[]) => R,
-		writableStrategy?: QueuingStrategy<T>,
-		readableStrategy?: QueuingStrategy<R>
-	) {
-		let chunks: T[] = [];
-		let timeout: ReturnType<typeof setTimeout> | undefined = undefined;
+	protected controller!: TransformStreamDefaultController<R>;
+	protected chunks: T[] = [];
+	protected timeout: ReturnType<typeof setTimeout> | undefined = undefined;
 
-		const flush = (controller: TransformStreamDefaultController<R>) => {
-			controller.enqueue(concat(chunks));
-			chunks = [];
-			timeout = undefined;
-		};
-
+	constructor(protected concat: (chunks: T[]) => R, delay = 0) {
+		let controller: TransformStreamDefaultController<R>;
 		super({
-			transform(chunk, controller) {
-				chunks.push(chunk);
-				if (!timeout) {
-					timeout = setTimeout(() => {
-						flush(controller);
-					}, 0);
+			start: (controller_) => {
+				// Cannot set this.controller here directly, it throws an error because the constructor is not finished
+				controller = controller_;
+			},
+			transform: (chunk) => {
+				this.chunks.push(chunk);
+				if (!this.timeout) {
+					this.timeout = setTimeout(() => {
+						this.flush();
+					}, delay);
 				}
 			},
 
-			flush(controller) {
-				if (timeout) {
-					clearTimeout(timeout);
-				}
-				flush(controller);
+			flush: () => {
+				this.flush();
 			}
-		}, writableStrategy, readableStrategy);
+		});
+		this.controller = controller!;
 	}
+
+	flush() {
+		if (this.timeout) {
+			clearTimeout(this.timeout);
+			this.timeout = undefined;
+		}
+
+		if (this.chunks.length > 0) {
+			this.controller.enqueue(this.concat(this.chunks));
+			this.chunks = [];
+		}
+	};
 }
 
 /**
  * A transform stream that aggregates all string chunks that arrive within a tick and emits them as one concatenated string chunk.
  */
 export class StringAggregationTransformStream extends AggregationTransformStream<string, string> {
-	constructor(
-		writableStrategy?: QueuingStrategy<string>,
-		readableStrategy?: QueuingStrategy<string>
-	) {
-		super((chunks) => chunks.join(""), writableStrategy, readableStrategy);
+	constructor(delay = 0) {
+		super((chunks) => chunks.join(""), delay);
 	}
 }
 
 export class ChunkAggregationTransformStream<T> extends AggregationTransformStream<T, T[]> {
-	constructor(
-		writableStrategy?: QueuingStrategy<T>,
-		readableStrategy?: QueuingStrategy<T[]>
-	) {
-		super((chunks) => chunks, writableStrategy, readableStrategy);
+	constructor(delay = 0) {
+		super((chunks) => chunks, delay);
 	}
 }

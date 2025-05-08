@@ -46,7 +46,8 @@ export interface ClientEventsInterface extends SocketEvents<SocketVersion.V3> {
 
 export type ClientEvents = Pick<ClientEventsInterface, keyof ClientEventsInterface>; // Workaround for https://github.com/microsoft/TypeScript/issues/15300
 
-const MANAGER_EVENTS: Array<EventName<ClientEvents>> = ['error', 'reconnect', 'reconnect_attempt', 'reconnect_error', 'reconnect_failed'];
+const SOCKET_EVENTS = ["connect", "disconnect", "connect_error"] as const satisfies Array<EventName<ClientEvents>>;
+const MANAGER_EVENTS = ["error", "reconnect", "reconnect_attempt", "reconnect_error", "reconnect_failed"] as const satisfies Array<EventName<ClientEvents>>;
 
 export enum ClientStateType {
 	/** The client has been set up and is not connected yes. Usually this means that it is currently connecting (unless autoConnect was set to false). */
@@ -75,7 +76,7 @@ interface ClientData {
 
 type StreamHandler = {
 	readable: ReadableStream<any>;
-	handleChunks: (chunks: any[]) => void;
+	handleChunk: (chunk: any) => void;
 	handleDone: () => void;
 	handleError: (error: Error) => void;
 };
@@ -119,6 +120,21 @@ export class SocketClient extends EventEmitter<ClientEvents> implements Api<ApiV
 		});
 		this.socket = socket;
 
+		for (const event of SOCKET_EVENTS) {
+			this.socket.on(event, (...data: any) => { this._emit(event, ...data); });
+		}
+
+		for (const event of MANAGER_EVENTS) {
+			(this.socket.io as any).on(event, (...data: any) => { this._emit(event, ...data); });
+		}
+
+		this.socket.on("events", (events) => {
+			for (const event of events) {
+				// @ts-ignore
+				this._emit(...event);
+			}
+		});
+
 		for(const [i, handler] of Object.entries(this._getEventHandlers())) {
 			this.on(i as any, handler as any);
 		}
@@ -148,35 +164,6 @@ export class SocketClient extends EventEmitter<ClientEvents> implements Api<ApiV
 		});
 	}
 
-	protected _decodeData(data: Record<string, string>): Record<string, string> {
-		const result = Object.create(null);
-		Object.assign(result, data);
-		return result;
-	}
-
-	protected _fixResponseObject<T>(requestName: keyof SocketApi<SocketVersion.V3, false>, obj: T): T {
-		if (typeof obj != "object" || !(obj as any)?.data || !["getMarker", "addMarker", "editMarker", "deleteMarker", "getLineTemplate", "addLine", "editLine", "deleteLine"].includes(requestName))
-			return obj;
-
-		return {
-			...obj,
-			data: this._decodeData((obj as any).data)
-		};
-	}
-
-	protected _fixEventObject<T extends any[]>(eventName: EventName<ClientEvents>, obj: T): T {
-		if (typeof obj?.[0] != "object" || !obj?.[0]?.data || !["marker", "line"].includes(eventName))
-			return obj;
-
-		return [
-			{
-				...obj[0],
-				data: this._decodeData((obj[0] as any).data)
-			},
-			...obj.slice(1)
-		] as T;
-	}
-
 	protected _getStream(streamId: StreamId<any>): StreamHandler {
 		if (!this.streams[streamId]) {
 			const stream = new TransformStream();
@@ -204,11 +191,9 @@ export class SocketClient extends EventEmitter<ClientEvents> implements Api<ApiV
 						}
 					}
 				}),
-				handleChunks: (chunks) => {
-					for (const chunk of chunks) {
-						// Uint8Arrays sent over Socket.IO arrive as ArrayBuffers
-						writer.write(chunk instanceof ArrayBuffer ? new Uint8Array(chunk) : chunk).catch(() => undefined);
-					}
+				handleChunk: (chunk) => {
+					// Uint8Arrays sent over Socket.IO arrive as ArrayBuffers
+					writer.write(chunk instanceof ArrayBuffer ? new Uint8Array(chunk) : chunk).catch(() => undefined);
 				},
 				handleDone: () => {
 					writer.close().catch(() => undefined);
@@ -255,15 +240,6 @@ export class SocketClient extends EventEmitter<ClientEvents> implements Api<ApiV
 		].includes(this.data.routeSubscriptions[routeKey].state.type);
 	}
 
-	on<E extends EventName<ClientEvents>>(eventName: E, fn: EventHandler<ClientEvents, E>): void {
-		if (!this._hasListeners(eventName)) {
-			(MANAGER_EVENTS.includes(eventName) ? this.socket.io as any : this.socket)
-				.on(eventName, (...data: ClientEvents[E]) => { this._emit(eventName as any, ...data); });
-		}
-
-		super.on(eventName, fn);
-	}
-
 	protected async _call<R extends keyof SocketApi<SocketVersion.V3, false>>(
 		eventName: R,
 		...args: DeepReadonly<Parameters<SocketApi<SocketVersion.V3, false>[R]>>
@@ -282,8 +258,7 @@ export class SocketClient extends EventEmitter<ClientEvents> implements Api<ApiV
 						const cause = deserializeError(err);
 						reject(deserializeError({ ...serializeError(outerError), message: cause.message, status: (cause as any).status, cause }));
 					} else {
-						const fixedData = this._fixResponseObject(eventName, data);
-						resolve(fixedData);
+						resolve(data);
 					}
 				});
 			});
@@ -332,8 +307,8 @@ export class SocketClient extends EventEmitter<ClientEvents> implements Api<ApiV
 				this.reactiveObjectProvider.set(this.data, 'runningOperations', this.data.runningOperations - 1);
 			},
 
-			streamChunks: (streamId, chunks) => {
-				this._getStream(streamId).handleChunks(chunks);
+			streamChunk: (streamId, chunk) => {
+				this._getStream(streamId).handleChunk(chunk);
 			},
 
 			streamDone: (streamId) => {
@@ -631,8 +606,4 @@ export class SocketClient extends EventEmitter<ClientEvents> implements Api<ApiV
 		this.socket.disconnect();
 	}
 
-	protected _emit<E extends EventName<ClientEvents>>(eventName: E, ...data: ClientEvents[E]): void {
-		const fixedData = this._fixEventObject(eventName, data);
-		super._emit(eventName, ...fixedData);
-	}
 }

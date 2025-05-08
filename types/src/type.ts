@@ -58,7 +58,7 @@ export function refineRawFieldOptionsValidator<
 export const fieldOptionsValidator = refineRawFieldOptionsValidator({
 	read: z.array(fieldOptionValidator.read),
 	create: z.array(fieldOptionValidator.create),
-	update: z.array(fieldOptionValidator.update)
+	update: z.array(fieldOptionValidator.create.or(fieldOptionValidator.update))
 });
 
 export const fieldValidator = cruValidator({

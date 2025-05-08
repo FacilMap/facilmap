@@ -1,7 +1,7 @@
 import * as z from "zod";
-import { socketV3RequestValidators, type MapEventsV3, type SocketApiV3 } from "./socket-v3.js";
-import { socketV1RequestValidators, type MapEventsV1, type SocketApiV1 } from "./socket-v1.js";
-import { socketV2RequestValidators, type MapEventsV2, type SocketApiV2 } from "./socket-v2.js";
+import { socketV3RequestValidators, type SocketEventsV3, type SocketApiV3 } from "./socket-v3.js";
+import { socketV1RequestValidators, type SocketEventsV1, type SocketApiV1 } from "./socket-v1.js";
+import { socketV2RequestValidators, type SocketEventsV2, type SocketApiV2 } from "./socket-v2.js";
 import type { StreamToStreamId } from "./socket-common.js";
 
 export * from "./socket-common.js";
@@ -19,10 +19,14 @@ export const socketRequestValidators = {
 } satisfies Record<SocketVersion, Record<string, z.ZodType>>;
 
 export type SocketEvents<V extends SocketVersion> = {
-	[SocketVersion.V1]: Pick<MapEventsV1, keyof MapEventsV1>;
-	[SocketVersion.V2]: Pick<MapEventsV2, keyof MapEventsV2>;
-	[SocketVersion.V3]: Pick<MapEventsV3, keyof MapEventsV3>;
+	[SocketVersion.V1]: SocketEventsV1;
+	[SocketVersion.V2]: SocketEventsV2;
+	[SocketVersion.V3]: SocketEventsV3;
 }[V];
+
+export type SocketEventWithName<V extends SocketVersion> = {
+	[E in keyof SocketEvents<V>]: SocketEvents<V>[E] extends any[] ? [E, ...SocketEvents<V>[E]] : never;
+}[keyof SocketEvents<V>];
 
 export type SocketApi<V extends SocketVersion, Validated extends boolean> = {
 	[SocketVersion.V1]: SocketApiV1<Validated>;
@@ -39,9 +43,13 @@ export type SocketClientToServerEvents<V extends SocketVersion, Validated extend
 	) => void) : never;
 };
 
-export type SocketServerToClientEvents<V extends SocketVersion> = {
-	[E in keyof SocketEvents<V>]: (...args: SocketEvents<V>[E] extends Array<any> ? SocketEvents<V>[E] : never) => void;
-};
+export type SocketServerToClientEvents<V extends SocketVersion> = (
+	V extends SocketVersion.V1 | SocketVersion.V2 ? {
+		[E in keyof SocketEvents<V>]: (...args: SocketEvents<V>[E] extends Array<any> ? SocketEvents<V>[E] : never) => void;
+	} : {
+		events: (events: Array<SocketEventWithName<V>>) => void;
+	}
+);
 export type SocketServerToClientEmitArgs<V extends SocketVersion> = {
-	[E in keyof SocketEvents<V>]: [e: E, ...args: SocketEvents<V>[E] extends Array<any> ? SocketEvents<V>[E] : never];
-}[keyof SocketEvents<V>];
+	[E in keyof SocketServerToClientEvents<V>]: SocketServerToClientEvents<V>[E] extends (...args: any) => any ? [e: E, ...args: Parameters<SocketServerToClientEvents<V>[E]>] : never;
+}[keyof SocketServerToClientEvents<V>];

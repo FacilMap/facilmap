@@ -738,7 +738,9 @@
         "link-comment": "Comment",
         "link-update-error": "Error updating map link",
         "link-disappeared-error": "The map link cannot be found on the type anymore.",
-        "edit-link": "Edit"
+        "edit-link": "Edit",
+        "delete-link": "Delete",
+        "add-link": "Add"
     },
     "map-settings-edit-link-dialog" : {
         "title": "Edit map link",

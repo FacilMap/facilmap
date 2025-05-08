@@ -46,7 +46,7 @@
 		clusterMarkers: false,
 		links: i18nMapLinkComments([
 			{
-				slug: generateRandomMapSlug(16),
+				slug: generateRandomMapSlug(),
 				comment: ADMIN_LINK_COMMENT,
 				password: false,
 				searchEngines: false,

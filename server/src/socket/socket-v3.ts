@@ -1,15 +1,15 @@
 import { generateRandomId } from "../utils/utils.js";
-import { mapAsyncIterable, streamToIterable } from "../utils/streams.js";
+import { ChunkAggregationTransformStream, mapAsyncIterable, streamToIterable } from "../utils/streams.js";
 import { isInBbox } from "../utils/geo.js";
 import { exportLineToRouteGpx, exportLineToTrackGpx } from "../export/gpx.js";
 import { isEqual, omit, pull } from "lodash-es";
 import Database, { type DatabaseEvents } from "../database/database.js";
-import { type BboxWithZoom, SocketVersion, type SocketServerToClientEmitArgs, type EventName, type MapSlug, type StreamId, type StreamToStreamId, type StreamedResults, type SubscribeToMapPick, type Route, type BboxWithExcept, DEFAULT_PAGING, type ID, type AllMapObjectsItem, type AllMapObjectsPick, subscribeToMapDefaultPick, markStripped, type Type, type Line, type Marker, type Stripped, type AnyMapSlug, getMainAdminLink, type ExportResult, type ReplaceProperties } from "facilmap-types";
+import { type BboxWithZoom, SocketVersion, type SocketServerToClientEmitArgs, type EventName, type MapSlug, type StreamId, type StreamToStreamId, type StreamedResults, type SubscribeToMapPick, type Route, type BboxWithExcept, DEFAULT_PAGING, type ID, type AllMapObjectsItem, type AllMapObjectsPick, subscribeToMapDefaultPick, markStripped, type Type, type Line, type Marker, type Stripped, type AnyMapSlug, getMainAdminLink, type ExportResult, type ReplaceProperties, type SocketEventWithName, mapValues } from "facilmap-types";
 import { prepareForBoundingBox } from "../routing/routing.js";
 import { type SocketConnection, type DatabaseHandlers, type SocketHandlers } from "./socket-common.js";
 import { getI18n, setDomainUnits } from "../i18n.js";
 import { ApiV3Backend } from "../api/api-v3.js";
-import { canReadObject, getSafeFilename, numberEntries, sleep } from "facilmap-utils";
+import { canReadObject, getSafeFilename, numberEntries } from "facilmap-utils";
 import { serializeError } from "serialize-error";
 import { exportLineToGeoJson } from "../export/geojson.js";
 import { isOwn, resolveMapLink, stripHistoryEntry, stripLine, stripMapData, stripMarker, stripType, stripView, type RawActiveMapLink } from "../utils/permissions.js";
@@ -17,14 +17,12 @@ import { getIdentityHash } from "../utils/crypt.js";
 
 export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 
-	/**
-	 * Emit an event to the client. Async because older socket versions might need to do some as async conversions.
-	 * The promise is resolved when the event has been sent. There is no confirmation about it being received.
-	 */
-	emit: (...args: SocketServerToClientEmitArgs<SocketVersion.V3>) => void | Promise<void>;
+	rawEmit: (...args: SocketServerToClientEmitArgs<SocketVersion.V3>) => void;
 	database: Database;
 	remoteAddr: string;
 	api: ApiV3Backend;
+	emitAggregator: ChunkAggregationTransformStream<SocketEventWithName<SocketVersion.V3>>;
+	emitWriter: WritableStreamDefaultWriter<SocketEventWithName<SocketVersion.V3>>;
 
 	bbox: BboxWithZoom | undefined = undefined;
 	/** AbortControllers for all active map subscriptions. Set synchronously when subscribing. */
@@ -46,14 +44,22 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 	unregisterDatabaseHandlers = (): void => undefined;
 
 	constructor(
-		emit: (...args: SocketServerToClientEmitArgs<SocketVersion.V3>) => void | Promise<void>,
+		emit: (...args: SocketServerToClientEmitArgs<SocketVersion.V3>) => void,
 		database: Database,
 		remoteAddr: string
 	) {
-		this.emit = emit;
+		this.rawEmit = emit;
 		this.database = database;
 		this.remoteAddr = remoteAddr;
 		this.api = new ApiV3Backend(database, remoteAddr);
+
+		this.emitAggregator = new ChunkAggregationTransformStream<SocketEventWithName<SocketVersion.V3>>();
+		void this.emitAggregator.readable.pipeTo(new WritableStream<Array<SocketEventWithName<SocketVersion.V3>>>({
+			write: (chunks) => {
+				this.rawEmit("events", chunks);
+			}
+		}));
+		this.emitWriter = this.emitAggregator.writable.getWriter();
 
 		this.registerDatabaseHandlers();
 	}
@@ -72,42 +78,26 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 		this.unregisterDatabaseHandlers();
 	};
 
+	emit(...args: SocketEventWithName<SocketVersion.V3>): void {
+		void this.emitWriter.write(args);
+	};
+
 	emitStream<T>(stream: AsyncIterable<T>): StreamId<T> {
 		const streamId = `${generateRandomId(8)}-${Date.now()}` as StreamId<T>;
 		void (async () => {
 			this.streamAbort[streamId] = new AbortController();
-			let chunks: any[] = [];
-			let tickPromise: Promise<void> | undefined = undefined;
-			let tickScheduled = false;
 			try {
 				for await (const chunk of stream) {
 					this.streamAbort[streamId].signal.throwIfAborted();
-					chunks.push(chunk);
-					if (!tickScheduled) {
-						tickScheduled = true;
-						tickPromise = Promise.all([tickPromise, sleep(20)]).then(async () => {
-							if (this.streamAbort[streamId].signal.aborted) {
-								return;
-							}
-
-							const thisChunks = chunks;
-							chunks = [];
-							tickScheduled = false;
-
-							await this.emit("streamChunks", streamId, thisChunks);
-						});
-					}
+					this.emit("streamChunk", streamId, chunk);
 				}
 
-				await tickPromise;
-				await this.emit("streamDone", streamId);
+				this.emit("streamDone", streamId);
 			} catch (err: any) {
 				this.streamAbort[streamId].abort();
-				await this.emit("streamError", streamId, serializeError(err));
+				this.emit("streamError", streamId, serializeError(err));
 			} finally {
-				await Promise.resolve(tickPromise).finally(() => {
-					delete this.streamAbort[streamId];
-				});
+				delete this.streamAbort[streamId];
 			}
 		})();
 		return streamId;
@@ -133,26 +123,31 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 			}
 
 			if (obj.type === "mapData") {
-				await this.emit("mapData", mapSlug, obj.data);
+				this.emit("mapData", mapSlug, obj.data);
 			} else if (obj.type === "markers") {
 				for await (const marker of obj.data) {
-					await this.emit("marker", mapSlug, marker);
+					this.emit("marker", mapSlug, marker);
 				}
 			} else if (obj.type === "lines") {
 				for await (const line of obj.data) {
-					await this.emit("line", mapSlug, line);
+					this.emit("line", mapSlug, line);
 				}
 			} else if (obj.type === "linePoints") {
+				const handledLineIds = new Set<ID>();
 				for await (const linePoints of obj.data) {
-					await this.emit("linePoints", mapSlug, { ...linePoints, reset: true });
+					const handled = handledLineIds.has(linePoints.lineId);
+					if (!handled) {
+						handledLineIds.add(linePoints.lineId);
+					}
+					this.emit("linePoints", mapSlug, { ...linePoints, reset: !handled });
 				}
 			} else if (obj.type === "types") {
 				for await (const type of obj.data) {
-					await this.emit("type", mapSlug, type);
+					this.emit("type", mapSlug, type);
 				}
 			} else if (obj.type === "views") {
 				for await (const view of obj.data) {
-					await this.emit("view", mapSlug, view);
+					this.emit("view", mapSlug, view);
 				}
 			}
 		}
@@ -185,7 +180,7 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 	}
 
 	getSocketHandlers(): SocketHandlers<SocketVersion.V3> {
-		return {
+		const handlers: SocketHandlers<SocketVersion.V3> = {
 			setLanguage: async (settings) => {
 				if (settings.lang) {
 					await getI18n().changeLanguage(settings.lang);
@@ -536,10 +531,10 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 
 					this.routeSubscriptionDetails[routeKey] = omit(routeInfo, ["trackPoints"]);
 
-					await this.emit("route", routeKey, omit(routeInfo, ["trackPoints", "routeId"]));
+					this.emit("route", routeKey, omit(routeInfo, ["trackPoints", "routeId"]));
 
 					if(this.bbox) {
-						await this.emit("routePoints", routeKey, {
+						this.emit("routePoints", routeKey, {
 							trackPoints: prepareForBoundingBox(routeInfo.trackPoints, this.bbox, true),
 							reset: true
 						});
@@ -620,14 +615,14 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 						const markerObjs = await this.api.getAllMapObjects(sub.mapSlug, { pick: ["markers"], bbox: markerBboxWithExcept });
 						for await (const obj of markerObjs) {
 							for await (const marker of obj.data) {
-								await this.emit("marker", sub.mapSlug, marker);
+								this.emit("marker", sub.mapSlug, marker);
 							}
 						}
 
 						const lineObjs = await this.api.getAllMapObjects(sub.mapSlug, { pick: ["linePoints"], bbox: lineBboxWithExcept });
 						for await (const obj of lineObjs) {
 							for await (const linePoints of obj.data) {
-								await this.emit("linePoints", sub.mapSlug, { ...linePoints, reset: false });
+								this.emit("linePoints", sub.mapSlug, { ...linePoints, reset: false });
 							}
 						}
 					}
@@ -635,7 +630,7 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 
 				for (const [routeKey, sub] of Object.entries(this.routeSubscriptionDetails)) {
 					const trackPoints = await this.database.routes.getRoutePoints(sub.routeId, lineBboxWithExcept, !lineBboxWithExcept.except);
-					await this.emit("routePoints", routeKey, { trackPoints, reset: false });
+					this.emit("routePoints", routeKey, { trackPoints, reset: false });
 				}
 			},
 
@@ -652,6 +647,15 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 				this.database.copyPad(this.padId, data.toId, callback);
 			}*/
 		};
+
+		return mapValues(handlers, (handler) => async (...args: any) => {
+			try {
+				return await handler(...args) as any;
+			} finally {
+				// Flush aggregated events so that events are guaranteed to arrive before their causing promise is resolved
+				this.emitAggregator.flush();
+			}
+		});
 	}
 
 	getDatabaseHandlers(): DatabaseHandlers {

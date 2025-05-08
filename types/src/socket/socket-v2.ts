@@ -232,11 +232,11 @@ export const socketV2RequestValidators = {
 type SocketV2Response = {
 	getPad: LegacyV2FindMapsResult | null;
 	findPads: PagedResults<LegacyV2FindMapsResult>;
-	createPad: MultipleEvents<MapEventsV2>;
+	createPad: MultipleEvents<SocketEventsV2>;
 	editPad: LegacyV2MapDataWithWritable;
 	deletePad: null;
 	findOnMap: Array<LegacyV2FindOnMapResult>;
-	revertHistoryEntry: MultipleEvents<MapEventsV2>;
+	revertHistoryEntry: MultipleEvents<SocketEventsV2>;
 	getMarker: LegacyV2Marker;
 	addMarker: LegacyV2Marker;
 	editMarker: LegacyV2Marker;
@@ -255,9 +255,9 @@ type SocketV2Response = {
 	find: SearchResult[] | string;
 	getRoute: RouteInfo;
 
-	setPadId: MultipleEvents<MapEventsV2>;
-	updateBbox: MultipleEvents<MapEventsV2>;
-	listenToHistory: MultipleEvents<MapEventsV2>;
+	setPadId: MultipleEvents<SocketEventsV2>;
+	updateBbox: MultipleEvents<SocketEventsV2>;
+	listenToHistory: MultipleEvents<SocketEventsV2>;
 	stopListeningToHistory: null;
 
 	setRoute: LegacyV2Route | null;
@@ -272,7 +272,7 @@ export type SocketApiV2<Validated extends boolean = false> = Pick<SocketApiV3<Va
 	[K in keyof SocketV2Response]: (...args: Validated extends true ? z.infer<typeof socketV2RequestValidators[K]> : z.input<typeof socketV2RequestValidators[K]>) => Promise<SocketV2Response[K]>;
 };
 
-export type MapEventsV2 = {
+export type SocketEventsV2 = {
 	marker: [LegacyV2Marker];
 	deleteMarker: [ObjectWithId];
 	line: [LegacyV2Line];
