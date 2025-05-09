@@ -5,6 +5,7 @@ import { cloneDeep, insertIdx } from "facilmap-utils";
 import type DatabaseTypesBackend from "../database-backend/type.js";
 import { getI18n } from "../i18n.js";
 import { isEqual } from "lodash-es";
+import { pickIdentity } from "../utils/permissions.js";
 
 const DEFAULT_TYPES: Type<CRU.CREATE_VALIDATED>[] = [
 	typeValidator.create.parse({ name: "Marker", type: "marker" } satisfies Type<CRU.CREATE>),
@@ -60,7 +61,7 @@ export default class DatabaseTypes {
 
 	async createType(mapId: ID, data: Type<CRU.CREATE_VALIDATED>, options: {
 		id?: ID;
-		identity: Buffer | undefined;
+		identities: Buffer[];
 		noHistory?: boolean;
 	}): Promise<Type> {
 		const [idx, nextFieldId] = await Promise.all([
@@ -84,7 +85,7 @@ export default class DatabaseTypes {
 			await this.db.history.addHistoryEntry(mapId, {
 				type: "Type",
 				action: "create",
-				identity: options.identity ?? null,
+				identity: pickIdentity(options.identities),
 				objectId: createdType.id,
 				objectAfter: createdType
 			});
@@ -95,7 +96,7 @@ export default class DatabaseTypes {
 
 	async updateType(mapId: ID, typeId: ID, data: Type<CRU.UPDATE_VALIDATED>, options: {
 		notFound404?: boolean;
-		identity: Buffer | undefined;
+		identities: Buffer[];
 	}): Promise<Type> {
 		const rename: Record<string, Record<string, string>> = {};
 		for (const field of (data.fields || [])) {
@@ -153,7 +154,7 @@ export default class DatabaseTypes {
 			await this.db.history.addHistoryEntry(mapId, {
 				type: "Type",
 				action: "update",
-				identity: options.identity ?? null,
+				identity: pickIdentity(options.identities),
 				objectId: typeId,
 				objectBefore: typeBefore,
 				objectAfter: typeAfter
@@ -165,11 +166,11 @@ export default class DatabaseTypes {
 
 				if (typeAfter.type === "marker") {
 					for await (const marker of this.db.markers.getMapMarkersByType(mapId, typeId)) {
-						await this.db.markers._updateMarker(marker, {}, typeAfter, { noHistory: true, identity: options.identity });
+						await this.db.markers._updateMarker(marker, {}, typeAfter, { noHistory: true, identities: options.identities });
 					}
 				} else if (typeAfter.type === "line") {
 					for await (const line of this.db.lines.getMapLinesByType(mapId, typeId)) {
-						await this.db.lines._updateLine(line, {}, typeAfter, { noHistory: true, identity: options.identity });
+						await this.db.lines._updateLine(line, {}, typeAfter, { noHistory: true, identities: options.identities });
 					}
 				}
 			})()
@@ -194,9 +195,9 @@ export default class DatabaseTypes {
 
 			if (!isEqual(object.data, newData)) {
 				if(isLine) {
-					await this.db.lines.updateLine(object.mapId, object.id, { data: newData }, { noHistory: true, identity: undefined });
+					await this.db.lines.updateLine(object.mapId, object.id, { data: newData }, { noHistory: true, identities: [] });
 				} else {
-					await this.db.markers.updateMarker(object.mapId, object.id, { data: newData }, { noHistory: true, identity: undefined });
+					await this.db.markers.updateMarker(object.mapId, object.id, { data: newData }, { noHistory: true, identities: [] });
 				}
 			}
 		}
@@ -210,7 +211,7 @@ export default class DatabaseTypes {
 		return markerUsed || lineUsed;
 	}
 
-	async deleteType(mapId: ID, typeId: ID, options: { notFound404?: boolean; identity: Buffer | undefined }): Promise<Type> {
+	async deleteType(mapId: ID, typeId: ID, options: { notFound404?: boolean; identities: Buffer[] }): Promise<Type> {
 		if (await this.isTypeUsed(mapId, typeId)) {
 			throw new Error("This type is in use.");
 		}
@@ -222,7 +223,7 @@ export default class DatabaseTypes {
 		await this.db.history.addHistoryEntry(mapId, {
 			type: "Type",
 			action: "delete",
-			identity: options.identity ?? null,
+			identity: pickIdentity(options.identities),
 			objectId: typeId,
 			objectBefore: oldType
 		});
@@ -233,7 +234,7 @@ export default class DatabaseTypes {
 	async createDefaultTypes(mapId: ID): Promise<Type[]> {
 		const result: Type[] = [];
 		for (const type of DEFAULT_TYPES) {
-			result.push(await this.createType(mapId, type, { noHistory: true, identity: undefined }));
+			result.push(await this.createType(mapId, type, { noHistory: true, identities: [] }));
 		}
 		return result;
 	}

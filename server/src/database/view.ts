@@ -4,6 +4,7 @@ import { iterableToArray } from "../utils/streams.js";
 import { insertIdx } from "facilmap-utils";
 import type DatabaseViewsBackend from "../database-backend/view.js";
 import { getI18n } from "../i18n.js";
+import { pickIdentity } from "../utils/permissions.js";
 
 export default class DatabaseViews {
 
@@ -54,7 +55,7 @@ export default class DatabaseViews {
 
 	async createView(mapId: ID, data: View<CRU.CREATE_VALIDATED>, options: {
 		id?: ID;
-		identity: Buffer | undefined;
+		identities: Buffer[];
 	}): Promise<View> {
 		const idx = await this._freeViewIdx(mapId, undefined, data.idx);
 
@@ -69,7 +70,7 @@ export default class DatabaseViews {
 		await this.db.history.addHistoryEntry(mapId, {
 			type: "View",
 			action: "create",
-			identity: options.identity ?? null,
+			identity: pickIdentity(options.identities),
 			objectId: newData.id,
 			objectAfter: newData
 		});
@@ -79,7 +80,7 @@ export default class DatabaseViews {
 
 	async updateView(mapId: ID, viewId: ID, data: View<CRU.UPDATE_VALIDATED>, options: {
 		notFound404?: boolean;
-		identity: Buffer | undefined;
+		identities: Buffer[];
 	}): Promise<View> {
 		if (data.idx != null) {
 			await this._freeViewIdx(mapId, viewId, data.idx);
@@ -93,7 +94,7 @@ export default class DatabaseViews {
 		await this.db.history.addHistoryEntry(mapId, {
 			type: "View",
 			action: "update",
-			identity: options.identity ?? null,
+			identity: pickIdentity(options.identities),
 			objectId: viewId,
 			objectBefore: viewBefore,
 			objectAfter: viewAfter
@@ -104,7 +105,7 @@ export default class DatabaseViews {
 
 	async deleteView(mapId: ID, viewId: ID, options: {
 		notFound404?: boolean;
-		identity: Buffer | undefined;
+		identities: Buffer[];
 	}): Promise<View> {
 		const oldView = await this.getView(mapId, viewId, options);
 		await this.backend.deleteView(mapId, viewId);
@@ -112,7 +113,7 @@ export default class DatabaseViews {
 		await this.db.history.addHistoryEntry(mapId, {
 			type: "View",
 			action: "delete",
-			identity: options.identity ?? null,
+			identity: pickIdentity(options.identities),
 			objectId: viewId,
 			objectBefore: oldView
 		});

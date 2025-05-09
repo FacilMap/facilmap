@@ -65,6 +65,8 @@ A map token is a derived version of a map slug that shares the configuration of 
 
 When a map token is derived from a map slug that requires a password, that password also has to be provided when accessing the map using the token, except for password-less map tokens created using `noPassword: true`. Password-less map tokens don’t require a password to access the map, but they are also directly associated with the password that was configured when the token was created. This means that when the password of the associated map link is changed, password-less tokens previously created for it become invalid.
 
+A map token never has more permissions than the map link it is derived from. Even if the token was created when the map link still had more permissions, when used its permissions are always restricted to the current permissions of the map link. Admin permission is never granted to a map token.
+
 ## Reactivity
 
 The various classes of the FacilMap client provide various properties that document the current state of the connection and of the subscribed maps and routes. The classes provide a universal way to subscribe to changes to these properties, so that you can use them in UI frameworks that rely on state change detection.

@@ -13,12 +13,13 @@ The following data is *processed* but *not persisted* by the FacilMap server:
 
 The following data is *processed* and *persisted* by the FacilMap server:
 * When you calculate a [route](../route/), the details about this route are stored on the server until you close the route (or your browser window) again.
-* Any [markers](../markers/), [lines](../lines), [types](../types), [views](../views) that you add and any [map settings](../map-settings/) that you make on a [collaborative map](../collaborative/) is stored on the server. Deleting such objects will still keep a copy in the [change history](../history/). The only way to delete the data is to [delete the collaborative map](../map-settings/#delete-the-map).
+* Any [markers](../markers/), [lines](../lines), [types](../types), [views](../views) that you add and any [map settings](../map-settings/) that you make on a [collaborative map](../collaborative/) is stored on the server. Deleting such objects will still keep a copy in the [change history](../history/). The only way to delete the data is to [delete the collaborative map](../map-settings/#delete-the-map). Map passwords and user identities (a random string identifying the creator of markers/lines) are stored in hashed form.
 
 The following data is persisted in your browser:
 * If you change the [zoom settings](../search/#zoom-settings), these are persisted in the local storage of your browser.
 * If you add [bookmarks](../collaborative/#bookmark-a-map), these are persisted in the local storage of your browser.
-* If you change the language or unit user preferences, these are persisted as a cookie in your browser.
+* Any changes that you make in the user preferences dialog (language, units, map style) are persisted in the local storage or cookies in your browser.
+* When you create/edit/delete something on a collaborative map for the first time, a random string is generated and persisted in the local storage of your browser to identify you as the owner of any changes that you make to the map. A separate string is generated for each map, so that a potential intruder to the server database cannot connect your involvement across different maps. In your local storage, the string is stored alongside a hash of the map slug. This way a potential intruder to your local storage cannot get access to the map unless they are already in possession of the map slug.
 
 ## Layers
 

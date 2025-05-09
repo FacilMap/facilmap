@@ -4,7 +4,7 @@ The Socket API uses events to send information about objects on a collaborative 
 
 Note that events are always fired _before_ the method causing them returns. For example, when updating a marker using the `updateMarker()` method, a `marker` event with the updated marker is fired first (if the marker is within the current bbox), and only then the method returns the updated marker as well.
 
-Subscribe to events using the [`on()`](./classes.md#on) method. When using raw Socket.IO, you can also use its [`on()`](https://socket.io/docs/v4/client-api/#socketoneventname-callback) method.
+When using the socket client, you can subscribe to events using the [`on()`](./classes.md#on) method.
 
 ```js
 const client = new SocketClient("https://facilmap.org/");
@@ -15,6 +15,8 @@ client.on("mapData", (mapSlug, mapData) => {
 });
 client.subscribeToMap("mymap");
 ```
+
+When using raw Socket.IO, events are emitted in batches using a single `events` event. You can subscribe using Socket.IO’s [`on()`](https://socket.io/docs/v4/client-api/#socketoneventname-callback) method by using `socket.on("events", (events) => {})`, where events is an `Array<[eventName: string, ...args: any[]]>`. The event names documented on this page refer to the `eventName` property in this array. The raw socket does not emit any other Socket.IO events than `events`.
 
 ## `mapData`
 

@@ -76,7 +76,7 @@ const storageValidator2 = z.record(z.any()).transform((val) => renameProperty(va
 			 */
 			slug: z.string()
 		})),
-		identity: z.string()
+		identities: z.array(z.string())
 	})).default(() => ({}))
 }));
 export const storageValidator = z.record(z.any()).catch(() => ({})).pipe(storageValidator2);

@@ -85,7 +85,7 @@ their `idx` property.
 
 ## MapSlug
 
-Where an API method expects a map slug as a parameter, this can be a `string` or an object of the shape `{ mapSlug: string; password?: string; identity?: string }`. The map slug string can be a slug that is configured for a [map link](#maplink) or a [map token](./advanced.md#map-slugs-tokens-and-passwords).
+Where an API method expects a map slug as a parameter, this can be a `string` or an object of the shape `{ mapSlug: string; password?: string; identity?: string | string[] }`. The map slug string can be a slug that is configured for a [map link](#maplink) or a [map token](./advanced.md#map-slugs-tokens-and-passwords).
 
 For the REST API, the password must be provided instead using basic authentication (see [password-protected maps](./advanced.md#password-protected-maps)), and the identity as the `identity` query parameter.
 
@@ -93,7 +93,9 @@ Where an API method returns a map slug or a socket event contains one, it is alw
 
 Attempting to access a password-protected map link without providing a or the right password will result in an error that has a `status: 401` property (or in HTTP status 401 when using the REST API).
 
-The `identity` property identifies you as the creator of a map object or history entry. When you provide it, will be persisted on all markers, lines and history entries that you create, and markers and lines whose creator identity matches yours will be returned with an `own: true` property. Some map links may be configured to only see or modify your markers/lines created by you. To interact with such markers/lines, providing an `identity` is required. What string you use as `identity` is up to you, but one suggestion is to create it using `btoa(String.fromCharCode(...crypto.getRandomValues(new Uint8Array(12)))).replaceAll("+", "-").replaceAll("/", "_")` (or `createIdentity()` exported by `facilmap-utils`) and to persist (for example in local storage) it as soon as the first change to the map is made.
+The `identity` property identifies you as the creator of a map object or history entry. When you provide it, it will be persisted on all markers, lines and history entries that you create, and markers and lines whose creator identity matches yours will be returned with an `own: true` property. Some map links may be configured to only see or modify your markers/lines created by you. To interact with such markers/lines, providing an `identity` is required. What string you use as `identity` is up to you, but one suggestion is to create it using `btoa(String.fromCharCode(...crypto.getRandomValues(new Uint8Array(12)))).replaceAll("+", "-").replaceAll("/", "_")` (or `createIdentity()` exported by `facilmap-utils`) and to persist (for example in local storage) it as soon as the first change to the map is made.
+
+You can also provide an array of identities. This is meant for cases where multiple devices/storages are merged and one user should be able to edit markers/lines created by multiple identities. When multiple identites are provided, the `own` property is true if the marker/line was created by any of them. When updating/deleting a marker/line owned by one of the identities, that identity is used, otherwise the first identity in the array will be used for any modifications.
 
 ## MapData
 

@@ -15,9 +15,9 @@ export type AnyMapSlugWithoutIdentity = z.infer<typeof anyMapSlugWithoutIdentity
 export const anyMapSlugValidator = mapSlugOrJwtValidator.or(z.object({
 	mapSlug: mapSlugOrJwtValidator,
 	password: z.string().optional(),
-	identity: z.string().optional()
+	identity: z.string().or(z.array(z.string())).optional()
 }));
-export type AnyMapSlug = z.infer<typeof anyMapSlugValidator>;
+export type AnyMapSlug = DeepReadonly<z.infer<typeof anyMapSlugValidator>>;
 
 export const pagingValidator = z.object({
 	start: z.coerce.number().int().min(0).default(() => 0),

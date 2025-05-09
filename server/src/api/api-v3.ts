@@ -123,7 +123,10 @@ export class ApiV3Backend implements Api<ApiVersion.V3, true> {
 		results: AsyncIterable<AllMapObjectsItem<Pick>>;
 	}> {
 		const rawMapData = await this.database.maps.createMap(data);
-		const activeLink = getMainAdminLink(rawMapData.links);
+		const activeLink = {
+			...getMainAdminLink(rawMapData.links),
+			identities: []
+		};
 		const mapData = stripMapData(activeLink, rawMapData);
 		const results = this.getMapObjects({ rawMapData, activeLink }, { ...options, pick: options?.pick ?? ["mapData", "types"] as Pick[] });
 		return { rawMapData, activeLink, mapData, results };
@@ -149,17 +152,17 @@ export class ApiV3Backend implements Api<ApiVersion.V3, true> {
 			delete update.links;
 		}
 
-		const result = await this.database.maps.updateMapData(mapData.id, update, { identity: activeLink.identity });
+		const result = await this.database.maps.updateMapData(mapData.id, update, { identities: activeLink.identities });
 
 		const newActiveLink = activeLink.id != null ? result.links.find((l) => l.id === activeLink.id) : undefined;
-		return stripMapData(newActiveLink ?? activeLink, result);
+		return stripMapData(newActiveLink ? { ...newActiveLink, identities: activeLink.identities } : activeLink, result);
 	}
 
 	async deleteMap(mapSlug: AnyMapSlug | RawActiveMapLink): Promise<void> {
 		const { mapData, activeLink } = await this.resolveMapSlug(mapSlug);
 		checkAdministrateMap(activeLink.permissions);
 
-		await this.database.maps.deleteMap(mapData.id, { identity: activeLink.identity });
+		await this.database.maps.deleteMap(mapData.id, { identities: activeLink.identities });
 	}
 
 	async getAllMapObjects<Pick extends AllMapObjectsPick = "mapData" | "markers" | "lines" | "linesWithTrackPoints" | "types" | "views">(mapSlug: AnyMapSlug | RawActiveMapLink, options?: { pick?: ReadonlyArray<Pick>; bbox?: BboxWithZoom }): Promise<AsyncIterable<AllMapObjectsItem<Pick>>> {
@@ -280,7 +283,7 @@ export class ApiV3Backend implements Api<ApiVersion.V3, true> {
 			}
 
 			const update = canAdministrateMap(activeLink.permissions) ? entry.objectBefore : omit(entry.objectBefore, ["links"]);
-			await this.database.maps.updateMapData(mapData.id, update, { identity: activeLink.identity });
+			await this.database.maps.updateMapData(mapData.id, update, { identities: activeLink.identities });
 			return;
 		} else if (!["Marker", "Line", "View", "Type"].includes(entry.type)) {
 			throw new Error(getI18n().t("database.unknown-type-error", { type: entry.type }));
@@ -355,12 +358,12 @@ export class ApiV3Backend implements Api<ApiVersion.V3, true> {
 
 	async createMarker(mapSlug: AnyMapSlug | RawActiveMapLink, data: Marker<CRU.CREATE_VALIDATED>, internalOptions?: { id?: ID }): Promise<Stripped<Marker>> {
 		const { mapData, activeLink } = await this.resolveMapSlug(mapSlug);
-		checkUpdateObject(activeLink.permissions, data.typeId, !!activeLink.identity);
+		checkUpdateObject(activeLink.permissions, data.typeId, activeLink.identities.length > 0);
 		const create = {
 			...data,
-			data: stripDataUpdate(activeLink, data.typeId, data.data, !!activeLink.identity)
+			data: stripDataUpdate(activeLink, data.typeId, data.data, activeLink.identities.length > 0)
 		};
-		const result = await this.database.markers.createMarker(mapData.id, create, { identity: activeLink.identity, ...internalOptions });
+		const result = await this.database.markers.createMarker(mapData.id, create, { identities: activeLink.identities, ...internalOptions });
 		return stripMarkerOrThrow(activeLink, result);
 	}
 
@@ -380,7 +383,7 @@ export class ApiV3Backend implements Api<ApiVersion.V3, true> {
 			...data,
 			...data.data ? { data: stripDataUpdate(activeLink, newType.id, data.data, isOwn(activeLink, originalRawMarker)) } : {}
 		};
-		const result = await this.database.markers._updateMarker(originalRawMarker, update, newType, { identity: activeLink.identity });
+		const result = await this.database.markers._updateMarker(originalRawMarker, update, newType, { identities: activeLink.identities });
 		return stripMarkerOrThrow(activeLink, result);
 	}
 
@@ -388,7 +391,7 @@ export class ApiV3Backend implements Api<ApiVersion.V3, true> {
 		const { activeLink, mapData } = await this.resolveMapSlug(mapSlug);
 		const rawMarker = await this.database.markers.getMarker(mapData.id, markerId, { notFound404: true });
 		checkManageObject(activeLink.permissions, rawMarker.typeId, isOwn(activeLink, rawMarker));
-		await this.database.markers._deleteMarker(rawMarker, { identity: activeLink.identity });
+		await this.database.markers._deleteMarker(rawMarker, { identities: activeLink.identities });
 	}
 
 	async* _getMapLines<IncludeTrackPoints extends boolean = false>(activeLink: RawActiveMapLink, options?: {
@@ -440,14 +443,14 @@ export class ApiV3Backend implements Api<ApiVersion.V3, true> {
 
 	async createLine(mapSlug: AnyMapSlug | RawActiveMapLink, data: Line<CRU.CREATE_VALIDATED>, internalOptions?: { id?: ID; trackPointsFromRoute?: Route & { trackPoints: AsyncIterable<TrackPoint> } }): Promise<Stripped<Line>> {
 		const { mapData, activeLink } = await this.resolveMapSlug(mapSlug);
-		checkUpdateObject(activeLink.permissions, data.typeId, activeLink.identity != null);
+		checkUpdateObject(activeLink.permissions, data.typeId, activeLink.identities.length > 0);
 		const create = {
 			...data,
-			data: stripDataUpdate(activeLink, data.typeId, data.data, activeLink.identity != null)
+			data: stripDataUpdate(activeLink, data.typeId, data.data, activeLink.identities.length > 0)
 		};
 		const result = await this.database.lines.createLine(mapData.id, create, {
 			...internalOptions,
-			identity: activeLink.identity
+			identities: activeLink.identities
 		});
 		return stripLineOrThrow(activeLink, result);
 	}
@@ -470,7 +473,7 @@ export class ApiV3Backend implements Api<ApiVersion.V3, true> {
 		};
 		const result = await this.database.lines._updateLine(originalRawLine, update, newType, {
 			trackPointsFromRoute,
-			identity: activeLink.identity
+			identities: activeLink.identities
 		});
 		return stripLineOrThrow(activeLink, result);
 	}
@@ -479,7 +482,7 @@ export class ApiV3Backend implements Api<ApiVersion.V3, true> {
 		const { activeLink, mapData } = await this.resolveMapSlug(mapSlug);
 		const rawLine = await this.database.lines.getLine(mapData.id, lineId, { notFound404: true });
 		checkManageObject(activeLink.permissions, rawLine.typeId, isOwn(activeLink, rawLine));
-		await this.database.lines._deleteLine(rawLine, { identity: activeLink.identity });
+		await this.database.lines._deleteLine(rawLine, { identities: activeLink.identities });
 	}
 
 	async exportLineAsGpx(mapSlug: AnyMapSlug | RawActiveMapLink, lineId: ID, options?: { rte?: boolean }): Promise<ExportResult> {
@@ -549,7 +552,7 @@ export class ApiV3Backend implements Api<ApiVersion.V3, true> {
 		checkConfigureMap(activeLink.permissions);
 		const rawType = await this.database.types.createType(mapData.id, data, {
 			...internalOptions,
-			identity: activeLink.identity
+			identities: activeLink.identities
 		});
 		return stripTypeOrThrow(activeLink, rawType);
 	}
@@ -559,7 +562,7 @@ export class ApiV3Backend implements Api<ApiVersion.V3, true> {
 		checkUpdateType(activeLink.permissions, typeId);
 		const rawType = await this.database.types.updateType(mapData.id, typeId, data, {
 			notFound404: true,
-			identity: activeLink.identity
+			identities: activeLink.identities
 		});
 		return stripTypeOrThrow(activeLink, rawType);
 	}
@@ -569,7 +572,7 @@ export class ApiV3Backend implements Api<ApiVersion.V3, true> {
 		checkUpdateType(activeLink.permissions, typeId);
 		await this.database.types.deleteType(mapData.id, typeId, {
 			notFound404: true,
-			identity: activeLink.identity
+			identities: activeLink.identities
 		});
 	}
 
@@ -598,7 +601,7 @@ export class ApiV3Backend implements Api<ApiVersion.V3, true> {
 		checkConfigureMap(activeLink.permissions);
 		const rawView = await this.database.views.createView(mapData.id, data, {
 			...internalOptions,
-			identity: activeLink.identity
+			identities: activeLink.identities
 		});
 		return stripViewOrThrow(activeLink, rawView);
 	}
@@ -608,7 +611,7 @@ export class ApiV3Backend implements Api<ApiVersion.V3, true> {
 		checkConfigureMap(activeLink.permissions);
 		const rawView = await this.database.views.updateView(mapData.id, viewId, data, {
 			notFound404: true,
-			identity: activeLink.identity
+			identities: activeLink.identities
 		});
 		return stripViewOrThrow(activeLink, rawView);
 	}
@@ -618,7 +621,7 @@ export class ApiV3Backend implements Api<ApiVersion.V3, true> {
 		checkConfigureMap(activeLink.permissions);
 		await this.database.views.deleteView(mapData.id, viewId, {
 			notFound404: true,
-			identity: activeLink.identity
+			identities: activeLink.identities
 		});
 	}
 

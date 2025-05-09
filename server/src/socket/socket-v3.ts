@@ -2,7 +2,7 @@ import { generateRandomId } from "../utils/utils.js";
 import { ChunkAggregationTransformStream, mapAsyncIterable, streamToIterable } from "../utils/streams.js";
 import { isInBbox } from "../utils/geo.js";
 import { exportLineToRouteGpx, exportLineToTrackGpx } from "../export/gpx.js";
-import { isEqual, omit, pull } from "lodash-es";
+import { isEqual, isEqualWith, omit, pull } from "lodash-es";
 import Database, { type DatabaseEvents } from "../database/database.js";
 import { type BboxWithZoom, SocketVersion, type SocketServerToClientEmitArgs, type EventName, type MapSlug, type StreamId, type StreamToStreamId, type StreamedResults, type SubscribeToMapPick, type Route, type BboxWithExcept, DEFAULT_PAGING, type ID, type AllMapObjectsItem, type AllMapObjectsPick, subscribeToMapDefaultPick, markStripped, type Type, type Line, type Marker, type Stripped, type AnyMapSlug, getMainAdminLink, type ExportResult, type ReplaceProperties, type SocketEventWithName, mapValues } from "facilmap-types";
 import { prepareForBoundingBox } from "../routing/routing.js";
@@ -433,16 +433,16 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 					sub = this.findMapSubscriptionData(mapSlug, false); // Another request might have created a subscription in the meantime
 				}
 
-				const identityBefore = sub ? sub.mapLink.identity : undefined;
+				const identityBefore = sub ? sub.mapLink.identities : undefined;
 				const pickBefore = sub?.pick;
 				if (sub) {
 					Object.assign(sub, { pick, history });
 					if (typeof identity !== "undefined") {
 						if (identity == null) {
-							sub.mapLink.identity = undefined;
+							sub.mapLink.identities = [];
 						} else {
 							const { rawMapData } = await this.api.resolveMapSlug(sub.mapLink);
-							sub.mapLink.identity = getIdentityHash(identity, rawMapData.salt);
+							sub.mapLink.identities = (typeof identity === "string" ? [identity] : identity).map((i) => getIdentityHash(i, rawMapData.salt));
 						}
 					}
 				} else {
@@ -455,7 +455,10 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 					this.registerDatabaseHandlers();
 				}
 
-				const identityChanged = (identityBefore == null) !== (sub.mapLink.identity == null) || (identityBefore != null && sub.mapLink.identity != null && !identityBefore.equals(sub.mapLink.identity));
+				const identityChanged = (
+					identityBefore == null ? sub.mapLink.identities.length > 0 :
+					isEqualWith(identityBefore, sub.mapLink.identities, (a, b) => a instanceof Buffer || b instanceof Buffer ? (a instanceof Buffer && b instanceof Buffer && a.equals(b)) : undefined)
+				);
 
 				const newPick = pickBefore ? pick.filter((p) => !pickBefore.includes(p) || (identityChanged && ["markers", "lines"].includes(p))) : pick;
 				const results = await this.api.getAllMapObjects(sub.mapLink, {
@@ -486,13 +489,14 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 				if (!this.mapSubscriptionDetails[activeLink.mapId]) {
 					this.mapSubscriptionDetails[activeLink.mapId] = [];
 				}
+				const identities = typeof identity === "string" ? [identity] : identity ? identity : [];
 				this.mapSubscriptionDetails[activeLink.mapId].push({
 					pick,
 					history,
 					mapSlug: activeLink.slug,
 					mapLink: {
 						...activeLink,
-						identity: identity != null ? getIdentityHash(identity, rawMapData.salt) : undefined
+						identities: identities.map((i) => getIdentityHash(i, rawMapData.salt))
 					}
 				});
 				this.registerDatabaseHandlers();
@@ -672,7 +676,7 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 								// updateMap() to the new map slug, so we can find it here. If another socket
 								// connection caused the change, we unsubscribe here if the old map slug does
 								// not exist anymore.
-								sub.mapLink = resolveMapLink(sub.mapSlug, sub.mapLink.password, sub.mapLink.identity, data);
+								sub.mapLink = resolveMapLink(sub.mapSlug, sub.mapLink.password, sub.mapLink.identities, data);
 							} catch (err: any) {
 								void this.emit("cancelMapSubscription", sub.mapSlug, err);
 								unsubscribe.push(sub.mapSlug);

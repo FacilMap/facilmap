@@ -54,10 +54,10 @@
 			) {
 				const mapId = storage.maps[args[1]].mapData!.id;
 				const mapLinkId = storage.maps[args[1]].mapData!.activeLink.id;
-				const identity = client.mapSubscriptions[args[1]].options.identity!;
+				const identities = client.mapSubscriptions[args[1]].options.identity as ReadonlyArray<string>;
 				const mapSlugHash = await getStorageSlugHash(args[1]);
 				if (storage.maps[args[1]].mapData) {
-					storeIdentity({ mapId, mapSlugHash, mapLinkId }, identity, true);
+					storeIdentity({ mapId, mapSlugHash, mapLinkId }, identities, true);
 				}
 			}
 		});
@@ -137,7 +137,7 @@
 
 	async function subscribeToMap(mapSlug: MapSlug, password?: string) {
 		const mapSlugHash = await getStorageSlugHash(mapSlug);
-		const identity = getIdentityForMapSlugHash(mapSlugHash) ?? createIdentity();
+		const identity = getIdentityForMapSlugHash(mapSlugHash) ?? [createIdentity()];
 		const subscription = clientContext.value.client.subscribeToMap({ mapSlug, password }, { identity });
 		await setSubscription(subscription);
 

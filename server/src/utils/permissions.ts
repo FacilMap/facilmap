@@ -26,7 +26,7 @@ export type RawActiveMapLink = (
 			slugHash: string;
 		})
 	) & {
-		identity?: Buffer;
+		identities: Buffer[];
 	}
 );
 
@@ -149,7 +149,7 @@ export function stripMarkerOrThrow<M extends Optional<RawMarker, "id" | "mapId">
 	return markStripped({
 		...omit(marker, ["identity"]),
 		data: stripData(link, marker.typeId, marker.data, own),
-		own: link.identity != null && marker.identity != null && link.identity.equals(marker.identity)
+		own: isOwn(link, marker)
 	});
 }
 
@@ -164,7 +164,7 @@ export function stripLineOrThrow<L extends Optional<RawLine, "id" | "mapId">>(li
 	return markStripped({
 		...omit(line, ["identity"]),
 		data: stripData(link, line.typeId, line.data, own),
-		own: link.identity != null && line.identity != null && link.identity.equals(line.identity)
+		own: isOwn(link, line)
 	});
 }
 
@@ -257,7 +257,7 @@ export function stripHistoryEntry(link: RawActiveMapLink, entry: RawHistoryEntry
 export async function resolveMapLinkAsync(
 	mapSlug: MapSlug,
 	password: Buffer | string | null | undefined,
-	identity: Buffer | string | undefined,
+	identity: Buffer | string | ReadonlyArray<Buffer | string> | undefined,
 	getMapDataById: (mapId: ID) => Promise<RawMapData>,
 	getMapDataBySlug: (mapSlug: MapSlug) => Promise<RawMapData>
 ): Promise<{ rawMapData: RawMapData; activeLink: RawActiveMapLink }> {
@@ -268,17 +268,18 @@ export async function resolveMapLinkAsync(
 	} else {
 		rawMapData = await getMapDataBySlug(mapSlug);
 	}
-	const [passwordHash, identityHash] = await Promise.all([
+	const identities = Array.isArray(identity) ? identity as ReadonlyArray<Buffer | string> : identity ? [identity as Buffer | string] : [];
+	const [passwordHash, identityHashes] = await Promise.all([
 		typeof password === "string" ? await getPasswordHash(password, rawMapData.salt) : (password ?? null),
-		typeof identity === "string" ? getIdentityHash(identity, rawMapData.salt) : identity
+		identities.map((i) => typeof i === "string" ? getIdentityHash(i, rawMapData.salt) : i)
 	]);
 	return {
 		rawMapData,
-		activeLink: resolveMapLink(mapSlug, passwordHash, identityHash, rawMapData)
+		activeLink: resolveMapLink(mapSlug, passwordHash, identityHashes, rawMapData)
 	};
 }
 
-export function resolveMapLink(mapSlug: MapSlug, password: Buffer | null, identity: Buffer | undefined, rawMapData: RawMapData): RawActiveMapLink {
+export function resolveMapLink(mapSlug: MapSlug, password: Buffer | null, identities: Buffer[], rawMapData: RawMapData): RawActiveMapLink {
 	let links;
 	if (isMapToken(mapSlug)) {
 		const token = verifyMapToken(mapSlug, rawMapData.jwtSecret);
@@ -294,9 +295,10 @@ export function resolveMapLink(mapSlug: MapSlug, password: Buffer | null, identi
 					comment: "",
 					password: token.passwordHash ? null : link.password,
 					searchEngines: false,
-					permissions: mergeMapPermissions(link.permissions, token.permissions),
+					permissions: { ...mergeMapPermissions(link.permissions, token.permissions), admin: false },
 					slugHash: token.slugHash,
-					parent: link
+					parent: link,
+					identities
 				}] satisfies RawActiveMapLink[];
 			} else {
 				return [];
@@ -324,10 +326,15 @@ export function resolveMapLink(mapSlug: MapSlug, password: Buffer | null, identi
 	}
 	return {
 		...activeLink,
-		identity
+		identities
 	};
 }
 
 export function isOwn(link: RawActiveMapLink, object: { identity: Buffer | null }): boolean {
-	return link.identity != null && object.identity != null && link.identity.equals(object.identity);
+	return object.identity != null && link.identities.some((i) => i.equals(object.identity!));
+}
+
+export function pickIdentity(identities: Buffer[], object?: { identity: Buffer | null }): Buffer | null {
+	const match = object?.identity && identities.find((i) => i.equals(object.identity!));
+	return match ?? (identities.length > 0 ? identities[0] : null);
 }

@@ -5,7 +5,7 @@ import { calculateRouteForLine } from "../routing/routing.js";
 import { resolveCreateLine, resolveUpdateLine } from "facilmap-utils";
 import { getI18n } from "../i18n.js";
 import type DatabaseLinesBackend from "../database-backend/line.js";
-import type { RawLine } from "../utils/permissions.js";
+import { pickIdentity, type RawLine } from "../utils/permissions.js";
 import { iterableToStream, streamToIterable } from "json-stream-es";
 import { ChunkAggregationTransformStream, queueAsyncIterable } from "../utils/streams.js";
 
@@ -45,7 +45,7 @@ export default class DatabaseLines {
 	async createLine(mapId: ID, data: Line<CRU.CREATE_VALIDATED>, options: {
 		id?: ID;
 		trackPointsFromRoute?: Route & { trackPoints: AsyncIterable<TrackPoint> };
-		identity: Buffer | undefined;
+		identities: Buffer[];
 	}): Promise<RawLine> {
 		const type = await this.db.types.getType(mapId, data.typeId);
 		if (type.type !== "line") {
@@ -56,10 +56,11 @@ export default class DatabaseLines {
 
 		const { trackPoints, ...routeInfo } = options?.trackPointsFromRoute ?? await calculateRouteForLine(resolvedData);
 
+		const identity = pickIdentity(options.identities);
 		const createdLine = await this.backend.createLine(mapId, {
 			...omit({ ...resolvedData, ...routeInfo }, "trackPoints" /* Part of data if mode is track */),
 			...options?.id ? { id: options.id } : {},
-			identity: options.identity ?? null
+			identity
 		});
 
 		// We have to emit this before calling _setLinePoints so that this event is sent to the client first
@@ -69,7 +70,7 @@ export default class DatabaseLines {
 			this.db.history.addHistoryEntry(mapId, {
 				type: "Line",
 				action: "create",
-				identity: options.identity ?? null,
+				identity,
 				objectId: createdLine.id,
 				objectAfter: createdLine
 			}),
@@ -83,7 +84,7 @@ export default class DatabaseLines {
 		trackPointsFromRoute?: Route & { trackPoints: AsyncIterable<TrackPoint> };
 		notFound404?: boolean;
 		noHistory?: boolean;
-		identity: Buffer | undefined;
+		identities: Buffer[];
 	}): Promise<RawLine> {
 		const originalLine = await this.getLine(mapId, lineId, { notFound404: options?.notFound404 });
 		const newType = await this.db.types.getType(mapId, data.typeId ?? originalLine.typeId);
@@ -94,7 +95,7 @@ export default class DatabaseLines {
 		trackPointsFromRoute?: Route & { trackPoints: AsyncIterable<TrackPoint> };
 		notFound404?: boolean;
 		noHistory?: boolean;
-		identity: Buffer | undefined;
+		identities: Buffer[];
 	}): Promise<RawLine> {
 		const { mapId, id: lineId } = originalLine;
 
@@ -119,7 +120,7 @@ export default class DatabaseLines {
 				await this.db.history.addHistoryEntry(mapId, {
 					type: "Line",
 					action: "update",
-					identity: options.identity ?? null,
+					identity: pickIdentity(options.identities, originalLine),
 					objectId: lineId,
 					objectBefore: originalLine,
 					objectAfter: newLine
@@ -154,21 +155,21 @@ export default class DatabaseLines {
 
 	async deleteLine(mapId: ID, lineId: ID, options: {
 		notFound404?: boolean;
-		identity: Buffer | undefined;
+		identities: Buffer[];
 	}): Promise<RawLine> {
 		const oldLine = await this.getLine(mapId, lineId, options);
 		await this._deleteLine(oldLine, options);
 		return oldLine;
 	}
 
-	async _deleteLine(line: RawLine, options: { identity: Buffer | undefined }): Promise<void> {
+	async _deleteLine(line: RawLine, options: { identities: Buffer[] }): Promise<void> {
 		await this.setLinePoints(line.mapId, line, [ ], true);
 		await this.backend.deleteLine(line.mapId, line.id);
 		this.db.emit("deleteLine", line.mapId, line);
 		await this.db.history.addHistoryEntry(line.mapId, {
 			type: "Line",
 			action: "delete",
-			identity: options.identity ?? null,
+			identity: pickIdentity(options.identities, line),
 			objectId: line.id,
 			objectBefore: line
 		});

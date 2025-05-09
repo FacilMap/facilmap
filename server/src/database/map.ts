@@ -107,7 +107,7 @@ export default class DatabaseMaps {
 	async updateMapData(
 		mapId: ID,
 		data: ReplaceProperties<MapData<CRU.UPDATE_VALIDATED>, { links?: Array<ReplaceProperties<MapLink<CRU.CREATE_VALIDATED | CRU.UPDATE_VALIDATED>, { password: string | boolean | Buffer }>> }>,
-		options: { identity: Buffer | undefined }
+		options: { identities: Buffer[] }
 	): Promise<RawMapData> {
 		const oldData = await this.getMapData(mapId);
 
@@ -166,7 +166,7 @@ export default class DatabaseMaps {
 		await this.db.history.addHistoryEntry(mapId, {
 			type: "Map",
 			action: "update",
-			identity: options.identity ?? null,
+			identity: options.identities.length > 0 ? options.identities[0] : null,
 			objectBefore: omit(oldData, ["salt", "jwtSecret", "nextFieldId"]),
 			objectAfter: omit(newData, ["salt", "jwtSecret", "nextFieldId"])
 		});
@@ -175,7 +175,7 @@ export default class DatabaseMaps {
 		return newData;
 	}
 
-	async deleteMap(mapId: ID, options: { identity: Buffer | undefined }): Promise<void> {
+	async deleteMap(mapId: ID, options: { identities: Buffer[] }): Promise<void> {
 		const mapData = await this.getMapData(mapId);
 
 		if (!mapData) {

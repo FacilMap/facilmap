@@ -11,13 +11,13 @@ export async function getStorageSlugHash(mapSlug: MapSlug): Promise<string> {
 	return encodeBase64Url(new Uint8Array(hash)).slice(0, 16);
 }
 
-export function getIdentityForMapSlugHash(mapSlugHash: string): string | undefined {
+export function getIdentityForMapSlugHash(mapSlugHash: string): ReadonlyArray<string> | undefined {
 	const res = entries(storage.identities).find(([mapId, i]) => i.links.some((l) => l.slug === mapSlugHash));
-	return res ? res[1].identity : undefined;
+	return res ? res[1].identities : undefined;
 }
 
-export function getIdentityForMapId(mapId: ID): string | undefined {
-	return storage.identities[mapId]?.identity;
+export function getIdentityForMapId(mapId: ID): ReadonlyArray<string> | undefined {
+	return storage.identities[mapId]?.identities;
 }
 
 /**
@@ -28,7 +28,7 @@ export function getIdentityForMapId(mapId: ID): string | undefined {
  */
 export function storeIdentity(
 	context: { mapId: ID; mapSlugHash: string; mapLinkId: ID | undefined },
-	identity: string,
+	identities: ReadonlyArray<string>,
 	force: boolean
 ): void {
 	let linkExists = false;
@@ -48,9 +48,9 @@ export function storeIdentity(
 	}
 
 	if (storage.identities[context.mapId]) {
-		storage.identities[context.mapId].identity = identity;
+		storage.identities[context.mapId].identities = [...identities];
 	} else if (force) {
-		storage.identities[context.mapId] = { identity, links: [] };
+		storage.identities[context.mapId] = { identities: [...identities], links: [] };
 	} else {
 		return;
 	}
