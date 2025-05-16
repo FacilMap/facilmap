@@ -457,10 +457,10 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 
 				const identityChanged = (
 					identityBefore == null ? sub.mapLink.identities.length > 0 :
-					isEqualWith(identityBefore, sub.mapLink.identities, (a, b) => a instanceof Buffer || b instanceof Buffer ? (a instanceof Buffer && b instanceof Buffer && a.equals(b)) : undefined)
+					!isEqualWith(identityBefore, sub.mapLink.identities, (a, b) => a instanceof Buffer || b instanceof Buffer ? (a instanceof Buffer && b instanceof Buffer && a.equals(b)) : undefined)
 				);
 
-				const newPick = pickBefore ? pick.filter((p) => !pickBefore.includes(p) || (identityChanged && ["markers", "lines"].includes(p))) : pick;
+				const newPick = pickBefore ? pick.filter((p) => !pickBefore.includes(p) || (identityChanged && ["markers", "lines", "linePoints"].includes(p))) : pick;
 				const results = await this.api.getAllMapObjects(sub.mapLink, {
 					pick: this.bbox ? newPick : newPick.filter((p) => !["markers", "linePoints"].includes(p)),
 					bbox: this.bbox

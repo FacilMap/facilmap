@@ -6,12 +6,7 @@ import { SocketClientSubscription, type SubscriptionState } from "./socket-clien
 
 type SocketClientMapSubscriptionInterface = Omit<{
 	[K in keyof SocketApi<SocketVersion.V3, false> as AnyMapSlug extends Parameters<SocketApi<SocketVersion.V3, false>[K]>[0] ? K : never]: (
-		Parameters<SocketApi<SocketVersion.V3, false>[K]> extends [any, ...infer Rest] ? (...args: Rest) => ReturnType<SocketApi<SocketVersion.V3, false>[K]> : never
-
-		// This would be simpler:
-		// SocketApi<SocketVersion.V3, false>[K] extends (mapSlug: MapSlug, ...args: infer Args) => (...args: Args) => Result : never;
-		// but it does not work and infers Args to never if it is a union.
-		// This seems to be a TypeScript bug, reported here: https://github.com/microsoft/TypeScript/issues/48663#issuecomment-2187713647
+		SocketApi<SocketVersion.V3, false>[K] extends (mapSlug: MapSlug, ...args: infer Args) => infer Result ? (...args: Args) => Result : never
 	)
 }, "subscribeToMap">;
 
@@ -64,8 +59,9 @@ export class SocketClientMapSubscription extends SocketClientSubscription<MapSub
 		await this.client._subscribeToMap(this.anyMapSlug, this.data.options);
 	}
 
-	async updateSubscription(options: DeepReadonly<SubscribeToMapOptions>): Promise<void> {
-		this.reactiveObjectProvider.set(this.data, "options", options);
+	async updateSubscription(options: DeepReadonly<Partial<SubscribeToMapOptions>>): Promise<void> {
+		console.trace("updateSubscription", options);
+		this.reactiveObjectProvider.set(this.data, "options", { ...this.data.options, ...options });
 		await this._doSubscribe();
 	}
 

@@ -48,15 +48,16 @@
 			// opened).
 			if (
 				(args[0].startsWith("create") || args[0].startsWith("update") || args[0].startsWith("delete") || args[0].startsWith("revert"))
-				&& typeof args[1] === "string"
-				&& client.mapSubscriptions[args[1]]?.options.identity != null
-				&& storage.maps[args[1]].mapData
+				&& typeof args[1].args[0] === "string"
+				&& client.mapSubscriptions[args[1].args[0]]?.options.identity != null
+				&& storage.maps[args[1].args[0]].mapData
 			) {
-				const mapId = storage.maps[args[1]].mapData!.id;
-				const mapLinkId = storage.maps[args[1]].mapData!.activeLink.id;
-				const identities = client.mapSubscriptions[args[1]].options.identity as ReadonlyArray<string>;
-				const mapSlugHash = await getStorageSlugHash(args[1]);
-				if (storage.maps[args[1]].mapData) {
+				console.log("store identity");
+				const mapId = storage.maps[args[1].args[0]].mapData!.id;
+				const mapLinkId = storage.maps[args[1].args[0]].mapData!.activeLink.id;
+				const identities = client.mapSubscriptions[args[1].args[0]].options.identity as ReadonlyArray<string>;
+				const mapSlugHash = await getStorageSlugHash(args[1].args[0]);
+				if (storage.maps[args[1].args[0]].mapData) {
 					storeIdentity({ mapId, mapSlugHash, mapLinkId }, identities, true);
 				}
 			}

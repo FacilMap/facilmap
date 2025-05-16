@@ -39,8 +39,8 @@ export class SocketClientRouteSubscription extends SocketClientSubscription<Rout
 		await this.client._subscribeToRoute(this.data.routeKey, this.data.options);
 	}
 
-	async updateSubscription(options: SubscribeToRouteOptions): Promise<void> {
-		this.reactiveObjectProvider.set(this.data, "options", options);
+	async updateSubscription(options: Partial<SubscribeToRouteOptions>): Promise<void> {
+		this.reactiveObjectProvider.set(this.data, "options", { ...this.data.options, options });
 		await this._subscribe();
 	}
 
