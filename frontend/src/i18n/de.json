@@ -370,7 +370,9 @@
         "gpx-track-tooltip": "GPX-Dateien können mit den meisten Navigationsprogrammen geöffnet werden. Im Track-Modus wird die berechnete Route in der exportierten Datei gespeichert.",
         "gpx-track-label": "Als GPX-Track exportieren",
         "gpx-route-tooltip": "GPX-Dateien können mit den meisten Navigationsprogrammen geöffnet werden. Im Route-Modus werden nur die Wegpunkte der Route in der exportierten Datei gespeichert; die importierende Software muss die Route selbst berechnen.",
-        "gpx-route-label": "Als GPX-Route exportieren"
+        "gpx-route-label": "Als GPX-Route exportieren",
+        "geojson-tooltip": "GeoJSON-Dateien werden oft in Programmen benutzt, die geografische Daten anzeigen oder analysieren.",
+        "geojson-label": "Export als GeoJSON"
     },
     "file-results": {
         "import-view-error": "Fehler beim Importieren der Ansicht",
