@@ -1,6 +1,8 @@
 import { type DeepReadonly, toRef, ref, readonly, watch } from "vue";
 import { useDomEventListener, type AnyRef } from "./utils";
 
+const MOVE_THRESHOLD = 1;
+
 export type DragData<CustomData> = {
 	deltaX: number;
 	deltaY: number;
@@ -64,7 +66,15 @@ export function useDrag<CustomData>(element: AnyRef<HTMLElement | undefined>, ha
 
 	useDomEventListener(elementRef, "pointermove", (e) => {
 		if (dragData.value && e.pointerId === dragData.value.pointerId) {
+			const deltaX = e.clientX - dragData.value.startX;
+			const deltaY = e.clientY - dragData.value.startY;
+
 			if (!dragData.value.started) {
+				if ((deltaX ** 2) + (deltaY ** 2) < MOVE_THRESHOLD ** 2) {
+					dragData.value.lastTime = new Date().getTime();
+					return;
+				}
+
 				elementRef.value!.setPointerCapture(e.pointerId);
 				Object.assign(dragData.value, {
 					customData: handlers.onDragStart?.(),
@@ -72,8 +82,6 @@ export function useDrag<CustomData>(element: AnyRef<HTMLElement | undefined>, ha
 				});
 			}
 
-			const deltaX = e.clientX - dragData.value.startX;
-			const deltaY = e.clientY - dragData.value.startY;
 			const time = new Date().getTime();
 			const timeDelta = time - dragData.value.lastTime;
 
