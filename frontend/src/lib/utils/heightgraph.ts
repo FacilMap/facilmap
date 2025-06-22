@@ -112,7 +112,7 @@ export function createElevationStats(extraInfo: DeepReadonly<ExtraInfo> | undefi
 }
 
 export default class FmHeightgraph extends Control.Heightgraph {
-	private translatedMapping: Record<"steepness" | "waytypes" | "surface" | "suitablity" | "green" | "noise" | "tollways" | "avgspeed" | "traildifficulty" | "roadaccessrestrictions", string>;
+	private translatedMapping: Record<"steepness" | "waytype" | "surface" | "suitablity" | "green" | "noise" | "tollways" | "avgspeed" | "traildifficulty" | "roadaccessrestrictions", string>;
 
 	constructor(options?: any) {
 		// Consume current units in constructor to mark it as a reactive dependency
@@ -121,7 +121,7 @@ export default class FmHeightgraph extends Control.Heightgraph {
 		const i18n = getI18n();
 		const translatedMapping: typeof FmHeightgraph["translatedMapping"] = {
 			steepness: i18n.t("heightgraph.steepness"),
-			waytypes: i18n.t("heightgraph.waytypes"),
+			waytype: i18n.t("heightgraph.waytype"),
 			surface: i18n.t("heightgraph.surface"),
 			suitablity: i18n.t("heightgraph.suitability"),
 			green: i18n.t("heightgraph.green"),
@@ -163,7 +163,7 @@ export default class FmHeightgraph extends Control.Heightgraph {
 					"4": { text: "10–15 %", color: "#BE312F" },
 					"5": { text: "16 % +", color: "#AD0F0C" }
 				},
-				[translatedMapping.waytypes]: {
+				[translatedMapping.waytype]: {
 					"0": { text: i18n.t("heightgraph.waytype-other"), color: "#30959e" },
 					"1": { text: i18n.t("heightgraph.waytype-state-road"), color: "#3f9da6" },
 					"2": { text: i18n.t("heightgraph.waytype-road"), color: "#4ea5ae" },
