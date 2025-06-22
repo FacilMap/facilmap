@@ -398,7 +398,7 @@
         "type": "Type",
         "legend": "Legend",
         "steepness": "Steepness",
-        "waytypes": "Road types",
+        "waytype": "Road type",
         "surface": "Surface",
         "suitablity": "Suitability",
         "green": "Green",
