@@ -3468,6 +3468,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"epsg@npm:^0.5.0":
+  version: 0.5.0
+  resolution: "epsg@npm:0.5.0"
+  checksum: 0c1f2da163138a206f845af9d48fd8c5b3d82900b6f81a8344a419b68a5a6c36d6d2ed3daaa23f8c2fcf3d29710a21e2ca343717c95574cd420eb799ce4a298b
+  languageName: node
+  linkType: hard
+
 "err-code@npm:^2.0.2":
   version: 2.0.3
   resolution: "err-code@npm:2.0.3"
@@ -4118,6 +4125,7 @@ __metadata:
     bootstrap: ^5.3.3
     copy-to-clipboard: ^3.3.3
     decode-uri-component: ^0.4.1
+    epsg: ^0.5.0
     facilmap-client: "workspace:^"
     facilmap-leaflet: "workspace:^"
     facilmap-types: "workspace:^"
@@ -4142,6 +4150,7 @@ __metadata:
     p-throttle: ^7.0.0
     pluralize: ^8.0.0
     popper-max-size-modifier: ^0.2.0
+    proj4: ^2.19.7
     qrcode.vue: ^3.6.0
     rimraf: ^6.0.1
     sass: ^1.85.1
@@ -6054,6 +6063,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"mgrs@npm:1.0.0":
+  version: 1.0.0
+  resolution: "mgrs@npm:1.0.0"
+  checksum: 98b9fa3caff9986868344567996f8dcc833f939c2e140507a00e2ce9a96ef7eaeb81933a749222a2b7bcbc1a4bb6ada6120dda3a5b6af6d72ae332d8990956b9
+  languageName: node
+  linkType: hard
+
 "micromatch@npm:^4.0.5, micromatch@npm:^4.0.8":
   version: 4.0.8
   resolution: "micromatch@npm:4.0.8"
@@ -7114,6 +7130,16 @@ __metadata:
   version: 0.11.10
   resolution: "process@npm:0.11.10"
   checksum: bfcce49814f7d172a6e6a14d5fa3ac92cc3d0c3b9feb1279774708a719e19acd673995226351a082a9ae99978254e320ccda4240ddc474ba31a76c79491ca7c3
+  languageName: node
+  linkType: hard
+
+"proj4@npm:^2.19.7":
+  version: 2.19.7
+  resolution: "proj4@npm:2.19.7"
+  dependencies:
+    mgrs: 1.0.0
+    wkt-parser: ^1.5.1
+  checksum: fb8a9b0fbc2666fc21fbb6daa39e3a532d39766dd84997091c6bec020d2d97576236c287e8d46ec8d579ff4882ea6b3cf011a0073422d28c092883851c87fe0f
   languageName: node
   linkType: hard
 
@@ -9144,6 +9170,13 @@ __metadata:
   bin:
     why-is-node-running: cli.js
   checksum: 58ebbf406e243ace97083027f0df7ff4c2108baf2595bb29317718ef207cc7a8104e41b711ff65d6fa354f25daa8756b67f2f04931a4fd6ba9d13ae8197496fb
+  languageName: node
+  linkType: hard
+
+"wkt-parser@npm:^1.5.1":
+  version: 1.5.2
+  resolution: "wkt-parser@npm:1.5.2"
+  checksum: 0055b11008bf47c390ae7c517ee3e2aa093b0c1149c8039c2d86d3dd3d33908e3ead31839addfbcd3fa4abf035348fc192cfae985296848f8eb6644c810108c9
   languageName: node
   linkType: hard
 

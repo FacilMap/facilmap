@@ -1,3 +1,4 @@
+import { ref, watchEffect } from "vue";
 import { getI18n } from "./i18n";
 import type { CustomLink } from "./storage";
 import storage from "./storage";
@@ -114,6 +115,23 @@ export function setExternalLinksSetting(links: ExternalLinkSetting[]): void {
 	storage.customLinks = cloneDeep(links.filter((l) => !isPresetLink(l)));
 }
 
+const POS_PLACEHOLDER_MATCH = /%(LAT|LON)(\d+)?%/g;
+const ZOOM_PLACEHOLDER_MATCH = /%ZOOM(?:([-+])(\d+))?%/g;
+
+let projLoaded = false;
+const proj = ref<{ proj4: (typeof import("proj4"))["default"]; epsg: (typeof import("epsg"))["default"] }>();
+watchEffect(() => {
+	if (!projLoaded) {
+		const allUrls = getExternalLinksSetting().flatMap((l) => [l.map, l.marker]).filter((u) => u.trim() !== "");
+		if (allUrls.some((u) => [...u.matchAll(POS_PLACEHOLDER_MATCH)].some((m) => m[2]))) {
+			projLoaded = true;
+			Promise.all([import("proj4"), import("epsg")]).then(([{ default: proj4 }, { default: epsg }]) => {
+				proj.value = { proj4, epsg };
+			}).catch(console.error);
+		}
+	}
+});
+
 export type ExternalLink = {
 	key: string;
 	label: string;
@@ -124,7 +142,7 @@ export type ExternalLink = {
 export function getExternalLinks(data: { lat: number; lon: number; zoom?: number }, type: "map" | "marker", hideCommercial: boolean): ExternalLink[] {
 	const lat = data.lat.toFixed(5);
 	const lon = data.lon.toFixed(5);
-	const zoom = `${data.zoom ?? 12}`;
+	const zoom = data.zoom ?? 12;
 
 	return getExternalLinksSetting().flatMap((l) => {
 		const url = l[type].trim();
@@ -132,11 +150,34 @@ export function getExternalLinks(data: { lat: number; lon: number; zoom?: number
 			return [];
 		}
 
-		return [{
-			key: l.key,
-			label: l.label,
-			href: url.replaceAll("%LAT%", lat).replaceAll("%LON%", lon).replaceAll("%ZOOM%", zoom),
-			target: url.startsWith("geo:") ? "" : "_blank"
-		}];
+		let hasUnknown = false;
+		const href = url.replaceAll(POS_PLACEHOLDER_MATCH, (m, type, code) => {
+			if (!code) {
+				return type === "LAT" ? lat : lon;
+			} else if (proj.value && proj.value.epsg[`EPSG:${code}`]) {
+				const result = proj.value.proj4(proj.value.epsg[`EPSG:${code}`], [Number(lon), Number(lat)]);
+				return `${result[type === "LAT" ? 1 : 0]}`;
+			} else {
+				hasUnknown = true;
+				return "";
+			}
+		}).replaceAll(ZOOM_PLACEHOLDER_MATCH, (m, operator, number) => {
+			if (operator && number) {
+				return `${zoom + (operator === "-" ? -1 : 1) * Number(number)}`;
+			} else {
+				return `${zoom}`;
+			}
+		});
+
+		if (hasUnknown) {
+			return [];
+		} else {
+			return [{
+				key: l.key,
+				label: l.label,
+				href,
+				target: href.startsWith("geo:") ? "" : "_blank"
+			}];
+		}
 	});
 }

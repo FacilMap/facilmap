@@ -12,3 +12,8 @@ declare module "@tmcw/togeojson" {
 }
 
 declare const __FM_VERSION__: string;
+
+declare module "epsg" {
+	declare const epsg: Record<string, string>;
+	export default epsg;
+}
