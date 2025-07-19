@@ -11,6 +11,7 @@
 	import { useImmutableModel } from "../../utils/vue";
 	import { markdownInline } from "facilmap-utils";
 	import vTooltip from "../../utils/tooltip";
+	import HelpPopover from "../ui/help-popover.vue";
 
 	const i18n = useI18n();
 	const context = injectContextRequired();
@@ -85,7 +86,32 @@
 		<hr class="mt-2" />
 		<h5>{{i18n.t("user-preferences-dialog.external-links")}}</h5>
 
-		<p v-html="markdownInline(i18n.t('user-preferences-dialog.external-links-description'), true)"></p>
+		<p>
+			<span v-html="markdownInline(i18n.t('user-preferences-dialog.external-links-description'), true)"></span>
+			<HelpPopover>
+				<p>{{i18n.t("user-preferences-dialog.external-links-placeholders")}}</p>
+				<table class="table table-condensed table-striped">
+					<tbody>
+						<tr>
+							<th><code>%LAT%</code>, <code>%LON%</code></th>
+							<td v-html="markdownInline(i18n.t('user-preferences-dialog.external-links-placeholder-coords'), true)"></td>
+						</tr>
+						<tr>
+							<th><code>%LAT#####%</code>,<br /><code>%LON#####%</code></th>
+							<td v-html="markdownInline(i18n.t('user-preferences-dialog.external-links-placeholder-coords-proj'), true)"></td>
+						</tr>
+						<tr>
+							<th><code>%ZOOM%</code></th>
+							<td v-html="markdownInline(i18n.t('user-preferences-dialog.external-links-placeholder-zoom'), true)"></td>
+						</tr>
+						<tr>
+							<th><code>%ZOOM+#%</code>,<br /><code>%ZOOM-#%</code></th>
+							<td v-html="markdownInline(i18n.t('user-preferences-dialog.external-links-placeholder-zoom-modified'), true)"></td>
+						</tr>
+					</tbody>
+				</table>
+			</HelpPopover>
+		</p>
 
 		<table class="table table-condensed table-striped">
 			<thead>

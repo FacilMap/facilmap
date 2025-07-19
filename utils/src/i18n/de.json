@@ -24,7 +24,7 @@
         "language-ru": "Russian",
         "language-ta": "Tamil",
         "language-zh-hant": "Chinesisch (traditionell)"
-	},
+    },
     "objects": {
         "untitled-marker": "Unbenannter Marker",
         "untitled-line": "Unbenannte Linie"
@@ -69,6 +69,9 @@
         "way": "Linie {{id}}",
         "way-with-name": "Linie {{id}} ({{name}})",
         "relation": "Relation {{id}}",
-        "relation-with-name": "Relation {{id}} ({{name}})"
+        "relation-with-name": "Relation {{id}} ({{name}})",
+        "feature-with-name-role": "{{feature}} ({{name}}, Rolle: {{role}})",
+        "feature-with-name": "{{feature}} ({{name}})",
+        "feature-with-role": "{{feature}} (Rolle: {{role}})"
     }
 }
