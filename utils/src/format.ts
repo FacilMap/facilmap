@@ -72,8 +72,7 @@ export function markdownBlock(string: string, html: boolean): string {
 export function markdownInline(string: string, html: boolean): string {
 	const $ = load("<div/>");
 	const el = $.root();
-	el.html(purify.sanitize(marked(string, markdownOptions) as string));
-	$("p", el).replaceWith(function() { return $(this).contents(); });
+	el.html(purify.sanitize(marked.parseInline(string, markdownOptions) as string));
 	applyMarkdownModifications(el);
 	return html ? el.html()! : getTextContent(el);
 }
