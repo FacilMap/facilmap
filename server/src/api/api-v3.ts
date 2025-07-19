@@ -646,16 +646,16 @@ export class ApiV3Backend implements Api<ApiVersion.V3, true> {
 // Declaring the API this way is a bit awkward compared to setting up an Express router directly, but it has the advantage
 // that we can be sure to not forget an API method and that we have type safety for the return value.
 export const apiV3Impl: ApiImpl<ApiVersion.V3> = {
-	findMaps: apiImpl.get("/map", (req) => {
+	findMaps: apiImpl.get("/maps", (req) => {
 		const { query, ...paging } = pagingValidator.extend({
 			query: z.string()
 		}).parse(req.query);
 		return [query, paging];
 	}, "json"),
 
-	getMap: apiImpl.get("/map/:mapSlug", (req) => [getRequestMapSlug(req)], "json"),
+	getMap: apiImpl.get("/maps/:mapSlug", (req) => [getRequestMapSlug(req)], "json"),
 
-	createMap: apiImpl.post("/map", (req) => {
+	createMap: apiImpl.post("/maps", (req) => {
 		const { pick, bbox } = z.object({
 			pick: stringArrayValidator.pipe(z.array(allMapObjectsPickValidator)).optional(),
 			bbox: stringifiedJsonValidator.pipe(bboxWithZoomValidator).optional()
@@ -672,11 +672,11 @@ export const apiV3Impl: ApiImpl<ApiVersion.V3> = {
 		}))).pipeTo(writableToWeb(res)).catch(() => undefined);
 	}),
 
-	updateMap: apiImpl.put("/map/:mapSlug", (req) => [getRequestMapSlug(req), mapDataValidator.update.parse(req.body)], "json"),
+	updateMap: apiImpl.put("/maps/:mapSlug", (req) => [getRequestMapSlug(req), mapDataValidator.update.parse(req.body)], "json"),
 
-	deleteMap: apiImpl.del("/map/:mapSlug", (req) => [getRequestMapSlug(req)], "empty"),
+	deleteMap: apiImpl.del("/maps/:mapSlug", (req) => [getRequestMapSlug(req)], "empty"),
 
-	getAllMapObjects: apiImpl.get("/map/:mapSlug/all", (req) => {
+	getAllMapObjects: apiImpl.get("/maps/:mapSlug/all", (req) => {
 		const { pick, bbox } = z.object({
 			pick: stringArrayValidator.pipe(z.array(allMapObjectsPickValidator)).optional(),
 			bbox: stringifiedJsonValidator.pipe(bboxWithZoomValidator).optional()
@@ -693,14 +693,14 @@ export const apiV3Impl: ApiImpl<ApiVersion.V3> = {
 		}))).pipeTo(writableToWeb(res)).catch(() => undefined);
 	}),
 
-	findOnMap: apiImpl.get("/map/:mapSlug/find", (req) => {
+	findOnMap: apiImpl.get("/maps/:mapSlug/find", (req) => {
 		const { query } = z.object({
 			query: z.string()
 		}).parse(req.query);
 		return [getRequestMapSlug(req), query];
 	}, "json"),
 
-	getMapToken: apiImpl.get("/map/:mapSlug/token", (req) => {
+	getMapToken: apiImpl.get("/maps/:mapSlug/token", (req) => {
 		const { permissions, noPassword } = z.object({
 			permissions: stringifiedJsonValidator.pipe(mapPermissionsValidator),
 			noPassword: stringifiedBooleanValidator.optional()
@@ -708,7 +708,7 @@ export const apiV3Impl: ApiImpl<ApiVersion.V3> = {
 		return [getRequestMapSlug(req), { permissions, noPassword }];
 	}, "json"),
 
-	exportMapAsGpx: apiImpl.get("/map/:mapSlug/gpx", (req) => {
+	exportMapAsGpx: apiImpl.get("/maps/:mapSlug/gpx", (req) => {
 		const { rte, filter } = z.object({
 			rte: stringifiedBooleanValidator.optional(),
 			filter: z.string().optional()
@@ -716,7 +716,7 @@ export const apiV3Impl: ApiImpl<ApiVersion.V3> = {
 		return [getRequestMapSlug(req), { rte, filter }];
 	}, "export"),
 
-	exportMapAsGpxZip: apiImpl.get("/map/:mapSlug/gpx/zip", (req) => {
+	exportMapAsGpxZip: apiImpl.get("/maps/:mapSlug/gpx/zip", (req) => {
 		const { rte, filter } = z.object({
 			rte: stringifiedBooleanValidator.optional(),
 			filter: z.string().optional()
@@ -724,14 +724,14 @@ export const apiV3Impl: ApiImpl<ApiVersion.V3> = {
 		return [getRequestMapSlug(req), { rte, filter }];
 	}, "export"),
 
-	exportMapAsGeoJson: apiImpl.get("/map/:mapSlug/geojson", (req) => {
+	exportMapAsGeoJson: apiImpl.get("/maps/:mapSlug/geojson", (req) => {
 		const { filter } = z.object({
 			filter: z.string().optional()
 		}).parse(req.query);
 		return [getRequestMapSlug(req), { filter }];
 	}, "export"),
 
-	exportMapAsTable: apiImpl.get("/map/:mapSlug/table", (req) => {
+	exportMapAsTable: apiImpl.get("/maps/:mapSlug/table", (req) => {
 		const { typeId, filter, hide } = z.object({
 			typeId: stringifiedIdValidator,
 			filter: z.string().optional(),
@@ -740,7 +740,7 @@ export const apiV3Impl: ApiImpl<ApiVersion.V3> = {
 		return [getRequestMapSlug(req), { typeId, filter, hide: hide ? hide.split(",") : undefined }];
 	}, "export"),
 
-	exportMapAsCsv: apiImpl.get("/map/:mapSlug/csv", (req) => {
+	exportMapAsCsv: apiImpl.get("/maps/:mapSlug/csv", (req) => {
 		const { typeId, filter, hide } = z.object({
 			typeId: stringifiedIdValidator,
 			filter: z.string().optional(),
@@ -749,17 +749,17 @@ export const apiV3Impl: ApiImpl<ApiVersion.V3> = {
 		return [getRequestMapSlug(req), { typeId, filter, hide: hide ? hide.split(",") : undefined }];
 	}, "export"),
 
-	getHistory: apiImpl.get("/map/:mapSlug/history", (req) => {
+	getHistory: apiImpl.get("/maps/:mapSlug/history", (req) => {
 		const paging = pagingValidator.parse(req.query);
 		return [getRequestMapSlug(req), paging];
 	}, "json"),
 
-	revertHistoryEntry: apiImpl.post("/map/:mapSlug/history/:historyEntryId/revert", (req) => {
+	revertHistoryEntry: apiImpl.post("/maps/:mapSlug/history/:historyEntryId/revert", (req) => {
 		const historyEntryId = stringifiedIdValidator.parse(req.params.historyEntryId);
 		return [getRequestMapSlug(req), historyEntryId];
 	}, "empty"),
 
-	getMapMarkers: apiImpl.get("/map/:mapSlug/marker", (req) => {
+	getMapMarkers: apiImpl.get("/maps/:mapSlug/markers", (req) => {
 		const { bbox, typeId } = z.object({
 			bbox: stringifiedJsonValidator.pipe(bboxWithExceptValidator).optional(),
 			typeId: stringifiedIdValidator.optional()
@@ -767,25 +767,25 @@ export const apiV3Impl: ApiImpl<ApiVersion.V3> = {
 		return [getRequestMapSlug(req), { bbox, typeId }];
 	}, "stream"),
 
-	getMarker: apiImpl.get("/map/:mapSlug/marker/:markerId", (req) => {
+	getMarker: apiImpl.get("/maps/:mapSlug/markers/:markerId", (req) => {
 		const markerId = stringifiedIdValidator.parse(req.params.markerId);
 		return [getRequestMapSlug(req), markerId];
 	}, "json"),
 
-	createMarker: apiImpl.post("/map/:mapSlug/marker", (req) => [getRequestMapSlug(req), markerValidator.create.parse(req.body)], "json"),
+	createMarker: apiImpl.post("/maps/:mapSlug/markers", (req) => [getRequestMapSlug(req), markerValidator.create.parse(req.body)], "json"),
 
-	updateMarker: apiImpl.put("/map/:mapSlug/marker/:markerId", (req) => {
+	updateMarker: apiImpl.put("/maps/:mapSlug/markers/:markerId", (req) => {
 		const markerId = stringifiedIdValidator.parse(req.params.markerId);
 		const data = markerValidator.update.parse(req.body);
 		return [getRequestMapSlug(req), markerId, data];
 	}, "json"),
 
-	deleteMarker: apiImpl.del("/map/:mapSlug/marker/:markerId", (req) => {
+	deleteMarker: apiImpl.del("/maps/:mapSlug/markers/:markerId", (req) => {
 		const markerId = stringifiedIdValidator.parse(req.params.markerId);
 		return [getRequestMapSlug(req), markerId];
 	}, "empty"),
 
-	getMapLines: apiImpl.get("/map/:mapSlug/line", (req) => {
+	getMapLines: apiImpl.get("/maps/:mapSlug/lines", (req) => {
 		const { bbox, includeTrackPoints, typeId } = z.object({
 			bbox: stringifiedJsonValidator.pipe(bboxWithExceptValidator).optional(),
 			includeTrackPoints: stringifiedBooleanValidator.optional(),
@@ -795,19 +795,19 @@ export const apiV3Impl: ApiImpl<ApiVersion.V3> = {
 	}, "stream"),
 
 	// Above getLine because it has a matching signature
-	getLineTemplate: apiImpl.get("/map/:mapSlug/line/template", (req) => {
+	getLineTemplate: apiImpl.get("/maps/:mapSlug/lines/template", (req) => {
 		const { typeId } = z.object({
 			typeId: stringifiedIdValidator
 		}).parse(req.query);
 		return [getRequestMapSlug(req), { typeId }];
 	}, "json"),
 
-	getLine: apiImpl.get("/map/:mapSlug/line/:lineId", (req) => {
+	getLine: apiImpl.get("/maps/:mapSlug/lines/:lineId", (req) => {
 		const lineId = stringifiedIdValidator.parse(req.params.lineId);
 		return [getRequestMapSlug(req), lineId];
 	}, "json"),
 
-	getLinePoints: apiImpl.get("/map/:mapSlug/line/:lineId/linePoints", (req) => {
+	getLinePoints: apiImpl.get("/maps/:mapSlug/lines/:lineId/linePoints", (req) => {
 		const { bbox } = stringifiedJsonValidator.pipe(z.object({
 			bbox: stringifiedJsonValidator.pipe(bboxWithExceptValidator)
 		})).parse(req.query);
@@ -815,20 +815,20 @@ export const apiV3Impl: ApiImpl<ApiVersion.V3> = {
 		return [getRequestMapSlug(req), lineId, { bbox }];
 	}, "stream"),
 
-	createLine: apiImpl.post("/map/:mapSlug/line", (req) => [getRequestMapSlug(req), lineValidator.create.parse(req.body)], "json"),
+	createLine: apiImpl.post("/maps/:mapSlug/lines", (req) => [getRequestMapSlug(req), lineValidator.create.parse(req.body)], "json"),
 
-	updateLine: apiImpl.put("/map/:mapSlug/line/:lineId", (req) => {
+	updateLine: apiImpl.put("/maps/:mapSlug/lines/:lineId", (req) => {
 		const lineId = stringifiedIdValidator.parse(req.params.lineId);
 		const data = lineValidator.update.parse(req.body);
 		return [getRequestMapSlug(req), lineId, data];
 	}, "json"),
 
-	deleteLine: apiImpl.del("/map/:mapSlug/line/:lineId", (req) => {
+	deleteLine: apiImpl.del("/maps/:mapSlug/lines/:lineId", (req) => {
 		const lineId = stringifiedIdValidator.parse(req.params.lineId);
 		return [getRequestMapSlug(req), lineId];
 	}, "empty"),
 
-	exportLineAsGpx: apiImpl.get("/map/:mapSlug/line/:lineId/gpx", (req) => {
+	exportLineAsGpx: apiImpl.get("/maps/:mapSlug/lines/:lineId/gpx", (req) => {
 		const lineId = stringifiedIdValidator.parse(req.params.lineId);
 		const { rte } = z.object({
 			rte: stringifiedBooleanValidator.optional()
@@ -836,47 +836,47 @@ export const apiV3Impl: ApiImpl<ApiVersion.V3> = {
 		return [getRequestMapSlug(req), lineId, { rte }];
 	}, "export"),
 
-	exportLineAsGeoJson: apiImpl.get("/map/:mapSlug/line/:lineId/geojson", (req) => {
+	exportLineAsGeoJson: apiImpl.get("/maps/:mapSlug/lines/:lineId/geojson", (req) => {
 		const lineId = stringifiedIdValidator.parse(req.params.lineId);
 		return [getRequestMapSlug(req), lineId];
 	}, "export"),
 
-	getMapTypes: apiImpl.get("/map/:mapSlug/type", (req) => [getRequestMapSlug(req)], "stream"),
+	getMapTypes: apiImpl.get("/maps/:mapSlug/types", (req) => [getRequestMapSlug(req)], "stream"),
 
-	getType: apiImpl.get("/map/:mapSlug/type/:typeId", (req) => {
+	getType: apiImpl.get("/maps/:mapSlug/types/:typeId", (req) => {
 		const typeId = stringifiedIdValidator.parse(req.params.typeId);
 		return [getRequestMapSlug(req), typeId];
 	}, "json"),
 
-	createType: apiImpl.post("/map/:mapSlug/type", (req) => [getRequestMapSlug(req), typeValidator.create.parse(req.body)], "json"),
+	createType: apiImpl.post("/maps/:mapSlug/types", (req) => [getRequestMapSlug(req), typeValidator.create.parse(req.body)], "json"),
 
-	updateType: apiImpl.put("/map/:mapSlug/type/:typeId", (req) => {
+	updateType: apiImpl.put("/maps/:mapSlug/types/:typeId", (req) => {
 		const typeId = stringifiedIdValidator.parse(req.params.typeId);
 		const data = typeValidator.update.parse(req.body);
 		return [getRequestMapSlug(req), typeId, data];
 	}, "json"),
 
-	deleteType: apiImpl.del("/map/:mapSlug/type/:typeId", (req) => {
+	deleteType: apiImpl.del("/maps/:mapSlug/types/:typeId", (req) => {
 		const typeId = stringifiedIdValidator.parse(req.params.typeId);
 		return [getRequestMapSlug(req), typeId];
 	}, "empty"),
 
-	getMapViews: apiImpl.get("/map/:mapSlug/view", (req) => [getRequestMapSlug(req)], "stream"),
+	getMapViews: apiImpl.get("/maps/:mapSlug/views", (req) => [getRequestMapSlug(req)], "stream"),
 
-	getView: apiImpl.get("/map/:mapSlug/view/:viewId", (req) => {
+	getView: apiImpl.get("/maps/:mapSlug/views/:viewId", (req) => {
 		const viewId = stringifiedIdValidator.parse(req.params.viewId);
 		return [getRequestMapSlug(req), viewId];
 	}, "json"),
 
-	createView: apiImpl.post("/map/:mapSlug/view", (req) => [getRequestMapSlug(req), viewValidator.create.parse(req.body)], "json"),
+	createView: apiImpl.post("/maps/:mapSlug/views", (req) => [getRequestMapSlug(req), viewValidator.create.parse(req.body)], "json"),
 
-	updateView: apiImpl.put("/map/:mapSlug/view/:viewId", (req) => {
+	updateView: apiImpl.put("/maps/:mapSlug/views/:viewId", (req) => {
 		const viewId = stringifiedIdValidator.parse(req.params.viewId);
 		const data = viewValidator.update.parse(req.body);
 		return [getRequestMapSlug(req), viewId, data];
 	}, "json"),
 
-	deleteView: apiImpl.del("/map/:mapSlug/view/:viewId", (req) => {
+	deleteView: apiImpl.del("/maps/:mapSlug/views/:viewId", (req) => {
 		const viewId = stringifiedIdValidator.parse(req.params.viewId);
 		return [getRequestMapSlug(req), viewId];
 	}, "empty"),

@@ -4,7 +4,7 @@
 
 Client: `findMaps(query, { start?, limit? })`\
 Socket: `emit("findMaps", query, { start?, limit? }, callback)`\
-REST: `GET /map?query=<query>&start=<start?>&limit=<limit?>`
+REST: `GET /maps?query=<query>&start=<start?>&limit=<limit?>`
 
 Finds collaborative maps by a search term. Only finds maps that have been made public by setting <code>[searchEngines](./types.md#mapdata)</code> to `true`.
 
@@ -18,7 +18,7 @@ Result: <code>[PagedResults](./types.md#pagedresults)&lt;Pick&lt;[MapData](./typ
 
 Client: `getMap(mapSlug)` or `mapSubscription.getMap()`\
 Socket: `emit("getMap", mapSlug, callback)`\
-REST: `GET /map/<mapSlug>`
+REST: `GET /maps/<mapSlug>`
 
 Retrieves the settings of a single map by map slug. This can also be used to check if a map with a certain slug exists.
 
@@ -29,7 +29,7 @@ Result: <code>[MapData](./types.md#mapdata)</code>
 Client (streamed): `createMap(data, { pick? })`\
 Client (unstreamed): `createMapUnstreamed(data, { pick? })`\
 Socket: `emit("createMap", data, { pick? }, callback)`\
-REST: `POST /map?pick=<pick?>` (body: `data`)
+REST: `POST /maps?pick=<pick?>` (body: `data`)
 
 Creates a new map.
 
@@ -43,7 +43,7 @@ The result is the result of <code>[getAllMapObjects()](#getallmapobjects)</code>
 
 Client: `updateMap(mapSlug, data)` or `mapSubscription.updateMap(data)`\
 Socket: `emit("updateMap", mapSlug, data, callback)`\
-REST: `PUT /map/<mapSlug>` (body: `data`)
+REST: `PUT /maps/<mapSlug>` (body: `data`)
 
 Update the map settings of the current map.
 
@@ -63,7 +63,7 @@ Changing a map slug will make everyone who is using that slug lose access to the
 
 Client: `deleteMap(mapSlug)` or `mapSubscription.deleteMap()`\
 Socket: `emit("deleteMap", mapSlug, callback)` \
-REST: `DELETE /map/<mapSlug>`
+REST: `DELETE /maps/<mapSlug>`
 
 Delete a map irrevocably.
 
@@ -77,7 +77,7 @@ If this is called through the socket and the map is currently subscribed, causes
 Client (streamed): `getAllMapObjects(mapSlug, { pick?, bbox? })` or `mapSubscription.getAllMapObjects({ pick?, bbox? })`\
 Client (unstreamed): `getAllMapObjectsUnstreamed(mapSlug, { pick?, bbox? })` or `mapSubscription.getAllMapObjectsUnstreamed({ pick?, bbox? })`\
 Socket: `emit("getAllMapObjects", mapSlug, { pick?, bbox? }, callback)`\
-REST: `GET /map/<mapSlug>/all?pick=<pick?>&bbox=<bbox?>`
+REST: `GET /maps/<mapSlug>/all?pick=<pick?>&bbox=<bbox?>`
 
 Returns the whole map data (map settings, types, views, markers, lines).
 
@@ -118,7 +118,7 @@ The REST API returns the unstreamed version, but produces the JSON document in a
 
 Client: `findOnMap(mapSlug, query)` or `mapSubscription.findOnMap(query)`\
 Socket: `emit("findOnMap", mapSlug, query, callback)`\
-REST: `GET /map/<mapSlug>/find?query=<query>`
+REST: `GET /maps/<mapSlug>/find?query=<query>`
 
 Search for markers and lines inside the map.
 
@@ -146,7 +146,7 @@ At the moment, the method returns markers/lines whose name contains the search t
 
 Client: `getMapToken(mapSlug, { permissions, noPassword? })` or `mapSubscription.getMapToken({ permissions, noPassword? })`\
 Socket: `emit("getMapToken", mapSlug, { permissions, noPassword? }, callback)`\
-REST: `GET /map/<mapSlug>/token?permissions=<permissions>&noPassword=<noPassword?>`
+REST: `GET /maps/<mapSlug>/token?permissions=<permissions>&noPassword=<noPassword?>`
 
 Creates a token that can be used as a map slug for API calls. This allows creating read-only or password-less equivalents for map links. More details can be found under [map slugs and tokens](./advanced.md#map-slugs-tokens-and-passwords).
 
@@ -163,7 +163,7 @@ Result: `{ token: string }`
 
 Client: `getHistory(mapSlug, { start?, limit? })` or `mapSubscription.getHistory({ start?, limit? })`\
 Socket: `emit("getHistory", mapSlug, { start?, limit? }, callback)`\
-REST: `GET /map/<mapSlug>/history?start=<start?>&limit=<limit?>`
+REST: `GET /maps/<mapSlug>/history?start=<start?>&limit=<limit?>`
 
 Returns a list of changes that have been made on the map.
 
@@ -177,7 +177,7 @@ Result: <code>Array&lt;[HistoryEntry](./types.md#historyentry)&gt;</code>
 
 Client: `revertHistoryEntry(mapSlug, historyEntryId)` or `mapSubscription.revertHistoryEntry(historyEntryId)`\
 Socket: `emit("revertHistoryEntry", mapSlug, historyEntryId)`\
-REST: `POST /map/<mapSlug>/history/<historyEntryId>/revert`
+REST: `POST /maps/<mapSlug>/history/<historyEntryId>/revert`
 
 Undo a modification on the map.
 
@@ -196,7 +196,7 @@ Reverting a history entry has the following effect:
 
 Client: `getMapMarkers(mapSlug, { bbox?, typeId? }` or `mapSubscription.getMapMarkers({ bbox?, typeId? })`\
 Socket: `emit("getMapMarkers", mapSlug, { bbox?, typeId? }, callback)`\
-REST: `GET /map/<mapSlug>/marker?bbox=<bbox>&typeId=<typeId>`
+REST: `GET /maps/<mapSlug>/markers?bbox=<bbox>&typeId=<typeId>`
 
 Returns all the markers on the map.
 
@@ -214,7 +214,7 @@ Result:
 
 Client: `getMarker(mapSlug, markerId)` or `mapSubscription.getMarker(markerId)`\
 Socket: `emit("getMarker", mapSlug, markerId, callback)`\
-REST: `GET /map/<mapSlug>/marker/<markerId>`
+REST: `GET /maps/<mapSlug>/markers/<markerId>`
 
 Return a single marker from the map.
 
@@ -228,7 +228,7 @@ Result: <code>[Marker](./types.md#marker)</code>
 
 Client: `createMarker(mapSlug, marker)` or `mapSubscription.createMarker(marker)`\
 Socket: `emit("createMarker", mapSlug, marker, callback)`\
-REST: `POST /map/<mapSlug>/marker` (body: `marker`)
+REST: `POST /maps/<mapSlug>/markers` (body: `marker`)
 
 Create a marker.
 
@@ -244,7 +244,7 @@ If you don’t set the elevation of the marker, it will be determined on the ser
 
 Client: `updateMarker(mapSlug, markerId, marker)` or `mapSubscription.updateMarker(markerId, marker)`\
 Socket: `emit("updateMarker", mapSlug, markerId, marker, callback)`\
-REST: `PUT /map/<mapSlug>/marker/<markerId>` (body: `marker`)
+REST: `PUT /maps/<mapSlug>/markers/<markerId>` (body: `marker`)
 
 Update an existing marker.
 
@@ -261,7 +261,7 @@ If you update the marker position but don’t set an elevation as part of the up
 
 Client: `deleteMarker(mapSlug, markerId)` or `mapSubscription.deleteMarker(markerId)`\
 Socket: `emit("deleteMarker", mapSlug, markerId, callback)`\
-REST: `DELETE /map/<mapSlug>/marker/<markerId>`
+REST: `DELETE /maps/<mapSlug>/markers/<markerId>`
 
 Delete an existing marker
 
@@ -273,7 +273,7 @@ Parameters:
 
 Client: `getMapLines(mapSlug, { bbox?, includeTrackPoints?, typeId? })` or `mapSubscription.getMapLines({ bbox?, includeTrackPoints?, typeId? })`\
 Socket: `emit("getMapLines", mapSlug, { bbox?, includeTrackPoints?, typeId? }, callback)`\
-REST: `GET /map/<mapSlug>/line?bbox=<bbox?>&includeTrackPoints=<includeTrackPoints?>&typeId=<typeId?>`
+REST: `GET /maps/<mapSlug>/lines?bbox=<bbox?>&includeTrackPoints=<includeTrackPoints?>&typeId=<typeId?>`
 
 Get the lines of a map.
 
@@ -292,7 +292,7 @@ Result:
 
 Client: `getLine(mapSlug, lineId)` or `mapSubscription.getLine(lineId)`\
 Socket: `emit("getLine", mapSlug, lineId, callback)`\
-REST: `GET /map/<mapSlug>/line/<lineId>`
+REST: `GET /maps/<mapSlug>/lines/<lineId>`
 
 Get a single line on the map.
 
@@ -306,7 +306,7 @@ Result: <code>[Line](./types.md#line)</code>
 
 Client: `getLinePoints(mapSlug, lineId, { bbox? })` or `mapSubscription.getLinePoints(lineId, { bbox? })`\
 Socket: `emit("getLinePoints", mapSlug, lineId, { bbox? }, callback)`\
-REST: `GET /map/<mapSlug>/line/<lineId>/linePoints?bbox=<bbox?>`
+REST: `GET /maps/<mapSlug>/lines/<lineId>/linePoints?bbox=<bbox?>`
 
 Returns the track points of a single line.
 
@@ -324,7 +324,7 @@ Result:
 
 Client: `getLineTemplate(mapSlug, { typeId })` or `mapSubscription.getLineTemplate({ typeId })`\
 Socket: `emit("getLineTemplate", mapSlug, { typeId }, callback)`\
-REST: `GET /map/<mapSlug>/line/template?typeId=<typeId>`
+REST: `GET /maps/<mapSlug>/lines/template?typeId=<typeId>`
 
 Get a mock line object for a line with the given type. This can be used so that while the user is drawing a new line, that line already has the right style.
 
@@ -340,7 +340,7 @@ In a JavaScript/TypeScript app, it would be preferrable to call `getLineTemplate
 
 Client: `createLine(mapSlug, line)` or `mapSubscription.createLine(line)`\
 Socket: `emit("createLine", mapSlug, line, callback)`\
-REST: `POST /map/<mapSlug>/line` (body: `line`)
+REST: `POST /maps/<mapSlug>/lines` (body: `line`)
 
 Create a line.
 
@@ -354,7 +354,7 @@ Result: <code>[Line](./types.md#line)</code>, the created line with all its prop
 
 Client: `updateLine(mapSlug, lineId, line)` or `mapSubscription.updateLine(lineId, line)`\
 Socket: `emit("updateLine", mapSlug, lineId, line, callback)`\
-REST: `PUT /map/<mapSlug>/line/<lineId>` (body: `line`)
+REST: `PUT /maps/<mapSlug>/lines/<lineId>` (body: `line`)
 
 Update an existing line.
 
@@ -371,7 +371,7 @@ If the `routePoints` and/or `mode` of the line are modified, causes the route to
 
 Client: `deleteLine(mapSlug, lineId)` or `mapSubscription.deleteLine(lineId)`\
 Socket: `emit("deleteLine", mapSlug, lineId, callback)`\
-REST: `DELETE /map/<mapSlug>/line/<lineId>`
+REST: `DELETE /maps/<mapSlug>/lines/<lineId>`
 
 Delete an existing line
 
@@ -383,7 +383,7 @@ Parameters:
 
 Client: `exportLine(mapSlug, lineId, { format })` or `mapSubscription.exportLine(lineId, { format })`\
 Socket: `emit("exportLine", mapSlug, lineId, { format }, callback)`\
-REST: `GET /map/<mapSlug>/line/<lineId>/export?format=<format>`
+REST: `GET /maps/<mapSlug>/lines/<lineId>/export?format=<format>`
 
 Export a single line from a map.
 
@@ -401,7 +401,7 @@ Result:
 
 Client: `getMapTypes(mapSlug)` or `mapSubscription.getMapTypes()`\
 Socket: `emit("getMapTypes", mapSlug, callback)`\
-REST: `GET /map/<mapSlug>/type`
+REST: `GET /maps/<mapSlug>/types`
 
 Returns all the types of the map.
 
@@ -417,7 +417,7 @@ Result:
 
 Client: `getType(mapSlug, typeId)` or `mapSubscription.getType(typeId)`\
 Socket: `emit("getType", mapSlug, typeId, callback)`\
-REST: `GET /map/<mapSlug>/type/<typeId>`
+REST: `GET /maps/<mapSlug>/types/<typeId>`
 
 Get a single type of the map.
 
@@ -431,7 +431,7 @@ Result: <code>[Type](./types.md#type)</code>
 
 Client: `createType(mapSlug, type)` or `mapSubscription.createType(type)`\
 Socket: `emit("createType", mapSlug, type, callback)`\
-REST: `POST /map/<mapSlug>/type` (body: `type`)
+REST: `POST /maps/<mapSlug>/types` (body: `type`)
 
 Create a type.
 
@@ -445,7 +445,7 @@ Result: <code>[Type](./types.md#type)</code>, the created type
 
 Client: `updateType(mapSlug, typeId, type)` or `mapSubscription.updateType(typeId, type)`\
 Socket: `emit("updateType", mapSlug, typeId, type, callback)`\
-REST: `PUT /map/<mapSlug>/type/<typeId>` (body: `type`)
+REST: `PUT /maps/<mapSlug>/types/<typeId>` (body: `type`)
 
 Update an existing type.
 
@@ -461,7 +461,7 @@ Result: <code>[Type](./types.md#type)</code>, the updated type with all its prop
 
 Client: `deleteType(mapSlug, typeId)` or `mapSubscription.deleteType(typeId)`\
 Socket: `emit("deleteType", mapSlug, typeId, callback)`\
-REST: `DELETE /map/<mapSlug>/type/<typeId>`
+REST: `DELETE /maps/<mapSlug>/types/<typeId>`
 
 Delete an existing type
 
@@ -473,7 +473,7 @@ Parameters:
 
 Client: `getMapViews(mapSlug)` or `mapSubscription.getMapViews()`\
 Socket: `emit("getMapViews", mapSlug, callback)`\
-REST: `GET /map/<mapSlug>/view`
+REST: `GET /maps/<mapSlug>/views`
 
 Returns all the views of the map.
 
@@ -489,7 +489,7 @@ Result:
 
 Client: `getView(mapSlug, viewId)` or `mapSubscription.getView(viewId)`\
 Socket: `emit("getView", mapSlug, viewId, callback)`\
-REST: `GET /map/<mapSlug>/view/<viewId>`
+REST: `GET /maps/<mapSlug>/views/<viewId>`
 
 Get a single view of the map.
 
@@ -503,7 +503,7 @@ Result: <code>[View](./types.md#view)</code>
 
 Client: `createView(mapSlug, view)` or `mapSubscription.createView(view)`\
 Socket: `emit("createView", mapSlug, view, callback)`\
-REST: `POST /map/<mapSlug>/view` (body: `view`)
+REST: `POST /maps/<mapSlug>/views` (body: `view`)
 
 Create a view.
 
@@ -517,7 +517,7 @@ Result: <code>[View](./types.md#view)</code>, the created view
 
 Client: `updateView(mapSlug, viewId, view)` or `mapSubscription.updateView(viewId, view)`\
 Socket: `emit("updateView", mapSlug, viewId, view, callback)`\
-REST: `PUT /map/<mapSlug>/view/<viewId>` (body: `view`)
+REST: `PUT /maps/<mapSlug>/views/<viewId>` (body: `view`)
 
 Update an existing view.
 
@@ -533,7 +533,7 @@ Result: <code>[View](./types.md#view)</code>, the updated view with all its prop
 
 Client: `deleteView(mapSlug, viewId)` or `mapSubscription.deleteView(viewId)`\
 Socket: `emit("deleteView", mapSlug, viewId, callback)`\
-REST: `DELETE /map/<mapSlug>/view/<viewId>`
+REST: `DELETE /maps/<mapSlug>/views/<viewId>`
 
 Delete an existing view
 

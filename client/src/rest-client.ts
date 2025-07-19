@@ -147,17 +147,17 @@ export class RestClient implements Api<ApiVersion.V3, false> {
 	}
 
 	async findMaps(query: string, data?: PagingInput): Promise<PagedResults<FindMapsResult>> {
-		const res = await this.fetch("/map", { query: { query, ...data } });
+		const res = await this.fetch("/maps", { query: { query, ...data } });
 		return await res.json();
 	}
 
 	async getMap(mapSlug: AnyMapSlug): Promise<Stripped<MapData>> {
-		const res = await this.fetchMap(mapSlug, (s) => `/map/${encodeURIComponent(s)}`);
+		const res = await this.fetchMap(mapSlug, (s) => `/maps/${encodeURIComponent(s)}`);
 		return await res.json();
 	}
 
 	protected async _createMap(data: MapData<CRU.CREATE>, options?: { pick?: AllMapObjectsPick[]; bbox?: BboxWithZoom }): Promise<Response> {
-		return await this.fetch("/map", {
+		return await this.fetch("/maps", {
 			method: "POST",
 			query: {
 				pick: options?.pick?.join(","),
@@ -178,7 +178,7 @@ export class RestClient implements Api<ApiVersion.V3, false> {
 	}
 
 	async updateMap(mapSlug: AnyMapSlug, data: MapData<CRU.UPDATE>): Promise<Stripped<MapData>> {
-		const res = await this.fetchMap(mapSlug, (s) => `/map/${encodeURIComponent(s)}`, {
+		const res = await this.fetchMap(mapSlug, (s) => `/maps/${encodeURIComponent(s)}`, {
 			method: "PUT",
 			body: data
 		});
@@ -186,13 +186,13 @@ export class RestClient implements Api<ApiVersion.V3, false> {
 	}
 
 	async deleteMap(mapSlug: AnyMapSlug): Promise<void> {
-		await this.fetchMap(mapSlug, (s) => `/map/${encodeURIComponent(s)}`, {
+		await this.fetchMap(mapSlug, (s) => `/maps/${encodeURIComponent(s)}`, {
 			method: "DELETE"
 		});
 	}
 
 	async _getAllMapObjects<Pick extends AllMapObjectsPick>(mapSlug: AnyMapSlug, options?: { pick?: Pick[]; bbox?: BboxWithExcept }): Promise<Response> {
-		return await this.fetchMap(mapSlug, (s) => `/map/${encodeURIComponent(s)}/all`, {
+		return await this.fetchMap(mapSlug, (s) => `/maps/${encodeURIComponent(s)}/all`, {
 			query: {
 				...options?.pick ? {
 					pick: encodeStringArray(options.pick)
@@ -214,7 +214,7 @@ export class RestClient implements Api<ApiVersion.V3, false> {
 	}
 
 	async findOnMap(mapSlug: AnyMapSlug, query: string): Promise<Array<Stripped<FindOnMapResult>>> {
-		const res = await this.fetchMap(mapSlug, (s) => `/map/${encodeURIComponent(s)}/find`, {
+		const res = await this.fetchMap(mapSlug, (s) => `/maps/${encodeURIComponent(s)}/find`, {
 			query: {
 				query
 			}
@@ -223,12 +223,12 @@ export class RestClient implements Api<ApiVersion.V3, false> {
 	}
 
 	async getMapToken(mapSlug: AnyMapSlug, options: { permissions: MapPermissions, noPassword?: boolean }): Promise<{ token: string }> {
-		const res = await this.fetchMap(mapSlug, (s) => `/map/${encodeURIComponent(s)}/token`);
+		const res = await this.fetchMap(mapSlug, (s) => `/maps/${encodeURIComponent(s)}/token`);
 		return await res.json();
 	}
 
 	async exportMapAsGpx(mapSlug: AnyMapSlug, options?: { rte?: boolean; filter?: string }): Promise<ExportResult> {
-		return this.getExportResult(await this.fetchMap(mapSlug, (s) => `/map/${encodeURIComponent(s)}/gpx`, {
+		return this.getExportResult(await this.fetchMap(mapSlug, (s) => `/maps/${encodeURIComponent(s)}/gpx`, {
 			query: {
 				...options?.rte != null ? {
 					rte: `${options.rte}`,
@@ -239,7 +239,7 @@ export class RestClient implements Api<ApiVersion.V3, false> {
 	}
 
 	async exportMapAsGpxZip(mapSlug: AnyMapSlug, options?: { rte?: boolean; filter?: string }): Promise<ExportResult> {
-		return this.getExportResult(await this.fetchMap(mapSlug, (s) => `/map/${encodeURIComponent(s)}/gpx/zip`, {
+		return this.getExportResult(await this.fetchMap(mapSlug, (s) => `/maps/${encodeURIComponent(s)}/gpx/zip`, {
 			query: {
 				...options?.rte != null ? {
 					rte: `${options.rte}`,
@@ -250,7 +250,7 @@ export class RestClient implements Api<ApiVersion.V3, false> {
 	}
 
 	async exportMapAsGeoJson(mapSlug: AnyMapSlug, options?: { filter?: string }): Promise<ExportResult> {
-		return this.getExportResult(await this.fetchMap(mapSlug, (s) => `/map/${encodeURIComponent(s)}/gpx`, {
+		return this.getExportResult(await this.fetchMap(mapSlug, (s) => `/maps/${encodeURIComponent(s)}/gpx`, {
 			query: {
 				filter: options?.filter
 			}
@@ -258,7 +258,7 @@ export class RestClient implements Api<ApiVersion.V3, false> {
 	}
 
 	async exportMapAsTable(mapSlug: AnyMapSlug, options: { typeId: ID; filter?: string; hide?: string[] }): Promise<ExportResult> {
-		return this.getExportResult(await this.fetchMap(mapSlug, (s) => `/map/${encodeURIComponent(s)}/table`, {
+		return this.getExportResult(await this.fetchMap(mapSlug, (s) => `/maps/${encodeURIComponent(s)}/table`, {
 			query: {
 				typeId: options.typeId,
 				filter: options.filter,
@@ -268,7 +268,7 @@ export class RestClient implements Api<ApiVersion.V3, false> {
 	}
 
 	async exportMapAsCsv(mapSlug: AnyMapSlug, options: { typeId: ID; filter?: string; hide?: string[] }): Promise<ExportResult> {
-		return this.getExportResult(await this.fetchMap(mapSlug, (s) => `/map/${encodeURIComponent(s)}/csv`, {
+		return this.getExportResult(await this.fetchMap(mapSlug, (s) => `/maps/${encodeURIComponent(s)}/csv`, {
 			query: {
 				typeId: options.typeId,
 				filter: options.filter,
@@ -278,20 +278,20 @@ export class RestClient implements Api<ApiVersion.V3, false> {
 	}
 
 	async getHistory(mapSlug: AnyMapSlug, data?: PagingInput): Promise<PagedResults<Stripped<HistoryEntry>>> {
-		const res = await this.fetchMap(mapSlug, (s) => `/map/${encodeURIComponent(s)}/history`, {
+		const res = await this.fetchMap(mapSlug, (s) => `/maps/${encodeURIComponent(s)}/history`, {
 			query: data
 		});
 		return await res.json();
 	}
 
 	async revertHistoryEntry(mapSlug: AnyMapSlug, historyEntryId: ID): Promise<void> {
-		await this.fetchMap(mapSlug, (s) => `/map/${encodeURIComponent(s)}/history/${encodeURIComponent(historyEntryId)}/revert`, {
+		await this.fetchMap(mapSlug, (s) => `/maps/${encodeURIComponent(s)}/history/${encodeURIComponent(historyEntryId)}/revert`, {
 			method: "POST"
 		});
 	}
 
 	async getMapMarkers(mapSlug: AnyMapSlug, options?: { bbox?: BboxWithExcept; typeId?: ID }): Promise<StreamedResults<Stripped<Marker>>> {
-		const res = await this.fetchMap(mapSlug, (s) => `/map/${encodeURIComponent(s)}/marker`, {
+		const res = await this.fetchMap(mapSlug, (s) => `/maps/${encodeURIComponent(s)}/markers`, {
 			query: {
 				...options?.bbox ? {
 					bbox: JSON.stringify(options.bbox)
@@ -305,12 +305,12 @@ export class RestClient implements Api<ApiVersion.V3, false> {
 	}
 
 	async getMarker(mapSlug: AnyMapSlug, markerId: ID): Promise<Stripped<Marker>> {
-		const res = await this.fetchMap(mapSlug, (s) => `/map/${encodeURIComponent(s)}/marker/${encodeURIComponent(markerId)}`);
+		const res = await this.fetchMap(mapSlug, (s) => `/maps/${encodeURIComponent(s)}/markers/${encodeURIComponent(markerId)}`);
 		return await res.json();
 	}
 
 	async createMarker(mapSlug: AnyMapSlug, data: Marker<CRU.CREATE>): Promise<Stripped<Marker>> {
-		const res = await this.fetchMap(mapSlug, (s) => `/map/${encodeURIComponent(s)}/marker`, {
+		const res = await this.fetchMap(mapSlug, (s) => `/maps/${encodeURIComponent(s)}/markers`, {
 			method: "POST",
 			body: data
 		});
@@ -318,7 +318,7 @@ export class RestClient implements Api<ApiVersion.V3, false> {
 	}
 
 	async updateMarker(mapSlug: AnyMapSlug, markerId: ID, data: Marker<CRU.UPDATE>): Promise<Stripped<Marker>> {
-		const res = await this.fetchMap(mapSlug, (s) => `/map/${encodeURIComponent(s)}/marker/${encodeURIComponent(markerId)}`, {
+		const res = await this.fetchMap(mapSlug, (s) => `/maps/${encodeURIComponent(s)}/markers/${encodeURIComponent(markerId)}`, {
 			method: "PUT",
 			body: data
 		});
@@ -326,11 +326,11 @@ export class RestClient implements Api<ApiVersion.V3, false> {
 	}
 
 	async deleteMarker(mapSlug: AnyMapSlug, markerId: ID): Promise<void> {
-		await this.fetchMap(mapSlug, (s) => `/map/${encodeURIComponent(s)}/marker/${encodeURIComponent(markerId)}`, { method: "DELETE" });
+		await this.fetchMap(mapSlug, (s) => `/maps/${encodeURIComponent(s)}/markers/${encodeURIComponent(markerId)}`, { method: "DELETE" });
 	}
 
 	async getMapLines<IncludeTrackPoints extends boolean = false>(mapSlug: AnyMapSlug, options?: { bbox?: BboxWithZoom; includeTrackPoints?: IncludeTrackPoints; typeId?: ID }): Promise<StreamedResults<IncludeTrackPoints extends true ? Stripped<LineWithTrackPoints> : Stripped<Line>>> {
-		const res = await this.fetchMap(mapSlug, (s) => `/map/${encodeURIComponent(s)}/line`, {
+		const res = await this.fetchMap(mapSlug, (s) => `/maps/${encodeURIComponent(s)}/lines`, {
 			query: {
 				...options?.bbox ? {
 					bbox: JSON.stringify(options.bbox)
@@ -347,12 +347,12 @@ export class RestClient implements Api<ApiVersion.V3, false> {
 	}
 
 	async getLine(mapSlug: AnyMapSlug, lineId: ID): Promise<Stripped<Line>> {
-		const res = await this.fetchMap(mapSlug, (s) => `/map/${encodeURIComponent(s)}/line/${encodeURIComponent(lineId)}`);
+		const res = await this.fetchMap(mapSlug, (s) => `/maps/${encodeURIComponent(s)}/lines/${encodeURIComponent(lineId)}`);
 		return await res.json();
 	}
 
 	async getLinePoints(mapSlug: AnyMapSlug, lineId: ID, options?: { bbox?: BboxWithExcept }): Promise<StreamedResults<TrackPoint>> {
-		const res = await this.fetchMap(mapSlug, (s) => `/map/${encodeURIComponent(s)}/line/${encodeURIComponent(lineId)}/linePoints`, {
+		const res = await this.fetchMap(mapSlug, (s) => `/maps/${encodeURIComponent(s)}/lines/${encodeURIComponent(lineId)}/linePoints`, {
 			query: {
 				...options?.bbox ? {
 					bbox: JSON.stringify(options.bbox)
@@ -363,7 +363,7 @@ export class RestClient implements Api<ApiVersion.V3, false> {
 	}
 
 	async createLine(mapSlug: AnyMapSlug, data: Line<CRU.CREATE>): Promise<Stripped<Line>> {
-		const res = await this.fetchMap(mapSlug, (s) => `/map/${encodeURIComponent(s)}/line`, {
+		const res = await this.fetchMap(mapSlug, (s) => `/maps/${encodeURIComponent(s)}/lines`, {
 			method: "POST",
 			body: data
 		});
@@ -371,7 +371,7 @@ export class RestClient implements Api<ApiVersion.V3, false> {
 	}
 
 	async updateLine(mapSlug: AnyMapSlug, lineId: ID, data: Line<CRU.UPDATE>): Promise<Stripped<Line>> {
-		const res = await this.fetchMap(mapSlug, (s) => `/map/${encodeURIComponent(s)}/line/${encodeURIComponent(lineId)}`, {
+		const res = await this.fetchMap(mapSlug, (s) => `/maps/${encodeURIComponent(s)}/lines/${encodeURIComponent(lineId)}`, {
 			method: "PUT",
 			body: data
 		});
@@ -379,13 +379,13 @@ export class RestClient implements Api<ApiVersion.V3, false> {
 	}
 
 	async deleteLine(mapSlug: AnyMapSlug, lineId: ID): Promise<void> {
-		await this.fetchMap(mapSlug, (s) => `/map/${encodeURIComponent(s)}/line/${encodeURIComponent(lineId)}`, {
+		await this.fetchMap(mapSlug, (s) => `/maps/${encodeURIComponent(s)}/lines/${encodeURIComponent(lineId)}`, {
 			method: "DELETE"
 		});
 	}
 
 	async exportLineAsGpx(mapSlug: AnyMapSlug, lineId: ID, options?: { rte?: boolean }): Promise<ExportResult> {
-		return this.getExportResult(await this.fetchMap(mapSlug, (s) => `/map/${encodeURIComponent(s)}/line/${encodeURIComponent(lineId)}/gpx`, {
+		return this.getExportResult(await this.fetchMap(mapSlug, (s) => `/maps/${encodeURIComponent(s)}/lines/${encodeURIComponent(lineId)}/gpx`, {
 			query: {
 				...options?.rte != null ? {
 					rte: `${options.rte}`
@@ -395,11 +395,11 @@ export class RestClient implements Api<ApiVersion.V3, false> {
 	}
 
 	async exportLineAsGeoJson(mapSlug: AnyMapSlug, lineId: ID): Promise<ExportResult> {
-		return this.getExportResult(await this.fetchMap(mapSlug, (s) => `/map/${encodeURIComponent(s)}/line/${encodeURIComponent(lineId)}/geojson`));
+		return this.getExportResult(await this.fetchMap(mapSlug, (s) => `/maps/${encodeURIComponent(s)}/lines/${encodeURIComponent(lineId)}/geojson`));
 	}
 
 	async getLineTemplate(mapSlug: AnyMapSlug, options: { typeId: ID }): Promise<LineTemplate> {
-		const res = await this.fetchMap(mapSlug, (s) => `/map/${encodeURIComponent(s)}/line/template`, {
+		const res = await this.fetchMap(mapSlug, (s) => `/maps/${encodeURIComponent(s)}/lines/template`, {
 			query: {
 				typeId: options.typeId
 			}
@@ -408,17 +408,17 @@ export class RestClient implements Api<ApiVersion.V3, false> {
 	}
 
 	async getMapTypes(mapSlug: AnyMapSlug): Promise<StreamedResults<Stripped<Type>>> {
-		const res = await this.fetchMap(mapSlug, (s) => `/map/${encodeURIComponent(s)}/type`);
+		const res = await this.fetchMap(mapSlug, (s) => `/maps/${encodeURIComponent(s)}/types`);
 		return parseStreamedResults(res);
 	}
 
 	async getType(mapSlug: AnyMapSlug, typeId: ID): Promise<Stripped<Type>> {
-		const res = await this.fetchMap(mapSlug, (s) => `/map/${encodeURIComponent(s)}/type/${encodeURIComponent(typeId)}`);
+		const res = await this.fetchMap(mapSlug, (s) => `/maps/${encodeURIComponent(s)}/types/${encodeURIComponent(typeId)}`);
 		return await res.json();
 	}
 
 	async createType(mapSlug: AnyMapSlug, data: Type<CRU.CREATE>): Promise<Stripped<Type>> {
-		const res = await this.fetchMap(mapSlug, (s) => `/map/${encodeURIComponent(s)}/type`, {
+		const res = await this.fetchMap(mapSlug, (s) => `/maps/${encodeURIComponent(s)}/types`, {
 			method: "POST",
 			body: data
 		});
@@ -426,7 +426,7 @@ export class RestClient implements Api<ApiVersion.V3, false> {
 	}
 
 	async updateType(mapSlug: AnyMapSlug, typeId: ID, data: Type<CRU.UPDATE>): Promise<Stripped<Type>> {
-		const res = await this.fetchMap(mapSlug, (s) => `/map/${encodeURIComponent(s)}/type/${encodeURIComponent(typeId)}`, {
+		const res = await this.fetchMap(mapSlug, (s) => `/maps/${encodeURIComponent(s)}/types/${encodeURIComponent(typeId)}`, {
 			method: "PUT",
 			body: data
 		});
@@ -434,23 +434,23 @@ export class RestClient implements Api<ApiVersion.V3, false> {
 	}
 
 	async deleteType(mapSlug: AnyMapSlug, typeId: ID): Promise<void> {
-		await this.fetchMap(mapSlug, (s) => `/map/${encodeURIComponent(s)}/type/${encodeURIComponent(typeId)}`, {
+		await this.fetchMap(mapSlug, (s) => `/maps/${encodeURIComponent(s)}/types/${encodeURIComponent(typeId)}`, {
 			method: "DELETE"
 		});
 	}
 
 	async getMapViews(mapSlug: AnyMapSlug): Promise<StreamedResults<Stripped<View>>> {
-		const res = await this.fetchMap(mapSlug, (s) => `/map/${encodeURIComponent(s)}/view`);
+		const res = await this.fetchMap(mapSlug, (s) => `/maps/${encodeURIComponent(s)}/views`);
 		return parseStreamedResults(res);
 	}
 
 	async getView(mapSlug: AnyMapSlug, viewId: ID): Promise<Stripped<View>> {
-		const res = await this.fetchMap(mapSlug, (s) => `/map/${encodeURIComponent(s)}/view/${encodeURIComponent(viewId)}`);
+		const res = await this.fetchMap(mapSlug, (s) => `/maps/${encodeURIComponent(s)}/views/${encodeURIComponent(viewId)}`);
 		return await res.json();
 	}
 
 	async createView(mapSlug: AnyMapSlug, data: View<CRU.CREATE>): Promise<Stripped<View>> {
-		const res = await this.fetchMap(mapSlug, (s) => `/map/${encodeURIComponent(s)}/view`, {
+		const res = await this.fetchMap(mapSlug, (s) => `/maps/${encodeURIComponent(s)}/views`, {
 			method: "POST",
 			body: data
 		});
@@ -458,7 +458,7 @@ export class RestClient implements Api<ApiVersion.V3, false> {
 	}
 
 	async updateView(mapSlug: AnyMapSlug, viewId: ID, data: View<CRU.UPDATE>): Promise<Stripped<View>> {
-		const res = await this.fetchMap(mapSlug, (s) => `/map/${encodeURIComponent(s)}/view/${encodeURIComponent(viewId)}`, {
+		const res = await this.fetchMap(mapSlug, (s) => `/maps/${encodeURIComponent(s)}/views/${encodeURIComponent(viewId)}`, {
 			method: "PUT",
 			body: data
 		});
@@ -466,7 +466,7 @@ export class RestClient implements Api<ApiVersion.V3, false> {
 	}
 
 	async deleteView(mapSlug: AnyMapSlug, viewId: ID): Promise<void> {
-		await this.fetchMap(mapSlug, (s) => `/map/${encodeURIComponent(s)}/view/${encodeURIComponent(viewId)}`, {
+		await this.fetchMap(mapSlug, (s) => `/maps/${encodeURIComponent(s)}/views/${encodeURIComponent(viewId)}`, {
 			method: "DELETE"
 		});
 	}
