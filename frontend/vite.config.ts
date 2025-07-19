@@ -37,5 +37,8 @@ export default defineConfig({
 	},
 	test: {
 		environment: 'happy-dom'
+	},
+	server: {
+		allowedHosts: true
 	}
 });
