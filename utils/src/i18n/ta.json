@@ -58,5 +58,13 @@
     },
     "search": {
         "http-error": "STATE {{status}} உடன் தேடல் தோல்வியுற்றது."
+    },
+    "utils": {
+        "node": "முனை {{id}}}",
+        "way": "வழி {{id}}}",
+        "relation": "உறவு {{id}}}",
+        "feature-with-name-role": "{{feature}} ({{name}}, பங்கு: {{role}})",
+        "feature-with-name": "{{feature}} ({{name}})",
+        "feature-with-role": "{{feature}} (பங்கு: {{role}})"
     }
 }
