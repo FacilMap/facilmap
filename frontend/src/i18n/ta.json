@@ -5,12 +5,12 @@
     "about-dialog": {
         "map-data-search": "தேடல்",
         "header": "FacilMap பற்றி {{version}}",
-        "license-text": "{{{facilmap}}} இன் கீழ் கிடைக்கிறது.",
+        "license-text": "{{facilmap}}} {{license}}இன் கீழ் கிடைக்கிறது.",
         "license-text-facilmap": "வசதி",
-        "license-text-license": "குனு பொது பொது உரிமம் பதிப்பு 3",
+        "license-text-license": "குனு பொது பொதுமக்கள் உரிமம் பதிப்பு 3",
         "issues-text": "ஏதாவது வேலை செய்யவில்லை அல்லது முன்னேற்றத்திற்கான பரிந்துரை இருந்தால், தயவுசெய்து {{tracker}} இல் புகாரளிக்கவும்.",
         "issues-text-tracker": "வெளியீடு டிராக்கர்",
-        "help-text": "உங்களிடம் ஒரு கேள்வி இருந்தால், தயவுசெய்து {{documentation}} ஐப் பாருங்கள், {{discussions}} இல் ஒரு கேள்வியை எழுப்புங்கள் அல்லது {{chat} in இல் கேளுங்கள்.",
+        "help-text": "உங்களிடம் ஒரு கேள்வி இருந்தால், தயவுசெய்து {{documentation}} ஐப் பாருங்கள், {{discussions}} இல் ஒரு கேள்வியை எழுப்புங்கள் அல்லது {{chat}} இல் கேளுங்கள்.",
         "help-text-documentation": "ஆவணப்படுத்துதல்",
         "help-text-discussions": "கலந்துரையாடல் மன்றம்",
         "map-data-geoip": "சியோப்",
@@ -18,7 +18,7 @@
         "privacy-information": "தனியுரிமை செய்தி",
         "map-data": "வரைபட தரவு",
         "map-data-pois": "பின்னர்",
-        "map-data-geoip-description": "இந்த தயாரிப்பில் மேக்ச்மின்ட் உருவாக்கிய சியோலைட் 2 தரவு அடங்கும், இது {{maxmind} இருந்து இலிருந்து கிடைக்கிறது.",
+        "map-data-geoip-description": "இந்தத் தயாரிப்பில் மேக்ச்மின்ட் உருவாக்கிய சியோலைட் 2 தரவு அடங்கும், இது {{maxmind}} இலிருந்து கிடைக்கிறது.",
         "map-data-directions": "திசைகள்",
         "attribution-osm-contributors": "OSM பங்களிப்பாளர்கள்",
         "programs-libraries": "திட்டங்கள்/நூலகங்கள்",
@@ -29,7 +29,8 @@
         "qr-code-fallback-tooltip": "QR குறியீட்டைக் காட்டு",
         "copied-fallback-title": "இணைப்பு நகலெடுக்கப்பட்டது",
         "copied-fallback-message": "இணைப்பு இடைநிலைப்பலகைக்கு நகலெடுக்கப்பட்டது.",
-        "copy-alt": "நகலெடு"
+        "copy-alt": "நகலெடு",
+        "copy-fallback-tooltip": "நகலெடு பெறுநர் இடைநிலைப் பலகை"
     },
     "custom-import-dialog": {
         "existing-type": "தற்போதுள்ள வகை “{{name}}”",
@@ -42,8 +43,8 @@
         "map-to": "வரைபடம்…",
         "markers_one": "வகையின் மார்க்கர் {{typeName}} ({{count}})",
         "markers_other": "{{typeName}} ({{count}}) வகையின் குறிப்பான்கள்",
-        "lines_one": "வகை {{typeName}} ({{count}})",
-        "lines_other": "வகை {{typeName}} ({{count}})",
+        "lines_one": "வரி வகை {{typeName}} ({{count}})",
+        "lines_other": "வரிகள் வகை {{typeName}} ({{count}})",
         "untyped-markers_one": "வெட்டப்படாத மார்க்கர் ({{count}})",
         "untyped-markers_other": "வெட்டப்படாத குறிப்பான்கள் ({{count}})",
         "untyped-lines_one": "வெட்டப்படாத வரி/பலகோணம் ({{count}})",
@@ -72,7 +73,7 @@
         "icon-description": "மார்க்கர் படவுரு",
         "shape-description": "மார்க்கர் வடிவம்",
         "ele-description": "மார்க்கர் உயரம்",
-        "mode-description": "வரி ரூட்டிங் பயன்முறை ({{straight}} / {{car}} / {{{bicycle}} / {{pedestrian}} / {{track}})",
+        "mode-description": "வரி ரூட்டிங் பயன்முறை ({{straight}} / {{car}} / {{bicycle}} / {{pedestrian}} / {{track}})",
         "width-description": "வரி அகலம்",
         "distance-description": "கிலோமீட்டரில் வரி தூரம்",
         "time-description": "வினாடிகளில் வரி ரூட்டிங் நேரம்",
@@ -83,7 +84,7 @@
         "routePoints-description": "வரி புள்ளி ஒருங்கிணைப்புகள்",
         "number-description": "எண் மதிப்பு",
         "text-description": "உரை மதிப்பு",
-        "mathematical-description": "கணித செயல்பாடுகள் ({{{modulo}}: மாடுலோ, {{power}}: சக்தி)",
+        "mathematical-description": "கணித செயல்பாடுகள் ({{modulo}}: மாடுலோ, {{power}}: சக்தி)",
         "logical-description": "தருக்க ஆபரேட்டர்கள்",
         "regexp-description": "வழக்கமான வெளிப்பாடு போட்டி (வழக்கு உணர்திறன்)",
         "lower-description": "கீழ் வழக்குக்கு மாற்றவும்",
@@ -92,7 +93,7 @@
         "min-max-description": "மிகச்சிறிய/மிக உயர்ந்த மதிப்பு"
     },
     "edit-type-dialog": {
-        "fixed": "சரி",
+        "fixed": "சரிசெய்யப்பட்டது",
         "default-size": "இயல்புநிலை அளவு",
         "default-icon": "இயல்புநிலை படவுரு",
         "default-shape": "இயல்புநிலை வடிவம்",
@@ -158,11 +159,12 @@
         "option-reorder": "மறுவரிசை",
         "shape": "வடிவம்",
         "width": "அகலம்",
-        "option-add": "கூட்டு"
+        "option-add": "கூட்டு",
+        "show-in-legend": "காட்டு in legend"
     },
     "export-dialog": {
         "gpx-explanation-interpolation-gpx": "சி.பி.எக்ச்",
-        "track-zip-explanation": "{{trackZip} அனைத்தும் அனைத்து குறிப்பான்களுக்கும் ஒரு சிபிஎக்ச் கோப்புடன் ஒரு சிப் கோப்பையும் ஒவ்வொரு வரிக்கும் ஒரு சிபிஎக்ச் கோப்பையும் உருவாக்கும். ஒரு கோப்பிற்கு ஒரு வரி பாணியை மட்டுமே ஆதரிக்கும் OSMand போன்ற பயன்பாடுகளுடன் இது சிறப்பாக செயல்படுகிறது.",
+        "track-zip-explanation": "{{trackZip}} அனைத்தும் அனைத்து குறிப்பான்களுக்கும் ஒரு சிபிஎக்ச் கோப்புடன் ஒரு சிப் கோப்பையும் ஒவ்வொரு வரிக்கும் ஒரு சிபிஎக்ச் கோப்பையும் உருவாக்கும். ஒரு கோப்பிற்கு ஒரு வரி பாணியை மட்டுமே ஆதரிக்கும் OSMand போன்ற பயன்பாடுகளுடன் இது சிறப்பாகச் செயல்படுகிறது.",
         "track-zip-explanation-interpolation-trackZip": "ட்ராக் புள்ளிகள், ஒரு வரிக்கு ஒரு கோப்பு (சிப் கோப்பு)",
         "route-explanation-interpolation-route": "பாதை புள்ளிகள்",
         "type": "வகை",
@@ -198,26 +200,26 @@
         "csv-explanation": "{{csv}} கோப்புகளை பெரும்பாலான விரிதாள் பயன்பாடுகளில் இறக்குமதி செய்யலாம் மற்றும் ஒரு வகை மார்க்கர் அல்லது வரியின் பொருள்களின் தரவு பண்புகளை மட்டுமே கொண்டிருக்கலாம்.",
         "csv-explanation-interpolation-csv": "சிஎச்வி",
         "route-type": "பாதை வகை",
-        "track-explanation": "{{track} your உங்கள் வரிகள் உங்கள் வரைபடத்தில் இருப்பதைப் போலவே ஏற்றுமதி செய்யும்.",
+        "track-explanation": "{{track}} உங்கள் வரிகள் உங்கள் வரைபடத்தில் இருப்பதைப் போலவே ஏற்றுமதி செய்யும்.",
         "track-explanation-interpolation-track": "டிராக் புள்ளிகள்",
-        "route-explanation": "{{route} your உங்கள் வரிகளின்/வழியாக/முதல் பாதை புள்ளிகளை மட்டுமே ஏற்றுமதி செய்யும், மேலும் உங்கள் வழிசெலுத்தல் மென்பொருள்/சாதனம் அதன் சொந்த வரைபட தரவு மற்றும் வழிமுறையைப் பயன்படுத்தி பாதையை கணக்கிட வேண்டும்.",
+        "route-explanation": "{{route}} உங்கள் வரிகளின்/வழியாக/முதல் பாதை புள்ளிகளை மட்டுமே ஏற்றுமதி செய்யும், மேலும் உங்கள் வழிசெலுத்தல் மென்பொருள்/சாதனம் அதன் சொந்த வரைபட தரவு மற்றும் வழிமுறையைப் பயன்படுத்தி பாதையைக் கணக்கிட வேண்டும்.",
         "include-columns": "நெடுவரிசைகளை உள்ளடக்குங்கள்",
         "apply-filter": "வடிகட்டியைப் பயன்படுத்துங்கள்",
         "apply-filter-label": "தற்போதைய வடிகட்டியின் கீழ் காணக்கூடிய பொருள்களை மட்டுமே சேர்க்கவும்"
     },
     "history-utils": {
-        "description-create-type": "உருவாக்கிய வகை {{id}} {{{quotedName}}}",
+        "description-create-type": "உருவாக்கிய வகை {{id}} {{quotedName}}}",
         "description-update-map": "மாற்றப்பட்ட வரைபட அமைப்புகள்",
         "description-update-marker": "மாற்றப்பட்ட மார்க்கர் {{id}} {{quotedName}}",
-        "description-update-line": "மாற்றப்பட்ட வரி {{id}} {{{quotedName}}}",
+        "description-update-line": "மாற்றப்பட்ட வரி {{id}} {{quotedName}}",
         "description-update-view": "மாற்றப்பட்ட பார்வை {{id}} {{quotedName}}}",
         "description-update-type": "மாற்றப்பட்ட வகை {{id}} {{quotedName}}",
         "description-delete-marker": "நீக்கப்பட்ட மார்க்கர் {{id}} {{quotedName}}",
         "description-delete-line": "நீக்கப்பட்ட வரி {{id}} {{quotedName}}",
         "description-delete-view": "நீக்கப்பட்ட பார்வை {{id}} {{quotedName}}",
         "revert-create-type-title": "வகையை நீக்கு",
-        "revert-create-marker-message-named": "நீங்கள் உண்மையில் மார்க்கரை நீக்க விரும்புகிறீர்களா {{quotedName}}}",
-        "revert-create-view-message-named": "பார்வையை நீக்க விரும்புகிறீர்களா {{quotedName}}}}",
+        "revert-create-marker-message-named": "நீங்கள் உண்மையில் மார்க்கரை நீக்க விரும்புகிறீர்களா {{quotedName}}?",
+        "revert-create-view-message-named": "பார்வையை நீக்க விரும்புகிறீர்களா {{quotedName}}?",
         "revert-create-view-message-unnamed": "இந்த பார்வையை நீக்க விரும்புகிறீர்களா?",
         "revert-create-type-message-named": "{{quotedName}} வகையை நீக்க விரும்புகிறீர்களா?",
         "revert-create-type-message-unnamed": "இந்த வகையை நீக்க விரும்புகிறீர்களா?",
@@ -233,10 +235,10 @@
         "revert-delete": "மீட்டமை",
         "revert-delete-marker-title": "மார்க்கரை மீட்டமை",
         "revert-delete-line-title": "வரியை மீட்டமை",
-        "description-create-marker": "உருவாக்கிய மார்க்கர் {{id}} {{{quotedName}}}",
-        "description-create-line": "உருவாக்கிய வரி {{id}} {{{quotedName}}",
+        "description-create-marker": "உருவாக்கிய மார்க்கர் {{id}} {{quotedName}}",
+        "description-create-line": "உருவாக்கிய வரி {{id}} {{quotedName}}",
         "description-create-view": "உருவாக்கப்பட்ட பார்வை {{id}} {{quotedName}}}",
-        "description-delete-type": "நீக்கப்பட்ட வகை {{id}} {{{quotedName}}",
+        "description-delete-type": "நீக்கப்பட்ட வகை {{id}} {{quotedName}}",
         "description-interpolation-quotedName": "“{{name}}”",
         "description-interpolation-quotedName-renamed": "{{quotedBefore}}} (புதிய பெயர்: {{quotedAfter}})",
         "revert-create": "மாற்றியமைக்கவும் (நீக்கு)",
@@ -356,7 +358,7 @@
         "search-engines-label": "தேடுபொறிகளுக்கு அணுகலாம்",
         "search-engines-description": "இது இயக்கப்பட்டிருந்தால், கூகிள் போன்ற தேடுபொறிகள் இந்த வரைபடத்தின் படிக்க மட்டும் பதிப்பைச் சேர்க்க அனுமதிக்கப்படும்.",
         "legend-text": "புராண உரை",
-        "legend-text-description": "புராணக்கதைக்கு மேலேயும் கீழேயும் காட்டப்படும் உரை. {{markdown} with உடன் வடிவமைக்கப்படலாம்.",
+        "legend-text-description": "புராணக்கதைக்கு மேலேயும் கீழேயும் காட்டப்படும் உரை. {{markdown}} உடன் வடிவமைக்கப்படலாம்.",
         "map-description": "குறுகிய விளக்கம்",
         "map-description-description": "இந்த விளக்கம் தேடுபொறிகளின் கீழ் காண்பிக்கப்படும்.",
         "cluster-markers": "கிளச்டர் குறிப்பான்கள்",
@@ -376,7 +378,7 @@
         "top-left": "மேல் இடது",
         "bottom-right": "கீழே வலது",
         "pois": "பின்னர்",
-        "include-pois": "எனவே ({{}}) சேர்க்கவும்",
+        "include-pois": "எனவே ({{pois}}) சேர்க்கவும்",
         "base-layer": "அடிப்படை அடுக்கு",
         "overlays": "மேலடுக்குகள்",
         "overlays-joiner": "அருவடிக்கு ",
@@ -417,11 +419,11 @@
         "link-copied-title": "வரைபட இணைப்பு நகலெடுக்கப்பட்டது",
         "link-copied-message": "வரைபட இணைப்பு இடைநிலைப்பலகைக்கு நகலெடுக்கப்பட்டது.",
         "embed-copied-title": "உட்பொதிக்கப்பட்ட குறியீடு நகலெடுக்கப்பட்டது",
-        "embed-copied-message": "{{appName} fud உட்பொதிக்கும் குறியீடு கிளிப்போர்டில் நகலெடுக்கப்பட்டது."
+        "embed-copied-message": "{{appName}} உட்பொதிக்கும் குறியீடு கிளிப்போர்டில் நகலெடுக்கப்பட்டது."
     },
     "route-form": {
         "submit": "போ!",
-        "route-description-outer": "{{inner} இருந்து இலிருந்து பாதை",
+        "route-description-outer": "{{inner}} இலிருந்து பாதை",
         "route-description-inner": "{{destinations}} {{mode}}",
         "route-description-inner-joiner": " பெறுநர் ",
         "find-destination-error": "இலக்கைக் கண்டுபிடிப்பது “{{query}}”",
@@ -554,7 +556,8 @@
         "colour": "நிறம்",
         "width": "அகலம்",
         "stroke": "பக்கவாதம்",
-        "change-type": "வகை மாற்றவும்"
+        "change-type": "வகை மாற்றவும்",
+        "edit-type": "“{{type}}” எனத் திருத்து"
     },
     "edit-marker-dialog": {
         "save-error": "மார்க்கரைச் சேமிக்கும் பிழை",
@@ -564,7 +567,8 @@
         "size": "அளவு",
         "icon": "படவுரு",
         "shape": "வடிவம்",
-        "change-type": "வகை மாற்றவும்"
+        "change-type": "வகை மாற்றவும்",
+        "edit-type": "“{{type}}” எனத் திருத்து"
     },
     "elevation-stats": {
         "ascent-alt": "ஏற்றம்",
@@ -580,7 +584,9 @@
         "gpx-track-tooltip": "சிபிஎக்ச் கோப்புகளை பெரும்பாலான வழிசெலுத்தல் மென்பொருளுடன் திறக்க முடியும். டிராக் பயன்முறையில், கணக்கிடப்பட்ட பாதை கோப்பில் சேமிக்கப்படுகிறது.",
         "gpx-track-label": "சிபிஎக்ச் பாதையாக ஏற்றுமதி செய்யுங்கள்",
         "gpx-route-tooltip": "சிபிஎக்ச் கோப்புகளை பெரும்பாலான வழிசெலுத்தல் மென்பொருளுடன் திறக்க முடியும். பாதை பயன்முறையில், தொடக்க/முடிவு/வழியாக புள்ளிகள் மட்டுமே கோப்பில் சேமிக்கப்படுகின்றன, மேலும் வழிசெலுத்தல் மென்பொருள் பாதையை கணக்கிட வேண்டும்.",
-        "gpx-route-label": "சிபிஎக்ச் பாதையாக ஏற்றுமதி செய்யுங்கள்"
+        "gpx-route-label": "சிபிஎக்ச் பாதையாக ஏற்றுமதி செய்யுங்கள்",
+        "geojson-tooltip": "சியோச்சன் கோப்புகள் பொதுவாக புவியியல் தரவைக் காட்சிப்படுத்தும் அல்லது பகுப்பாய்வு செய்யும் மென்பொருளில் பயன்படுத்தப்படுகின்றன.",
+        "geojson-label": "ஏற்றுமதி அச் GeoJSON"
     },
     "file-results": {
         "import-view-error": "பார்வை இறக்குமதி செய்வதில் பிழை",
@@ -622,7 +628,7 @@
         "waytype-path": "பாதை",
         "waytype-track": "மின்தடம்",
         "waytype-cycleway": "சைக்கிள் பாதை",
-        "waytype-footway": "பாதை",
+        "waytype-footway": "நடைபாதை",
         "waytype-steps": "படிகள்",
         "waytype-ferry": "படகு",
         "waytype-construction": "கட்டுமானம்",
@@ -654,7 +660,8 @@
         "access-destination": "இலக்கு",
         "access-delivery": "வழங்கு",
         "access-private": "தனிப்பட்ட",
-        "access-permissive": "இசைவு"
+        "access-permissive": "இசைவு",
+        "waytype": "சாலை வகை"
     },
     "help-popover": {
         "show-alt": "விளக்கத்தைக் காட்டு"
@@ -762,7 +769,13 @@
         "zoom-to-object-label": "தேர்வுக்கு பெரிதாக்கு"
     },
     "map-id-edit": {
-        "unique-id-error": "வெவ்வேறு அணுகல் நிலைகளுக்கும் அதே இணைப்பைப் பயன்படுத்த முடியாது."
+        "unique-id-error": "வெவ்வேறு அணுகல் நிலைகளுக்கும் அதே இணைப்பைப் பயன்படுத்த முடியாது.",
+        "copy-tooltip": "நகலெடு map இணைப்பு பெறுநர் இடைநிலைப் பலகை",
+        "qr-tooltip": "வரைபட இணைப்பிற்கான QR குறியீட்டைக் காட்டு",
+        "copied-title": "வரைபட இணைப்பு நகலெடுக்கப்பட்டது",
+        "copied-message": "The map இணைப்பு was copied பெறுநர் the clipboard.",
+        "random-tooltip": "சீரற்ற ஐடியை உருவாக்குங்கள்",
+        "random-alt": "சீரற்ற"
     },
     "pagination": {
         "first-label": "முதல்",
@@ -792,17 +805,39 @@
         "label": "பயன்படுத்த",
         "from": "பாதை தொடக்க",
         "via": "வழியாக பாதை",
-        "to": "பாதை இலக்கு"
+        "to": "பாதை இலக்கு",
+        "from-insert": "Route தொடங்கு (insert before மின்னோட்ட்ம், ஓட்டம் start)",
+        "from-replace": "பாதை தொடக்க (தற்போதைய தொடக்கத்தை மாற்றவும்)",
+        "via-first": "(முதல்) வழியாக பாதை",
+        "via-last": "Route வழிமம் (last)",
+        "to-insert": "பாதை இலக்கு (தற்போதைய இலக்குக்குப் பிறகு செருகவும்)",
+        "to-replace": "Route destination (replace மின்னோட்ட்ம், ஓட்டம் destination)"
     },
     "user-preferences-dialog": {
         "title": "பயனர் விருப்பத்தேர்வுகள்",
         "introduction": "இந்த அமைப்புகள் உங்கள் கணினியில் குக்கீ என சேமிக்கப்படுகின்றன, மேலும் அவை திறந்த வரைபடத்திலிருந்து சுயாதீனமாக பயன்படுத்தப்படுகின்றன.",
         "language": "மொழி",
-        "language-description": "சில மொழிபெயர்ப்புகள் இன்னும் முழுமையடையாமல் இருக்கலாம். மொழிபெயர்ப்புகள் சமூகத்தால் உருவாக்கப்பட்டுள்ளன, {{weblate} on இல் பங்களிக்க தயங்க.",
+        "language-description": "சில மொழிபெயர்ப்புகள் இன்னும் முழுமையடையாமல் இருக்கலாம். மொழிபெயர்ப்புகள் சமூகத்தால் உருவாக்கப்பட்டுள்ளன, {{weblate}} இல் பங்களிக்க தயங்க.",
         "language-description-interpolation-weblate": "வலைபெயர்ப்பு",
         "units-us": "அமெரிக்க வழக்கம் (மைல்கள், அடி)",
         "units": "அலகுகள்",
-        "units-metric": "மெட்ரிக்"
+        "units-metric": "மெட்ரிக்",
+        "tab-general": "பொது",
+        "tab-map-style": "Map சூல் தண்டு",
+        "default-map-style": "இயல்புநிலை map சூல் தண்டு",
+        "external-links": "வெளிப்புற இணைப்புகள்",
+        "external-links-description": "Configure links பெறுநர் external maps here that will appear in the “Map style” toolbox பட்டியல் (to காட்டு the மின்னோட்ட்ம், ஓட்டம் map section), and in the coordinates dropdown of markers, தேடல் முடிவுகள் and POIs (to காட்டு the marker). Enable or முடக்கு preset map links here or configure your own.",
+        "external-links-placeholders": "Available placeholders க்கு தனிப்பயன் இணைப்பு URLs:",
+        "external-links-placeholder-coords": "சி.பி.எச் ஒருங்கிணைப்புகள்",
+        "external-links-placeholder-coords-proj": "Cooordinates in தனிப்பயன் projection with an EPSG code, க்கு example `%LON25833%`",
+        "external-links-placeholder-zoom": "Zoom நிலை",
+        "external-links-placeholder-zoom-modified": "Increased/decreased zoom level, க்கு example `%ZOOM-8%`",
+        "external-links-label": "சிட்டை",
+        "external-links-map-url": "Map முகவரி",
+        "external-links-marker-url": "Marker முகவரி",
+        "external-links-delete-tooltip": "நீக்கு",
+        "external-links-reorder-alt": "மறுவரிசை",
+        "external-links-create": "உருவாக்கு"
     },
     "utils": {
         "required-error": "காலியாக இருக்கக்கூடாது."
@@ -837,7 +872,7 @@
         "load-details": "பாதை விவரங்களை ஏற்றவும் (உயரம், சாலை வகைகள்,…)"
     },
     "route-form-tab": {
-        "tab-label": "பாதை"
+        "tab-label": "வழி"
     },
     "search-box": {
         "close-alt": "மூடு",
@@ -849,7 +884,8 @@
         "auto-zoom": "முடிவுகளுக்கு ஆட்டோ-சூம்",
         "search-alt": "தேடல்",
         "clear-alt": "தெளிவான",
-        "zoom-to-all": "எல்லா முடிவுகளுக்கும் பெரிதாக்கு"
+        "zoom-to-all": "எல்லா முடிவுகளுக்கும் பெரிதாக்கு",
+        "map-only": "Only தேடல் on map “{{mapName}}”"
     },
     "search-form-tab": {
         "tab-label": "தேடல்"
@@ -881,6 +917,72 @@
         "openstreetmap": "ஓபன்ச்ட்ரீட் வரைபடம்",
         "google-maps": "கூகிள் வரைபடங்கள்",
         "google-maps-satellite": "கூகிள் வரைபடங்கள் (செயற்கைக்கோள்)",
-        "bing-maps": "பிங் வரைபடங்கள்"
+        "bing-maps": "பிங் வரைபடங்கள்",
+        "geo-link": "சியோ: இணைப்பு",
+        "openstreetmap-editor": "OpenStreetMap எடிட்டர்",
+        "mapy-cz": "Mapy.cz"
+    },
+    "blame-results": {
+        "section-label": "{{timestamp}}, {{username}}",
+        "section-label-with-comment": "{{timestamp}}, {{username}}: {{comment}}",
+        "show-details-tooltip": "விவரங்களைக் காட்டு",
+        "zoom-to-section-tooltip": "பிரிவுக்கு பெரிதாக்கு",
+        "zoom-to-feature-label": "இடம்பெற பெரிதாக்கவும்"
+    },
+    "blame-section-info": {
+        "changeset": "மாற்றங்கள்",
+        "changeset-value": "{{id}} ({{message}})",
+        "changeset-analyze": "மாற்றங்களை பகுப்பாய்வு செய்யுங்கள்",
+        "timestamp": "நேர முத்திரை",
+        "user": "பயனர்",
+        "created-modified": "உருவாக்கப்பட்டது/மாற்றியமைக்கப்பட்டது"
+    },
+    "blame-section-membership": {
+        "tooltip": "உறுப்பினர் வரிசைக்கு காட்டு",
+        "alt": "தகவல்",
+        "heading": "உறுப்பினர் வரிசைமுறை",
+        "member-with-name-role": "{{feature}} ({{name}}, பங்கு: {{role}})",
+        "member-with-name": "{{feature}} ({{name}})",
+        "member-with-role": "{{feature}} (பங்கு: {{role}})"
+    },
+    "changeset-results": {
+        "heading": "மாற்றங்கள் {{id}}}",
+        "created": "உருவாக்கிய நேரம்",
+        "closed": "நிறைவு நேரம்",
+        "user": "பயனர்",
+        "features": "நற்பொருத்தங்கள்",
+        "created-tooltip": "உருவாக்கப்பட்டது",
+        "deleted-tooltip": "நீக்கப்பட்டது",
+        "modified-tooltip": "மாற்றியமைக்கப்பட்ட",
+        "zoom-to-feature-tooltip": "இடம்பெற பெரிதாக்கவும்",
+        "show-details-tooltip": "விவரங்களைக் காட்டு",
+        "show-details-no-tag-changes-tooltip": "விவரங்களைக் காட்டு (குறிச்சொல் மாற்றங்கள் இல்லை)",
+        "show-details-no-tag-member-changes-tooltip": "விவரங்களைக் காட்டு (குறிச்சொல்/உறுப்பினர் மாற்றங்கள் இல்லை)",
+        "zoom-to-changeset-label": "மாற்றங்களை பெரிதாக்கவும்"
+    },
+    "changeset-feature-info": {
+        "zoom-to-feature-label": "இடம்பெற பெரிதாக்கவும்",
+        "members": "உறுப்பினர்கள்"
+    },
+    "osm-feature-link": {
+        "changeset": "மாற்றங்கள் {{id}}}",
+        "node-tooltip": "OpenStreetMap இல் முனை திறக்கவும்",
+        "way-tooltip": "OpenStreetMap இல் திறந்த வழி",
+        "relation-tooltip": "OpenStreetMap இல் திறந்த உறவு",
+        "changeset-tooltip": "OpenStreetMap இல் மாற்றங்களைத் திறக்கவும்",
+        "user-tooltip": "OpenStreetMap இல் பயனரைத் திறக்கவும்"
+    },
+    "osm-feature-info": {
+        "zoom-to-node": "முனைக்கு பெரிதாக்கு",
+        "zoom-to-way": "வழி பெரிதாக்கவும்",
+        "zoom-to-relation": "உறவுக்கு பெரிதாக்கு",
+        "show-details-tooltip": "அம்ச விவரங்களைக் காட்டு",
+        "total-length": "மொத்த நீளம்",
+        "sections": "பிரிவுகள்",
+        "nodes": "முனைகள்",
+        "members": "உறவு உறுப்பினர்கள்",
+        "section-label": "பிரிவு ({{distance}})",
+        "zoom-to-section-tooltip": "பிரிவுக்கு பெரிதாக்கு",
+        "role": "பாத்திரம்"
     }
 }
