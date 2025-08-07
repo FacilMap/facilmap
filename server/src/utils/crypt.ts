@@ -1,6 +1,6 @@
 import { createHash, randomBytes, scrypt as scryptRaw, type BinaryLike, type ScryptOptions } from "node:crypto";
 import { promisify } from "node:util";
-import { sign, verify } from "jsonwebtoken";
+import jwt from "jsonwebtoken";
 import { type ID, type MapPermissions } from "facilmap-types";
 import { base64ToNumber, base64UrlValidator, deserializeMapPermissions, encodeBase64Url, numberToBase64, serializeMapPermissions } from "facilmap-utils";
 import { tupleWithOptional } from "zod-tuple-with-optional";
@@ -30,7 +30,7 @@ export async function createMapToken(data: MapTokenPayload, secret: Buffer): Pro
 
 	const permissions = serializeMapPermissions(data.permissions);
 
-	const jwt = sign({
+	const fullToken = jwt.sign({
 		mapId: data.mapId,
 		slugHash: data.slugHash,
 		passwordHash: data.passwordHash,
@@ -40,7 +40,7 @@ export async function createMapToken(data: MapTokenPayload, secret: Buffer): Pro
 	}).split(".");
 
 	return [
-		jwt[2],
+		fullToken[2],
 		numberToBase64(data.mapId),
 		data.slugHash,
 		permissions,
@@ -61,7 +61,7 @@ export function verifyMapToken(token: string, secret: Buffer): MapTokenPayload {
 		base64UrlValidator.optional()
 	]).parse(token.split("."));
 
-	const jwt = [
+	const fullToken = [
 		"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9",
 		encodeBase64Url(JSON.stringify({
 			mapId: base64ToNumber(spl[1]),
@@ -72,7 +72,7 @@ export function verifyMapToken(token: string, secret: Buffer): MapTokenPayload {
 		spl[0]
 	].join(".");
 
-	const verified = verify(jwt, secret) as any;
+	const verified = jwt.verify(fullToken, secret) as any;
 	return {
 		mapId: verified.mapId,
 		slugHash: verified.slugHash,
