@@ -1,0 +1,241 @@
+name: Publish Docker image (latest)
+
+on:
+  push:
+    branches:
+      - 'v5'
+
+concurrency:
+  group: ${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  FACILMAP_REPO: facilmap/facilmap
+  # DOCS_REPO: facilmap/facilmap-docs
+
+
+jobs:
+  build-facilmap:
+    strategy:
+      matrix:
+        # os: [ubuntu-latest, ubuntu-24.04-arm]
+        os: [ubuntu-latest]
+    name: Build FacilMap
+    runs-on: ${{ matrix.os }}
+    steps:
+      -
+        name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.FACILMAP_REPO }}
+
+      -
+        name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      -
+        name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      -
+        name: Login to DockerHub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      -
+        name: Start integration test components in background
+        run: docker compose -f ./integration-tests/docker-compose.yml up -d --quiet-pull mysql postgres &
+
+      -
+        name: Build and push docker image
+        id: build
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          labels: ${{ steps.meta.outputs.labels }}
+          outputs: |
+            type=docker,name=facilmap-ci
+            type=image,"name=${{ env.FACILMAP_REPO }}",push-by-digest=true,name-canonical=true,push=true
+
+      # -
+      #   name: Start integration test components
+      #   run: |
+      #     docker compose -f ./integration-tests/docker-compose.yml up --wait
+      #     status="$?"
+      #     if (( status != 0 )); then
+      #       docker compose -f ./integration-tests/docker-compose.yml logs
+      #       exit "$status"
+      #     fi
+
+      # -
+      #   name: Run integration tests
+      #   run: >-
+      #     docker run --rm -u root --add-host host.docker.internal:host-gateway facilmap-ci sh -c "
+      #     yarn workspaces focus facilmap-integration-tests &&
+      #     FACILMAP_URL=http://host.docker.internal:8080 yarn workspace facilmap-integration-tests run integration-tests &&
+      #     FACILMAP_URL=http://host.docker.internal:8081 yarn workspace facilmap-integration-tests run integration-tests
+      #     "
+
+      - name: Export digest
+        run: |
+          mkdir -p ${{ runner.temp }}/digests
+          digest="${{ steps.build.outputs.digest }}"
+          touch "${{ runner.temp }}/digests/${digest#sha256:}"
+
+      - name: Upload digest
+        uses: actions/upload-artifact@v4
+        with:
+          name: digests-facilmap-${{ matrix.os }}
+          path: ${{ runner.temp }}/digests/*
+          if-no-files-found: error
+          retention-days: 1
+
+  # build-docs:
+  #   strategy:
+  #     matrix:
+  #       os: [ubuntu-latest, ubuntu-24.04-arm]
+  #   name: Build docs
+  #   runs-on: ${{ matrix.os }}
+  #   steps:
+  #     -
+  #       name: Checkout
+  #       uses: actions/checkout@v4
+
+  #     - name: Docker meta
+  #       id: meta
+  #       uses: docker/metadata-action@v5
+  #       with:
+  #         images: ${{ env.DOCS_REPO }}
+
+  #     -
+  #       name: Set up QEMU
+  #       uses: docker/setup-qemu-action@v3
+
+  #     -
+  #       name: Set up Docker Buildx
+  #       uses: docker/setup-buildx-action@v3
+
+  #     -
+  #       name: Login to DockerHub
+  #       uses: docker/login-action@v3
+  #       with:
+  #         username: ${{ secrets.DOCKERHUB_USERNAME }}
+  #         password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+  #     -
+  #       name: Build and push docker image
+  #       id: build
+  #       uses: docker/build-push-action@v5
+  #       with:
+  #         context: ./docs
+  #         labels: ${{ steps.meta.outputs.labels }}
+  #         outputs: type=image,"name=${{ env.DOCS_REPO }}",push-by-digest=true,name-canonical=true,push=true
+
+  #     - name: Export digest
+  #       run: |
+  #         mkdir -p ${{ runner.temp }}/digests
+  #         digest="${{ steps.build.outputs.digest }}"
+  #         touch "${{ runner.temp }}/digests/${digest#sha256:}"
+
+  #     - name: Upload digest
+  #       uses: actions/upload-artifact@v4
+  #       with:
+  #         name: digests-docs-${{ matrix.os }}
+  #         path: ${{ runner.temp }}/digests/*
+  #         if-no-files-found: error
+  #         retention-days: 1
+
+  merge-facilmap:
+    name: Push FacilMap
+    runs-on: ubuntu-latest
+    needs:
+      - build-facilmap
+    steps:
+      - name: Download digests
+        uses: actions/download-artifact@v4
+        with:
+          path: ${{ runner.temp }}/digests
+          pattern: digests-facilmap-*
+          merge-multiple: true
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.FACILMAP_REPO }}
+          flavor: latest=false
+          tags: |
+            type=raw,value=v5-alpha
+          # type=raw,value=latest,enable=${{ github.ref == format('refs/heads/{0}', 'main') }}
+          # type=semver,pattern={{major}}
+          # type=semver,pattern={{major}}.{{minor}}
+          # type=semver,pattern={{version}}
+
+      - name: Create manifest list and push
+        working-directory: ${{ runner.temp }}/digests
+        run: |
+          docker buildx imagetools create $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
+            $(printf '${{ env.FACILMAP_REPO }}@sha256:%s ' *)
+
+      - name: Inspect image
+        run: docker buildx imagetools inspect ${{ env.FACILMAP_REPO }}:${{ steps.meta.outputs.version }}
+
+
+  # merge-docs:
+  #   name: Push docs
+  #   runs-on: ubuntu-latest
+  #   needs:
+  #     - build-docs
+  #     - build-facilmap # Do not publish docs if main build failed
+  #   steps:
+  #     - name: Download digests
+  #       uses: actions/download-artifact@v4
+  #       with:
+  #         path: ${{ runner.temp }}/digests
+  #         pattern: digests-docs-*
+  #         merge-multiple: true
+
+  #     - name: Login to Docker Hub
+  #       uses: docker/login-action@v3
+  #       with:
+  #         username: ${{ secrets.DOCKERHUB_USERNAME }}
+  #         password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+  #     - name: Set up Docker Buildx
+  #       uses: docker/setup-buildx-action@v3
+
+  #     - name: Docker meta
+  #       id: meta
+  #       uses: docker/metadata-action@v5
+  #       with:
+  #         images: ${{ env.DOCS_REPO }}
+  #         flavor: latest=false
+  #         tags: |
+  #           type=raw,value=latest,enable=${{ github.ref == format('refs/heads/{0}', 'main') }}
+  #           type=semver,pattern={{major}}
+  #           type=semver,pattern={{major}}.{{minor}}
+  #           type=semver,pattern={{version}}
+
+  #     - name: Create manifest list and push
+  #       working-directory: ${{ runner.temp }}/digests
+  #       run: |
+  #         docker buildx imagetools create $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
+  #           $(printf '${{ env.DOCS_REPO }}@sha256:%s ' *)
+
+  #     - name: Inspect image
+  #       run: docker buildx imagetools inspect ${{ env.DOCS_REPO }}:${{ steps.meta.outputs.version }}
