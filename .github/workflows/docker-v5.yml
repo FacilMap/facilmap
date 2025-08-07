@@ -1,4 +1,5 @@
-name: Publish Docker image (latest)
+# name: Publish Docker image (latest)
+name: Publish Docker image (v5)
 
 on:
   push:
@@ -58,6 +59,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
+          file: Dockerfile-v5-alpha
           labels: ${{ steps.meta.outputs.labels }}
           outputs: |
             type=docker,name=facilmap-ci
