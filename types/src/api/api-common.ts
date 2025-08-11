@@ -5,6 +5,7 @@ import type { Line, TrackPoint } from "../line.js";
 import type { Marker } from "../marker.js";
 import type { Type } from "../type.js";
 import type { View } from "../view.js";
+import type { DeepReadonly } from "../utility.js";
 
 export const anyMapSlugWithoutIdentityValidator = mapSlugOrJwtValidator.or(z.object({
 	mapSlug: mapSlugOrJwtValidator,

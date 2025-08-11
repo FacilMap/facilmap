@@ -1,4 +1,4 @@
-import type { ApiV3, DeepReadonly, EventHandler, EventName, ExportResult, Route, SocketApi, SocketVersion, SubscribeToRouteOptions, TrackPoints } from "facilmap-types";
+import type { DeepReadonly, EventHandler, EventName, ExportResult, Route, SocketApi, SocketVersion, SubscribeToRouteOptions, TrackPoints } from "facilmap-types";
 import { type ClientEvents, type SocketClient } from "./socket-client";
 import { type ReactiveObjectProvider } from "./reactivity";
 import { mergeEventHandlers } from "./utils";
@@ -40,7 +40,7 @@ export class SocketClientRouteSubscription extends SocketClientSubscription<Rout
 	}
 
 	async updateSubscription(options: Partial<SubscribeToRouteOptions>): Promise<void> {
-		this.reactiveObjectProvider.set(this.data, "options", { ...this.data.options, options });
+		this.reactiveObjectProvider.set(this.data, "options", { ...this.data.options, ...options });
 		await this._subscribe();
 	}
 
