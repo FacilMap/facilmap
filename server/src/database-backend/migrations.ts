@@ -140,7 +140,7 @@ export default class DatabaseBackendMigrations {
 			console.log("DB migration: Rename map writeId to adminId");
 			const MapModel = this.backend.maps.MapModel;
 			await queryInterface.renameColumn('Maps', 'writeId', 'adminId');
-			await queryInterface.addColumn('Maps', 'writeId', MapModel.rawAttributes.writeId);
+			await queryInterface.addColumn('Maps', 'writeId', { type: DataTypes.STRING, allowNull: false });
 
 			const maps = await MapModel.findAll<MapModel>();
 			for(const map of maps) {
@@ -1023,7 +1023,7 @@ export default class DatabaseBackendMigrations {
 		const queryInterface = this.backend._conn.getQueryInterface();
 		const attrs = await queryInterface.describeTable(this.backend.maps.MapModel.getTableName());
 
-		if (!attrs["readId"] && !attrs["writeId"] && !attrs["adminId"]) {
+		if (!attrs["readId"] && !attrs["writeId"] && !attrs["adminId"] && !attrs["searchEngines"]) {
 			return;
 		}
 
@@ -1031,7 +1031,7 @@ export default class DatabaseBackendMigrations {
 
 		// If some ID columns are already missing, the previous migration attempt aborted while deleting columns. This means
 		// that the MapLinks table is already ready.
-		if (attrs["readId"] && attrs["writeId"] && attrs["adminId"]) {
+		if (attrs["readId"] && attrs["writeId"] && attrs["adminId"] && attrs["searchEngines"]) {
 			const allMaps = await this.backend.maps.MapModel.findAll({
 				attributes: ["id", "salt", "jwtSecret", "readId", "writeId", "adminId", "searchEngines"]
 			});
@@ -1078,6 +1078,21 @@ export default class DatabaseBackendMigrations {
 					}
 				}
 			}, 8); // Maximum concurrency is 4 by default, can be increased through UV_THREADPOOL_SIZE, see https://nodejs.org/dist/latest-v16.x/docs/api/cli.html#uv_threadpool_sizesize
+		}
+
+		// Delete adminId before writeId to avoid problem in _renameColMigrations() (renames writeId to adminId
+		// if writeId exists and adminId doesn't) if this aborts in the middle.
+		if (attrs["adminId"]) {
+			await queryInterface.removeColumn(this.backend.maps.MapModel.getTableName(), "adminId");
+		}
+		if (attrs["writeId"]) {
+			await queryInterface.removeColumn(this.backend.maps.MapModel.getTableName(), "writeId");
+		}
+		if (attrs["readId"]) {
+			await queryInterface.removeColumn(this.backend.maps.MapModel.getTableName(), "readId");
+		}
+		if (attrs["searchEngines"]) {
+			await queryInterface.removeColumn(this.backend.maps.MapModel.getTableName(), "searchEngines");
 		}
 
 		console.log("DB migration: Create map link table finished");
