@@ -55,7 +55,7 @@
 
 <template>
 	<ModalDialog
-		:title="i18n.t('map-settings-edit-link-dialog.title')"
+		:title="props.isCreate ? i18n.t('map-settings-edit-link-dialog.title-add') : i18n.t('map-settings-edit-link-dialog.title-edit')"
 		class="fm-map-settings-edit-link"
 		:isModified="isModified"
 		:isCreate="props.isCreate"
