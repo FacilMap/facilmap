@@ -778,7 +778,7 @@ export default class DatabaseBackendMigrations {
 
 		const queryInterface = this.backend._conn.getQueryInterface();
 
-		await queryInterface.changeColumn("History", "type", DataTypes.TEXT);
+		await queryInterface.changeColumn("History", "type", DataTypes.STRING(20));
 
 		await this.backend.history.HistoryModel.update({ type: "Map" }, { where: { type: "Pad" } });
 
