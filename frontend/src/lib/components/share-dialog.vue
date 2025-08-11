@@ -232,7 +232,7 @@
 				<label :for="`${id}-mapSlugType-input`" class="col-sm-3 col-form-label">{{i18n.t("share-dialog.map-link")}}</label>
 				<div class="col-sm-9">
 					<select :id="`${id}-mapSlugType-input`" class="form-select" v-model="mapLink">
-						<option v-for="link in mapLinks" :key="link.slug" :value="link">{{link.comment ? i18n.t("share-dialog.map-link-with-comment", { mapSlug: link.slug, comment: link.comment }) : link.slug}}</option>
+						<option v-for="link in mapLinks" :key="link.slug" :value="link">{{link.comment ? i18n.t("share-dialog.map-link-with-description", { mapSlug: link.slug, description: link.comment }) : link.slug}}</option>
 					</select>
 				</div>
 			</div>

@@ -735,7 +735,7 @@
         "add-favourite-persist": "Add map to favourites (browser will ask for persistent storage permission)",
         "add-favourite-tooltip": "Favourites are available in the “Collaborative maps” menu, allowing you to quickly open them without having to remember their link. They are saved in the local storage of your browser.",
         "link-url": "URL",
-        "link-comment": "Comment",
+        "link-description": "Description",
         "link-update-error": "Error updating map link",
         "link-disappeared-error": "The map link cannot be found on the type anymore.",
         "edit-link": "Edit",
@@ -743,9 +743,10 @@
         "add-link": "Add"
     },
     "map-settings-edit-link-dialog" : {
-        "title": "Edit map link",
+        "title-edit": "Edit map link",
+        "title-add": "Add map link",
         "url": "URL",
-        "comment": "Comment",
+        "description": "Description",
         "password": "Password",
         "permissions": "Permissions"
     },
@@ -836,7 +837,7 @@
         "show-legend": "Legend",
         "show-locate": "Location",
         "map-link": "Map link",
-        "map-link-with-comment": "{{mapSlug}} ({{comment}})",
+        "map-link-with-description": "{{mapSlug}} ({{description}})",
         "share-link": "Share link",
         "embed": "Embed",
         "link-copied-title": "Map link copied",

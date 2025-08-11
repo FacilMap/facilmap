@@ -66,7 +66,7 @@
 	<table class="table table-striped table-hover">
 		<thead>
 			<tr>
-				<th>{{i18n.t("map-settings-dialog.link-comment")}}</th>
+				<th>{{i18n.t("map-settings-dialog.link-description")}}</th>
 				<th>{{i18n.t("map-settings-dialog.link-url")}}</th>
 				<th></th>
 			</tr>

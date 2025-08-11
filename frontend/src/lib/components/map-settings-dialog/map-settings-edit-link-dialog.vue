@@ -66,7 +66,7 @@
 		@hidden="emit('hidden')"
 	>
 		<div class="row mb-3">
-			<label :for="`${id}-slug-input`" class="col-sm-3 col-form-label text-break">{{i18n.t("map-settings-edit-link-dialog.comment")}}</label>
+			<label :for="`${id}-slug-input`" class="col-sm-3 col-form-label text-break">{{i18n.t("map-settings-edit-link-dialog.description")}}</label>
 			<div class="col-sm-9 position-relative">
 				<input type="text" class="form-control" v-model="mapLink.comment" />
 			</div>
