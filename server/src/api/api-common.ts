@@ -1,5 +1,5 @@
 import { type Request, type Response } from "express";
-import type { AnyMapSlug, Api, ApiVersion, ExportResult, StreamedResults } from "facilmap-types";
+import type { AnyMapSlug, Api, ApiVersion, DeepReadonly, ExportResult, StreamedResults } from "facilmap-types";
 import * as z from "zod";
 import type { RouteParameters } from "express-serve-static-core";
 
@@ -16,7 +16,7 @@ type Method = "get" | "post" | "put" | "delete";
 export type ApiImplObj<Version extends ApiVersion, Func extends keyof Api<Version>, Route extends string> = {
 	method: Method,
 	route: Route,
-	getParams: (req: Request<RouteParameters<Route>>) => Parameters<ApiFunc<Version, Func>>,
+	getParams: (req: Request<RouteParameters<Route>>) => DeepReadonly<Parameters<ApiFunc<Version, Func>>>,
 	sendResult: Awaited<ReturnType<ApiFunc<Version, Func>>> extends void ? (
 		"empty" | ((res: Response) => void)
 	) : Awaited<ReturnType<ApiFunc<Version, Func>>> extends StreamedResults<any> ? (
@@ -62,7 +62,7 @@ export function getRequestMapSlug(req: Request<{ mapSlug: string }>): AnyMapSlug
 		}
 	}
 
-	const { identity } = z.object({ identity: z.string().optional() }).parse(req.query);
+	const { identity } = z.object({ identity: z.string().or(z.array(z.string())).optional() }).parse(req.query);
 
 	if (password != null || identity != null) {
 		return {

@@ -604,7 +604,7 @@ Parameters:
 * `mapSlug` (<code>[MapSlug](./types.md#mapslug)</code>): The map slug of the map to subscribe to. In this case, the `identity` cannot be provided as part of the `mapSlug` but instead passed as a separate property.
 * `pick` (`Array<"mapData" | "types" | "views" | "markers" | "lines" | "linePoints">`): The types of objects to subscribe to. Defaults to all of them.
 * `history` (boolean): Whether to retrieve history entries. Defaults to `false`.
-* `identity` (`string | null`): The identity, see <code>[MapSlug](./types.md#mapslug)</code>. When updating an existing map subscription, omitting the `identity` will keep the current one, while setting it to `null` will clear the current identity.
+* `identity` (`string | string[] | null`): The identity, see <code>[MapSlug](./types.md#mapslug)</code>. When updating an existing map subscription, omitting the `identity` will keep the current one, while setting it to `null` will clear the current identity.
 
 When using the Client, a map subscription object will be returned, see <code>[SocketClient.subscribeToMap()](./classes.md#subscribetomap)</code>. Calling `subscribeToMap()` with a map slug that is already subscribed will throw an error. To update an existing subscription, use <code>[mapSubscription.updateSubscription()](./classes.md#updatesubscription)</code>. On the contrary, when using the Socket API directly, `subscribeToMap()` acts as a way to enable _and_ to update a subscription. When called with a map slug that is already subscribed, it updates the subscription.
 
@@ -634,7 +634,7 @@ Parameters:
 * `mapData` (<code>[MapData](./types.md#mapdata)</code>): The data to create the map with
 * `pick` (`Array<"mapData" | "types" | "views" | "markers" | "lines" | "linePoints">`): The types of objects to subscribe to. Defaults to all of them.
 * `history` (boolean): Whether to retrieve history entries.
-* `identity` (string): The identity to subscribe with, see <code>[MapSlug](./types.md#mapslug)</code>.
+* `identity` (`string | string[]`): The identity to subscribe with, see <code>[MapSlug](./types.md#mapslug)</code>.
 
 ## `unsubscribeFromMap()`
 

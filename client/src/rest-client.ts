@@ -10,7 +10,7 @@ import {
 	parseJsonStream, streamToIterable
 } from "json-stream-es";
 import { parse as parseContentDisposition } from "content-disposition";
-import { flatMapAsyncIterable } from "./utils";
+import { flatMapAsyncIterable, makeUrlQuery, type UrlQuery } from "./utils";
 import { deserializeError } from "serialize-error";
 
 function parseStreamedResults<T>(res: Response): StreamedResults<T> {
@@ -70,14 +70,14 @@ export class RestClient implements Api<ApiVersion.V3, false> {
 		this.query = options?.query;
 	}
 
-	protected async fetch(path: string, init?: Omit<RequestInit, "body"> & { query?: Record<string, string | number | undefined>; body?: BodyInit | object }): Promise<Response> {
+	protected async fetch(path: string, init?: Omit<RequestInit, "body"> & { query?: UrlQuery; body?: BodyInit | object }): Promise<Response> {
 		const { query, body, ...rest } = init ?? {};
 
 		const urlWithoutQuery = `${this.baseUrl}${path}`;
-		const queryString = `${new URLSearchParams(Object.fromEntries(Object.entries({
+		const queryString = `${makeUrlQuery({
 			...this.query ?? {},
 			...query ?? {}
-		}).flatMap(([k, v]) => v != null ? [[k, `${v}`]] : [])))}`;
+		})}`;
 		const url = `${urlWithoutQuery}${queryString ? `${urlWithoutQuery.includes("?") ? "&" : "?"}${queryString}` : ""}`;
 
 		const resolvedInit: RequestInit & { headers: Headers } = {
@@ -118,7 +118,7 @@ export class RestClient implements Api<ApiVersion.V3, false> {
 		return res;
 	}
 
-	protected async fetchMap(anyMapSlug: AnyMapSlug, path: (mapSlug: string) => string, init?: Omit<RequestInit, "body"> & { query?: Record<string, string | number | undefined>; body?: BodyInit | object }): Promise<Response> {
+	protected async fetchMap(anyMapSlug: AnyMapSlug, path: (mapSlug: string) => string, init?: Omit<RequestInit, "body"> & { query?: UrlQuery; body?: BodyInit | object }): Promise<Response> {
 		const { mapSlug, password, identity } = typeof anyMapSlug === "string" ? { mapSlug: anyMapSlug } : anyMapSlug;
 		return await this.fetch(path(mapSlug), {
 			...init,

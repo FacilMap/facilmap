@@ -82,3 +82,17 @@ export function mergeObjectWithPromise<T extends {}, R>(object: T, promise: Basi
 export function isInBbox(position: Point, bbox: Bbox): boolean {
 	return position.lat <= bbox.top && position.lat >= bbox.bottom && position.lon >= bbox.left && position.lon <= bbox.right;
 }
+
+export type UrlQuery = Record<string, string | number | ReadonlyArray<string | number> | undefined>;
+
+export function makeUrlQuery(query: UrlQuery): URLSearchParams {
+	const result = new URLSearchParams();
+	for (const [key, values] of Object.entries(query)) {
+		for (const value of Array.isArray(values) ? values : [values]) {
+			if (value != null) {
+				result.append(key, `${value}`);
+			}
+		}
+	}
+	return result;
+}
