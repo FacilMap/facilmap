@@ -55,15 +55,18 @@ export default class DatabaseBackend {
 		this.types.afterInit();
 	}
 
-	async connect(force?: boolean): Promise<void> {
+	async connect(): Promise<void> {
 		await this._conn.authenticate();
 		const isNewDatabase = (await this._conn.getQueryInterface().showAllTables()).length === 0;
 		await this.migrations._runMigrationsBeforeSync();
-		await this._conn.sync({ force: !!force });
+		await this._conn.sync();
 		if (isNewDatabase) {
 			await this.meta.initializeMeta();
 		}
-		await this.migrations._runMigrationsAfterSync();
+		await this.migrations._runMigrationsAfterSync1();
+
+		this.maps.afterMigration1();
+		await this._conn.sync();
 
 		// Delete all route points, clients will have to reconnect and recalculate their routes anyways
 		await this.routes.truncateRoutePoints();

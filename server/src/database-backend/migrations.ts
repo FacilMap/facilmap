@@ -23,7 +23,7 @@ export default class DatabaseBackendMigrations {
 		await this._renamePadsTableMigration();
 	}
 
-	async _runMigrationsAfterSync(): Promise<void> {
+	async _runMigrationsAfterSync1(): Promise<void> {
 		await this._renameColMigrations();
 		await this._changeColMigrations();
 		await this._addColMigrations();

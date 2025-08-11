@@ -94,7 +94,11 @@ export default class DatabaseMapsBackend {
 
 	afterInit(): void {
 		this.MapModel.belongsTo(this.backend.views.ViewModel, { as: "defaultView", foreignKey: "defaultViewId", constraints: false });
+	}
 
+	afterMigration1(): void {
+		// We need to run this after migrations 1, since before "Map.id" might still be TEXT, so a foreign key
+		// of type INTEGER will fail.
 		this.MapLinkModel.belongsTo(this.MapModel, makeNotNullForeignKey("map", "mapId"));
 		this.MapModel.hasMany(this.MapLinkModel, { as: "links", foreignKey: "mapId" });
 	}
