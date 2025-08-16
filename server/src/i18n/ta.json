@@ -1,1 +1,60 @@
-{}
+{
+    "map-not-found-error": "வரைபடம் {{mapId}} கண்டுபிடிக்க முடியவில்லை.",
+    "map-read-not-found-error": "படிக்க-மட்டும் அடையாளம் {{mapId}} உடன் வரைபடத்தைக் கண்டுபிடிக்க முடியவில்லை.",
+    "database": {
+        "type-not-found-error": "{{typeId}}} இல்லை.",
+        "object-not-found-in-map-error": "{{mapId}} வரைபடத்தின் {{type}} {{id}} ஐக் கண்டுபிடிக்க முடியவில்லை.",
+        "old-map-data-not-available-error": "பழைய வரைபட தரவு கிடைக்கவில்லை.",
+        "unknown-type-error": "அறியப்படாத வகை \"{{type}}\".",
+        "route-points-not-an-array-error": "ரூட் புள்ளிகள் ஒரு வரிசை அல்ல",
+        "route-points-less-than-two-points-error": "ஒரு வரியில் இரண்டு பாதை புள்ளிகளுக்கு குறைவாக இருக்க முடியாது.",
+        "cannot-use-type-for-line-error": "வரிக்கு {{type}} வகையைப் பயன்படுத்த முடியாது.",
+        "cannot-use-type-for-marker-error": "மார்க்கருக்கு {{type}} வகையைப் பயன்படுத்த முடியாது.",
+        "unique-map-ids-error": "படிக்க மட்டும், படிக்க-எழுது மற்றும் நிர்வாக அடையாளம் ஒருவருக்கொருவர் வித்தியாசமாக இருக்க வேண்டும்.",
+        "unique-map-ids-read-write-error": "படிக்க மட்டும் மற்றும் படிக்க-எழுதும் அடையாளம் ஒரே மாதிரியாக இருக்க முடியாது.",
+        "unique-map-ids-read-admin-error": "படிக்க மட்டும் மற்றும் நிர்வாக அடையாளம் ஒரே மாதிரியாக இருக்க முடியாது.",
+        "unique-map-ids-write-admin-error": "வாசிப்பு-எழுது மற்றும் நிர்வாக அடையாளம் ஒரே மாதிரியாக இருக்க முடியாது.",
+        "map-id-taken-error": "அடையாளம் '{{id}}' ஏற்கனவே எடுக்கப்பட்டுள்ளது.",
+        "map-disappeared-error": "புதுப்பித்த பிறகு வரைபடம் மறைந்துவிட்டது."
+    },
+    "frontend": {
+        "requires-javascript": "{{appName}} வேலை செய்யச் சாவாகைஉரை தேவைப்படுகிறது.",
+        "loading": "ஏற்றுகிறது…",
+        "load-error": "{{appName}} ஐ ஏற்ற முடியவில்லை!"
+    },
+    "routing": {
+        "ors-token-warning": "ORS கிள்ளாக்கு கட்டமைக்கப்படவில்லை. சுற்றுச்சூழலில் அல்லது config.env இல் ors_token ஐ அமைக்க நிர்வாகியிடம் கேளுங்கள்.",
+        "too-much-distance-error": "பாதை புள்ளிகளுக்கு இடையில் அதிக தூரம். புள்ளிகள் வழியாக சிலவற்றைச் சேர்ப்பதைக் கவனியுங்கள்.",
+        "invalid-response-error": "ரூட்டிங் சேவையகத்திலிருந்து தவறான பதில்.",
+        "mapbox-token-warning": "மேபாக்ச் கிள்ளாக்கு கட்டமைக்கப்படவில்லை. சூழலில் அல்லது config.env இல் MapBox_Token ஐ அமைக்க நிர்வாகியிடம் கேளுங்கள்.",
+        "mapbox-error": "வழியைக் கணக்கிட முடியவில்லை ({{code}})."
+    },
+    "socket": {
+        "only-in-admin-error": "நிர்வாக பயன்முறையில் மட்டுமே கிடைக்கும்.",
+        "only-in-write-error": "எழுதும் பயன்முறையில் மட்டுமே கிடைக்கும்.",
+        "map-id-set-error": "வரைபட அடையாளம் ஏற்கனவே அமைக்கப்பட்டுள்ளது.",
+        "map-not-exist-error": "இந்த வரைபடம் இல்லை.",
+        "map-already-loaded-error": "வரைபடம் ஏற்கனவே ஏற்றப்பட்டுள்ளது.",
+        "no-map-open-error": "எந்த வரைபடமும் திறக்கப்படவில்லை.",
+        "unknown-format-error": "தெரியாத வடிவம்",
+        "route-not-available-error": "பாதை கிடைக்கவில்லை.",
+        "route-name": "Fixilmap பாதை",
+        "already-listening-to-history-error": "ஏற்கனவே வரலாற்றைக் கேட்கிறது.",
+        "not-listening-to-history-error": "வரலாற்றைக் கேட்கவில்லை.",
+        "admin-revert-error": "இந்த வகையான மாற்றத்தை நிர்வாக பயன்முறையில் மட்டுமே மாற்ற முடியும்."
+    },
+    "search": {
+        "url-request-error": "\"{{url}}\" என்ற கோரிக்கை நிலை {{status}} உடன் தோல்வியடைந்தது.",
+        "url-response-error": "சேவையகத்திலிருந்து தவறான பதில்.",
+        "url-unknown-format-error": "தெரியாத கோப்பு வடிவம்."
+    },
+    "tabular": {
+        "field-name": "பெயர்",
+        "field-position": "நிலை",
+        "field-distance": "தூரம்",
+        "field-time": "நேரம்"
+    },
+    "webserver": {
+        "map-not-found-error": "அடையாளம் {{mapId}} உடன் வரைபடத்தைக் கண்டுபிடிக்க முடியவில்லை."
+    }
+}
