@@ -156,7 +156,7 @@ export function parseRouteQuery(query: string): RouteQuery {
 		[i18n.t("routing.query-by-wheelchair")]: "pedestrian wheelchair",
 		[i18n.t("routing.query-by-foot")]: "pedestrian",
 		[i18n.t("routing.query-by-straight")]: ""
-	}).flatMap(([k, v]) => k.split("|").map((k2) => [k2, v])));
+	}).flatMap(([k, v]) => k !== "" ? k.split("|").map((k2) => [k2, v]) : []));
 
 	let queryWithoutMode = query;
 	let mode = null;
@@ -173,7 +173,7 @@ export function parseRouteQuery(query: string): RouteQuery {
 		[i18n.t("routing.query-from")]: "from",
 		[i18n.t("routing.query-to")]: "to",
 		[i18n.t("routing.query-via")]: "via"
-	}).flatMap(([k, v]) => k.split("|").map((k2) => [k2.toLowerCase(), v])));
+	}).flatMap(([k, v]) => k !== "" ? k.split("|").map((k2) => [k2.toLowerCase(), v]) : []));
 
 	const splitQuery = queryWithoutMode
 		.split(new RegExp(`(?:^|\\s+)(${Object.keys(keywordsByTranslation).map((k) => quoteRegExp(k)).join("|")})(?:\\s+|$)`, "i"));
