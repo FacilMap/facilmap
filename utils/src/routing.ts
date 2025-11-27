@@ -200,6 +200,10 @@ export function encodeRouteQuery(query: RouteQuery): string {
 	return joinRawRouteQuery(rawQuery, ["to", "by"]);
 }
 
+export function quoteSearchTerm(term: string): string {
+	return joinRawRouteQuery([{ keyword: false, value: term }], ["to", "by"]);
+}
+
 /**
  * Decodes a route query as encoded into English by encodeRouteQuery().
  */

@@ -44,6 +44,7 @@ export type CustomLink = z.infer<typeof customLinkValidator>;
 const storageValidator2 = z.object({
 	zoomToAll: z.boolean().catch(false),
 	autoZoom: z.boolean().catch(true),
+	routeQueries: z.boolean().catch(true),
 	bookmarks: arrayIgnoringInvalids(bookmarkValidator).catch(() => []),
 	baseLayer: z.string().optional(),
 	overlays: z.array(z.string()).optional(),

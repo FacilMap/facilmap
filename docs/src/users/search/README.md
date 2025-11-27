@@ -70,7 +70,7 @@ Clicking on the right arrow next to a search result will open some details about
 
 Typing a [route query](../route/README.md#use-a-route-query) such as `Berlin to Hamburg` is a shortcut to switch over to the route form.
 
-Sometimes, you may want to search for a place whose name contains a route query keyword. For example, Italian street names often start with "via". If you want to search for such a street without switching to the route form, you can use quotes, for example `"Via Collina 1, Semione"`.
+Sometimes, you may want to search for a place whose name contains a route query keyword. For example, Italian street names often start with "via". If you want to search for such a street without switching to the route form, you can use quotes, for example `"Via Collina 1, Semione"`. Alternatively, you can disable the “Interpret route queries” option altogether in the dropdown.
 
 ## Configure a browser search engine
 
