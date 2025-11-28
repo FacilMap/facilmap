@@ -53,6 +53,7 @@ export type CustomLink = z.infer<typeof customLinkValidator>;
 const storageValidator2 = z.record(z.any()).transform((val) => renameProperty(val, "bookmarks", "favourites")).pipe(z.object({
 	zoomToAll: z.boolean().catch(false),
 	autoZoom: z.boolean().catch(true),
+	routeQueries: z.boolean().catch(true),
 	favourites: arrayIgnoringInvalids(favouriteValidator).catch(() => []),
 	baseLayer: z.string().optional(),
 	overlays: z.array(z.string()).optional(),

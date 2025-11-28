@@ -461,7 +461,7 @@ function useHashHandler(map: Ref<Map>, clientContext: Ref<ClientContext>, contex
 					queryChangePromise = (async () => {
 						if (!e.query)
 							await searchFormTab?.setQuery("", false, false).zoomed;
-						else if (!await openSpecialQuery(e.query, context, e.zoom, smooth))
+						else if (!await openSpecialQuery(e.query, context, e.zoom, { smooth, forceRouteQuery: true }))
 							await searchFormTab?.setQuery(e.query, e.zoom, smooth, autofocus).zoomed;
 					})();
 					await queryChangePromise;

@@ -1,4 +1,4 @@
-import type { RouteMode } from "facilmap-types";
+import type { DistributiveOmit, RouteMode } from "facilmap-types";
 import { getI18n } from "./i18n.js";
 import { quoteRegExp } from "./utils.js";
 
@@ -118,25 +118,100 @@ export function formatRouteMode(encodedMode: RouteMode): string {
 	}
 }
 
+type RawRouteQuerySegment<T extends string> = { keyword: false; value: string; rawValue: string } | { keyword: true; value: T; rawValue: string };
+type RawRouteQuerySegmentInput<T extends string> = DistributiveOmit<RawRouteQuerySegment<T>, "rawValue">;
+
+function getRawRouteQueryKeywordRegExp(keyword: string): string {
+	return quoteRegExp(keyword).replaceAll(" ", "\\s+");
+}
+
+function joinRawRouteQuery<T extends string>(query: Array<RawRouteQuerySegmentInput<T>>, keywords: T[]): string {
+	const keywordsRegExp = keywords.map((t) => new RegExp(`(^| )${getRawRouteQueryKeywordRegExp(t)}( |$)`, "i"));
+	return query.map((q) => {
+		if (!q.keyword && (q.value.includes("\"") || keywordsRegExp.some((k) => q.value.match(k)))) {
+			return `"${q.value.replaceAll("\\", "\\\\").replaceAll("\"", "\\\"")}"`;
+		} else {
+			return q.value;
+		}
+	}).join(" ");
+}
+
+function splitRawRouteQuery<T extends string>(query: string, keywords: T[]): Array<RawRouteQuerySegment<T>> {
+	const keywordRegExps = keywords.map((k) => [k, new RegExp(`^${getRawRouteQueryKeywordRegExp(k)}$`, "i")] as const);
+	const matches = [...query.matchAll(new RegExp(`"|((?<=^|\\s+)(${keywords.map((k) => getRawRouteQueryKeywordRegExp(k)).join("|")})(?=\\s+|$))`, "ig"))];
+	const result: Array<RawRouteQuerySegment<T>> = [{ keyword: false, rawValue: "", value: "" }];
+	let isInQuote = false;
+	for (let i = 0; i < matches.length; i++) {
+		const afterLast = query.substring(i > 0 ? (matches[i-1].index + matches[i-1][0].length) : 0, matches[i].index);
+		if (isInQuote) {
+			result[result.length - 1].rawValue += `${afterLast}${matches[i][0]}`;
+
+			if (matches[i][0] === "\"" && afterLast.match(/\\*$/)![0].length % 2 === 0) {
+				result[result.length - 1].value += afterLast.replaceAll("\\\\", "\\");
+				isInQuote = false;
+			} else {
+				result[result.length - 1].value += `${afterLast}${matches[i][0]}`.replaceAll(/\\([\\"])/g, "$1");
+			}
+		} else {
+			result[result.length - 1].rawValue += afterLast;
+			result[result.length - 1].value += afterLast;
+
+			if (matches[i][0] === "\"") {
+				result[result.length - 1].rawValue += matches[i][0];
+				isInQuote = true;
+			} else {
+				result.push(
+					{ keyword: true, rawValue: matches[i][1], value: keywordRegExps.find((k) => matches[i][1].match(k[1]))![0] },
+					{ keyword: false, rawValue: "", value: "" }
+				);
+			}
+		}
+	}
+
+	const afterLast = matches.length > 0 ? query.substring(matches[matches.length - 1].index + matches[matches.length - 1][0].length) : query;
+	result[result.length - 1].value += isInQuote ? afterLast.replaceAll("\\\\", "\\") : afterLast;
+
+	return result.flatMap((s) => {
+		if (s.keyword) {
+			return [s];
+		} else {
+			const trimmed = s.value.trim();
+			return trimmed !== "" ? [{ ...s, value: trimmed } as RawRouteQuerySegment<T>] : [];
+		}
+	});
+}
+
 export type RouteQuery = {
 	queries: string[];
 	mode: string | null;
 }
 
 export function encodeRouteQuery(query: RouteQuery): string {
-	const queries = query.queries.join(" to ");
-	return query.mode != null ? `${queries} by ${query.mode}` : queries;
+	const rawQuery: Array<RawRouteQuerySegmentInput<"to" | "by">> = [
+		...query.queries.flatMap((q, i) => [
+			...i > 0 ? [{ keyword: true, value: "to" } as const] : [],
+			{ keyword: false, value: q } as const
+		]),
+		...query.mode != null ? [
+			{ keyword: true, value: "by" } as const,
+			{ keyword: false, value: query.mode } as const
+		] : []
+	];
+	return joinRawRouteQuery(rawQuery, ["to", "by"]);
+}
+
+export function quoteSearchTerm(term: string): string {
+	return joinRawRouteQuery([{ keyword: false, value: term }], ["to", "by"]);
 }
 
 /**
  * Decodes a route query as encoded into English by encodeRouteQuery().
  */
 export function decodeRouteQuery(query: string): RouteQuery {
-	const splitBy = query.split(" by ");
-	const splitTo = splitBy[0].split(" to ");
+	const parts = splitRawRouteQuery(query, ["to", "by"]);
 	return {
-		queries: splitTo,
-		mode: splitBy[1] ?? null
+		queries: parts.flatMap((p, i) => !p.keyword && (i === 0 || (parts[i - 1].keyword && parts[i - 1].value === "to")) ? [p.value] : []),
+		mode: parts.find((p, i) => !p.keyword && i > 0 && parts[i - 1].keyword && parts[i - 1].value === "by")?.value ?? null
 	};
 }
 
@@ -145,6 +220,12 @@ export function decodeRouteQuery(query: string): RouteQuery {
  */
 export function parseRouteQuery(query: string): RouteQuery {
 	const i18n = getI18n();
+
+	const keywordsByTranslation = Object.fromEntries(Object.entries({
+		[i18n.t("routing.query-from")]: "from",
+		[i18n.t("routing.query-to")]: "to",
+		[i18n.t("routing.query-via")]: "via"
+	}).flatMap(([k, v]) => k !== "" ? k.split("|").map((k2) => [k2, v]) : []));
 
 	const routeModesByTranslation = Object.fromEntries(Object.entries({
 		[i18n.t("routing.query-by-hgv")]: "car hgv",
@@ -156,38 +237,23 @@ export function parseRouteQuery(query: string): RouteQuery {
 		[i18n.t("routing.query-by-wheelchair")]: "pedestrian wheelchair",
 		[i18n.t("routing.query-by-foot")]: "pedestrian",
 		[i18n.t("routing.query-by-straight")]: ""
-	}).flatMap(([k, v]) => k.split("|").map((k2) => [k2, v])));
+	}).flatMap(([k, v]) => k !== "" ? k.split("|").map((k2) => [k2, v]) : []));
 
-	let queryWithoutMode = query;
-	let mode = null;
-	for (const [translation, thisMode] of Object.entries(routeModesByTranslation)) {
-		const m = query.match(new RegExp(`(?<= |^)${quoteRegExp(translation)}(?= |$)`, "di"));
-		if (m) {
-			queryWithoutMode = `${query.slice(0, m.indices![0][0])}${query.slice(m.indices![0][1])}`.trim();
-			mode = thisMode;
-			break;
-		}
-	}
-
-	const keywordsByTranslation = Object.fromEntries(Object.entries({
-		[i18n.t("routing.query-from")]: "from",
-		[i18n.t("routing.query-to")]: "to",
-		[i18n.t("routing.query-via")]: "via"
-	}).flatMap(([k, v]) => k.split("|").map((k2) => [k2.toLowerCase(), v])));
-
-	const splitQuery = queryWithoutMode
-		.split(new RegExp(`(?:^|\\s+)(${Object.keys(keywordsByTranslation).map((k) => quoteRegExp(k)).join("|")})(?:\\s+|$)`, "i"));
+	const split = splitRawRouteQuery(query, [...Object.keys(keywordsByTranslation), ...Object.keys(routeModesByTranslation)]);
 
 	const queryParts = {
 		from: [] as string[],
 		via: [] as string[],
 		to: [] as string[]
 	};
+	let mode: string | null = null;
 
-	for(let i=0; i<splitQuery.length; i+=2) {
-		if(splitQuery[i]) {
-			const thisKeyword = splitQuery[i - 1] ? keywordsByTranslation[splitQuery[i - 1].toLowerCase()] : "from";
-			queryParts[thisKeyword as keyof typeof queryParts].push(splitQuery[i]);
+	for (let i = 0; i < split.length; i++) {
+		if (!split[i].keyword && (i === 0 || (split[i - 1].keyword && Object.hasOwn(keywordsByTranslation, split[i - 1].value)))) {
+			const thisKeyword = i === 0 ? "from" : keywordsByTranslation[split[i - 1].value];
+			queryParts[thisKeyword as keyof typeof queryParts].push(split[i].value);
+		} else if (split[i].keyword && Object.hasOwn(routeModesByTranslation, split[i].value) && mode == null) {
+			mode = routeModesByTranslation[split[i].value];
 		}
 	}
 

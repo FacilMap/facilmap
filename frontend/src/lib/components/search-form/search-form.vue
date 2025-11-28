@@ -1,6 +1,6 @@
 <script setup lang="ts">
 	import Icon from "../ui/icon.vue";
-	import { find, getCurrentLanguage, getElevationForPoint, isSearchId, parseUrlQuery, loadDirectUrlQuery, type AnalyzedChangeset, type OsmFeatureBlame, normalizeMapName, type AnalyzedOsmFeature, concatArrayBuffers } from "facilmap-utils";
+	import { find, getCurrentLanguage, getElevationForPoint, isSearchId, parseUrlQuery, loadDirectUrlQuery, type AnalyzedChangeset, type OsmFeatureBlame, normalizeMapName, type AnalyzedOsmFeature, concatArrayBuffers, quoteSearchTerm } from "facilmap-utils";
 	import { useToasts } from "../ui/toasts/toasts.vue";
 	import type { Bbox, SearchResult } from "facilmap-types";
 	import SearchResults from "../search-results/search-results.vue";
@@ -87,14 +87,18 @@
 	const hashQuery = computed(() => {
 		if (loadedSearchString.value) {
 			return {
-				query: loadedSearchString.value,
+				query: quoteSearchTerm(loadedSearchString.value), // Quote so that when the page is loaded with this term, it doesn't switch to the route form
 				...(zoomDestination.value && normalizeZoomDestination(mapContext.value.components.map, zoomDestination.value)),
 				description: i18n.t("search-form.search-description", { query: loadedSearchString.value })
 			};
-		} else if (loadingSearchString.value)
-			return { query: loadingSearchString.value, description: i18n.t("search-form.search-description", { query: loadingSearchString.value }) };
-		else
+		} else if (loadingSearchString.value) {
+			return {
+				query: quoteSearchTerm(loadingSearchString.value),
+				description: i18n.t("search-form.search-description", { query: loadingSearchString.value })
+			};
+		} else {
 			return undefined;
+		}
 	});
 
 	watch(hashQuery, (hashQuery: HashQuery | undefined) => {
@@ -349,6 +353,16 @@
 							@click.capture.stop.prevent="storage.zoomToAll = !storage.zoomToAll"
 						>
 							<Icon :icon="storage.zoomToAll ? 'check' : 'unchecked'"></Icon> {{i18n.t("search-form.zoom-to-all")}}
+						</a>
+					</li>
+
+					<li>
+						<a
+							href="javascript:"
+							class="dropdown-item"
+							@click.capture.stop.prevent="storage.routeQueries = !storage.routeQueries"
+						>
+							<Icon :icon="storage.routeQueries ? 'check' : 'unchecked'"></Icon> {{i18n.t("search-form.route-queries")}}
 						</a>
 					</li>
 

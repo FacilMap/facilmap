@@ -102,6 +102,8 @@ Here are some example queries:
 * `Berlin to Hamburg by walk`
 * `Berlin to Hamburg by mountain bike details avoid steps ferries`
 
+Sometimes your search terms may contain route query keywords, for example when an Italian street name contains the word "via" and you want to search for that street, not add it as an intermediate route point. In this case, you can put your search term in quotes, for example: `Berlin to "Via Collina 1, Semione"`
+
 ## Live navigation
 
 FacilMap does not support live navigation yet. You can [show your location](../locate/) on the map and use it to follow a route, but no turning instructions will be shown and the route does not recalculate if you take a wrong turn.

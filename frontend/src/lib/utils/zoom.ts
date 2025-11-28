@@ -10,6 +10,7 @@ import { ClientContextMapState, type ClientContext } from "../components/facil-m
 import type { FacilMapContext } from "../components/facil-map-context-provider/facil-map-context";
 import { getClientSub, requireClientContext, requireMapContext } from "../components/facil-map-context-provider/facil-map-context-provider.vue";
 import { toRef, type DeepReadonly } from "vue";
+import storage from "./storage";
 
 export type ZoomDestination = {
 	center?: LatLng;
@@ -202,7 +203,7 @@ export function getHashQuery(map: Map, client: ClientContext, items: DeepReadonl
 	return undefined;
 }
 
-export async function openSpecialQuery(query: string, context: FacilMapContext, zoom: boolean, smooth = true): Promise<boolean> {
+export async function openSpecialQuery(query: string, context: FacilMapContext, zoom: boolean, { smooth = true, forceRouteQuery = false }: { smooth?: boolean; forceRouteQuery?: boolean } = {}): Promise<boolean> {
 	const mapContext = requireMapContext(context);
 	const clientContext = requireClientContext(context);
 	const clientSub = getClientSub(context);
@@ -210,18 +211,22 @@ export async function openSpecialQuery(query: string, context: FacilMapContext, 
 	const routeFormTabContext = toRef(() => context.components.routeFormTab);
 
 	if(searchBoxContext.value && routeFormTabContext.value) {
-		const split1 = decodeRouteQuery(query); // A route hash query encoded in a predictable format in English by the route form
-		if (split1.queries.length >= 2) {
-			routeFormTabContext.value.setQuery(query, zoom, smooth);
-			searchBoxContext.value.activateTab(`fm${context.id}-route-form-tab`, { autofocus: true });
-			return true;
+		if (storage.routeQueries || forceRouteQuery) {
+			const split1 = decodeRouteQuery(query); // A route hash query encoded in a predictable format in English by the route form
+			if (split1.queries.length >= 2) {
+				routeFormTabContext.value.setQuery(query, zoom, smooth);
+				searchBoxContext.value.activateTab(`fm${context.id}-route-form-tab`, { autofocus: true });
+				return true;
+			}
 		}
 
-		const split2 = parseRouteQuery(query); // A free-text route query specified by the user in the current language
-		if (split2.queries.length >= 2) {
-			routeFormTabContext.value.setQuery(encodeRouteQuery(split2), zoom, smooth);
-			searchBoxContext.value.activateTab(`fm${context.id}-route-form-tab`, { autofocus: true });
-			return true;
+		if (storage.routeQueries) {
+			const split2 = parseRouteQuery(query); // A free-text route query specified by the user in the current language
+			if (split2.queries.length >= 2) {
+				routeFormTabContext.value.setQuery(encodeRouteQuery(split2), zoom, smooth);
+				searchBoxContext.value.activateTab(`fm${context.id}-route-form-tab`, { autofocus: true });
+				return true;
+			}
 		}
 	}
 
