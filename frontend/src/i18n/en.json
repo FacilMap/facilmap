@@ -911,6 +911,7 @@
         "auto-zoom": "Auto-zoom to results",
         "zoom-to-all": "Zoom to all results",
         "route-queries": "Interpret route queries",
+        "route-queries-tooltip": "If enabled, searching for route queries such as “Berlin to Hamburg via Hannover by electric bike” will switch to the route form.",
         "map-only": "Only search on map “{{mapName}}”"
     },
     "search-form-tab": {
