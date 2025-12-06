@@ -910,7 +910,8 @@
         "auto-zoom": "Automatisch zu den Ergebnissen zoomen",
         "zoom-to-all": "Zur Übersicht aller Ergebnisse zoomen",
         "map-only": "Nur auf der Karte „{{mapName}}“ suchen",
-        "route-queries": "Routenabfragen interpretieren"
+        "route-queries": "Routenabfragen interpretieren",
+        "route-queries-tooltip": "Wenn diese Option aktiviert ist, öffnen Routenabfragen wie „Berlin nach Hamburg über Hannover mit dem E-Bike“ automatisch das Routenformular."
     },
     "search-form-tab": {
         "tab-label": "Suche"
