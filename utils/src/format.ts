@@ -219,7 +219,8 @@ export function renderOsmTag(key: string, value: string): string {
 		}).join(";");
 	} else {
 		return linkifyStr(value, {
-			target: (href: string, type: string) => type === "url" ? "_blank" : ""
+			target: (href, type) => type === "url" ? "_blank" : "",
+			validate: (value) => !value.match(/^file:/i)
 		});
 	}
 }
