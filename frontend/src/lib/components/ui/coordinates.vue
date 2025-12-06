@@ -79,7 +79,7 @@
 				</a>
 			</li>
 
-			<li>
+			<li v-if="plus != null">
 				<a
 					href="javascript:"
 					class="dropdown-item"
