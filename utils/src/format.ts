@@ -1,6 +1,6 @@
 import { marked, type MarkedOptions } from "marked";
 import { Units, type Field, type Point, type RouteMode } from "facilmap-types";
-import { quoteHtml } from "./utils.js";
+import { quoteHtml, quoteRegExp } from "./utils.js";
 import linkifyStr from "linkify-string";
 import createPurify from "dompurify";
 import { type Cheerio, load } from "cheerio";
@@ -201,22 +201,35 @@ function applyMarkdownModifications($el: Cheerio<AnyNode>): void {
 }
 
 export function renderOsmTag(key: string, value: string): string {
-	if(key.match(/^wikipedia(:|$)/)) {
-		return value.split(";").map((it) => {
-			const m = it.match(/^(\s*)((([-a-z]+):)?(.*))(\s*)$/)!;
-			const url = "https://" + (m[4] || "en") + ".wikipedia.org/wiki/" + m[5];
-			return m?.[1] + '<a href="' + quoteHtml(url) + '" target="_blank">' + quoteHtml(m[2]) + '</a>' + m[6];
-		}).join(";");
-	} else if(key.match(/^wikidata(:|$)/)) {
-		return value.split(";").map((it) => {
-			const m = it.match(/^(\s*)(.*?)(\s*)$/)!;
-			return m[1] + '<a href="https://www.wikidata.org/wiki/' + quoteHtml(m[2]) + '" target="_blank">' + quoteHtml(m[2]) + '</a>' + m[3];
-		}).join(";");
-	} else if(key.match(/^wiki:symbol(:$)/)) {
-		return value.split(";").map(function(it) {
-			var m = it.match(/^(\s*)(.*?)(\s*)$/)!;
-			return m[1] + '<a href="https://wiki.openstreetmap.org/wiki/Image:' + quoteHtml(m[2]) + '" target="_blank">' + quoteHtml(m[2]) + '</a>' + m[3];
-		}).join(";");
+	const isTag = (tag: string) => !!key.match(new RegExp(`(^${quoteRegExp(tag)}(:|$))|((^|:)${quoteRegExp(tag)}$)`));
+	const replace = (getReplacementHtml: (value: string) => string) => value.split(";").map((it) => {
+		const m = it.match(/^(\s*)(.*?)(\s*)$/)!;
+		return `${m[1]}${getReplacementHtml(m[2])}${m[3]}`;
+	}).join(";");
+	const replaceLink = (getUrl: (value: string) => string | undefined) => replace((value) => {
+		const url = getUrl(value);
+		return url ? `<a href="${quoteHtml(url)}" target="_blank">${quoteHtml(value)}</a>` : quoteHtml(value);
+	});
+
+	if (isTag("wikipedia")) {
+		return replaceLink((value) => {
+			const m = value.match(/^(([-a-z]+):)?(.*)$/)!;
+			return `https://${m[2] || "en"}.wikipedia.org/wiki/${encodeURIComponent(m[3])}`;
+		});
+	} else if (isTag("wikidata")) {
+		return replaceLink((v) => `https://www.wikidata.org/wiki/${encodeURIComponent(v)}`);
+	} else if (isTag("wikimedia_commons")) {
+		return replaceLink((v) => `https://commons.wikimedia.org/wiki/${encodeURIComponent(v)}`);
+	} else if (isTag("flag")) {
+		return replaceLink((v) => v.startsWith("File:") ? `https://commons.wikimedia.org/wiki/${encodeURIComponent(v)}` : undefined);
+	} else if (isTag("wiki:symbol")) {
+		return replaceLink((v) => `https://wiki.openstreetmap.org/wiki/Image:${encodeURIComponent(v)}`);
+	} else if (isTag("mapillary")) {
+		return replaceLink((v) => `https://www.mapillary.com/app/?pKey=${encodeURIComponent(v)}`);
+	} else if (isTag("panoramax")) {
+		return replaceLink((v) => `https://api.panoramax.xyz/#focus=pic&pic=${encodeURIComponent(v)}`);
+	} else if (isTag("kartaview")) {
+		return replaceLink((v) => `https://kartaview.org/details/${v}`); // May contain a slash, hence no encode
 	} else {
 		return linkifyStr(value, {
 			target: (href, type) => type === "url" ? "_blank" : "",
