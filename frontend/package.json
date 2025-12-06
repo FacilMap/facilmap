@@ -69,6 +69,7 @@
     "p-debounce": "^4.0.0",
     "p-throttle": "^7.0.0",
     "pluralize": "^8.0.0",
+    "pluscodes": "^3.0.1",
     "popper-max-size-modifier": "^0.2.0",
     "proj4": "^2.19.7",
     "qrcode.vue": "^3.6.0",
