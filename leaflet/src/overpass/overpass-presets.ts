@@ -36,6 +36,7 @@ export function getAllOverpassPresets(): OverpassPresetCategory[] {
 					{ key: "musicschool", query: "nwr[amenity=music_school]", label: i18n.t("overpass-presets.musicschool") },
 					{ key: "parking", query: "nwr[amenity=parking]", label: i18n.t("overpass-presets.parking") },
 					{ key: "pharmacy", query: "nwr[amenity=pharmacy]", label: i18n.t("overpass-presets.pharmacy") },
+					{ key: "playground", query: "nwr[leisure=playground]", label: i18n.t("overpass-presets.playground") },
 					{ key: "police", query: "nwr[amenity=police]", label: i18n.t("overpass-presets.police") },
 					{ key: "postbox", query: "(node[amenity=post_box];node(w);)", label: i18n.t("overpass-presets.postbox") },
 					{ key: "postoffice", query: "nwr[amenity=post_office]", label: i18n.t("overpass-presets.postoffice") },
