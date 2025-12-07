@@ -40,6 +40,7 @@
   },
   "dependencies": {
     "@ckpack/vue-color": "^1.6.0",
+    "@kalisio/leaflet-graphicscale": "^1.0.0",
     "@tmcw/togeojson": "^6.0.1",
     "@vitejs/plugin-vue": "^5.2.1",
     "@zip.js/zip.js": "^2.7.57",
@@ -60,7 +61,6 @@
     "leaflet-doubletapdrag": "^0.1.2",
     "leaflet-doubletapdragzoom": "^0.3.2",
     "leaflet-draggable-lines": "^3.2.1",
-    "leaflet-graphicscale": "^0.0.4",
     "leaflet-mouse-position": "^1.2.0",
     "leaflet.heightgraph": "^1.4.0",
     "leaflet.locatecontrol": "^0.83.1",

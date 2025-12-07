@@ -484,6 +484,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@kalisio/leaflet-graphicscale@npm:^1.0.0":
+  version: 1.0.0
+  resolution: "@kalisio/leaflet-graphicscale@npm:1.0.0"
+  checksum: 870245a42cb24eddc83988cc3f7c051d115b05198f1bdcf34a273d5392fc9a1ceb06d4f64bcce1574fc9ed67eb90d0c6153de8b245e6e5ea9dbccddd0c194738
+  languageName: node
+  linkType: hard
+
 "@mapbox/geojson-rewind@npm:0.5.2":
   version: 0.5.2
   resolution: "@mapbox/geojson-rewind@npm:0.5.2"
@@ -4108,6 +4115,7 @@ __metadata:
   resolution: "facilmap-frontend@workspace:frontend"
   dependencies:
     "@ckpack/vue-color": ^1.6.0
+    "@kalisio/leaflet-graphicscale": ^1.0.0
     "@tmcw/togeojson": ^6.0.1
     "@types/bootstrap": ^5.2.10
     "@types/decode-uri-component": ^0.2.2
@@ -4139,7 +4147,6 @@ __metadata:
     leaflet-doubletapdrag: ^0.1.2
     leaflet-doubletapdragzoom: ^0.3.2
     leaflet-draggable-lines: ^3.2.1
-    leaflet-graphicscale: ^0.0.4
     leaflet-mouse-position: ^1.2.0
     leaflet.heightgraph: ^1.4.0
     leaflet.locatecontrol: ^0.83.1
@@ -5773,13 +5780,6 @@ __metadata:
   peerDependencies:
     leaflet: x
   checksum: d9f7d7c6bf62d7d4421933b295d9226d01bc314e1c5bbe33421f6e9eda16cf3d5bf3a8c5a6e573f3b2e44b55b483fed5c2717dd4c73cbc4a431f7ac5ba093323
-  languageName: node
-  linkType: hard
-
-"leaflet-graphicscale@npm:^0.0.4":
-  version: 0.0.4
-  resolution: "leaflet-graphicscale@npm:0.0.4"
-  checksum: b4529297fdf46dafadb6f61fd110a4dd4211959a3d90e9c603d5595e88a6f4439286a16c662a7ac8c33ef4aaa04517768693e7bc10017c2ff3635f6eda57592d
   languageName: node
   linkType: hard
 

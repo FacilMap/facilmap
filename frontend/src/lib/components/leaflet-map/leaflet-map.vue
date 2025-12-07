@@ -157,6 +157,7 @@
 				margin-bottom: 0; // Wide screens (bottomcenter)
 
 				pointer-events: none;
+				color-scheme: only light;
 
 				.label {
 					color: #000;
