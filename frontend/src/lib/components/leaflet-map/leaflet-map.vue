@@ -311,6 +311,7 @@
 			overflow: hidden;
 			user-select: none;
 			-webkit-user-select: none;
+			color-scheme: only light;
 
 			img {
 				margin-bottom: -24px;
