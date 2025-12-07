@@ -125,6 +125,7 @@
 				left: 50%;
 				transform: translateX(-50%);
 				text-align: center;
+				width: 100%;
 
 				.leaflet-control {
 					display: inline-block;
@@ -152,7 +153,9 @@
 			}
 
 			.leaflet-control.leaflet-control-graphicscale {
-				margin-bottom: 0;
+				margin-top: 0; // Narrow screens (topcenter)
+				margin-bottom: 0; // Wide screens (bottomcenter)
+
 				pointer-events: none;
 
 				.label {
@@ -207,6 +210,10 @@
 					border-radius: 4px;
 					background-clip: padding-box;
 				}
+			}
+
+			.leaflet-control.leaflet-control-graphicscale {
+				opacity: 0.6;
 			}
 		}
 

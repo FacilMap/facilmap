@@ -35,6 +35,7 @@ function useMap(element: Ref<HTMLElement>, mapContext: MapContextWithoutComponen
 			zoomControl: false
 		}));
 
+		map._controlCorners.topcenter = DomUtil.create("div", "leaflet-top fm-leaflet-center", map._controlContainer);
 		map._controlCorners.bottomcenter = DomUtil.create("div", "leaflet-bottom fm-leaflet-center", map._controlContainer);
 
 		map.on("moveend", () => {
@@ -165,14 +166,12 @@ function useBboxHandler(map: Ref<Map>, client: Ref<ClientContext>): Ref<Raw<Bbox
 function useGraphicScale(map: Ref<Map>): Ref<Raw<any>> {
 	return useMapComponent(
 		map,
-		() => markRaw(control.graphicScale({ fill: "hollow", position: "bottomcenter" })),
+		() => markRaw(control.graphicScale({ fill: "hollow" })),
 		(graphicScale, map) => {
 			watch(() => isNarrowBreakpoint(), (isNarrow) => {
-				if (isNarrow) {
-					graphicScale.remove();
-				} else {
-					graphicScale.addTo(map);
-				}
+				graphicScale.remove();
+				graphicScale.options.position = isNarrow ? "topcenter" : "bottomcenter";
+				graphicScale.addTo(map);
 			}, { immediate: true });
 
 			onScopeDispose(() => {
