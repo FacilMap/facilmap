@@ -232,6 +232,7 @@
 			max-width: calc(100% - 54px);
 			opacity: 0;
 			transition: opacity 1s;
+			pointer-events: none;
 
 			// Style like attribution control
 			background: rgba(255, 255, 255, 0.8);
@@ -243,6 +244,7 @@
 
 		&.isNarrow .fm-leaflet-map-narrow-attribution.visible {
 			opacity: 1;
+			pointer-events: auto;
 		}
 
 		.fm-leaflet-map-disabled-cover {
