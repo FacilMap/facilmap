@@ -57,6 +57,8 @@
     "jquery": "^3.7.1",
     "js-cookie": "^3.0.5",
     "leaflet": "^1.9.4",
+    "leaflet-doubletapdrag": "^0.1.2",
+    "leaflet-doubletapdragzoom": "^0.3.2",
     "leaflet-draggable-lines": "^3.2.1",
     "leaflet-graphicscale": "^0.0.4",
     "leaflet-mouse-position": "^1.2.0",

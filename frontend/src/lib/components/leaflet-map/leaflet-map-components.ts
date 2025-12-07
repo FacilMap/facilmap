@@ -22,6 +22,8 @@ import { isNarrowBreakpoint } from "../../utils/bootstrap";
 import { useWakeLock } from "../../utils/wake-lock";
 import storage from "../../utils/storage";
 import config from "../../../map/config";
+import "leaflet-doubletapdrag";
+import "leaflet-doubletapdragzoom";
 
 type MapContextWithoutComponents = Optional<WritableMapContext, 'components'>;
 
@@ -33,7 +35,11 @@ function useMap(element: Ref<HTMLElement>, mapContext: MapContextWithoutComponen
 		const map = mapRef.value = markRaw(leafletMap(element.value, {
 			boxZoom: false,
 			attributionControl: false,
-			zoomControl: false
+			zoomControl: false,
+			doubleTapDragZoom: true,
+			doubleTapDragZoomOptions: {
+				reverse: true
+			}
 		}));
 
 		map._controlCorners.topcenter = DomUtil.create("div", "leaflet-top fm-leaflet-center", map._controlContainer);

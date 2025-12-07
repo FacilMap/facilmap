@@ -4136,6 +4136,8 @@ __metadata:
     jquery: ^3.7.1
     js-cookie: ^3.0.5
     leaflet: ^1.9.4
+    leaflet-doubletapdrag: ^0.1.2
+    leaflet-doubletapdragzoom: ^0.3.2
     leaflet-draggable-lines: ^3.2.1
     leaflet-graphicscale: ^0.0.4
     leaflet-mouse-position: ^1.2.0
@@ -5733,6 +5735,26 @@ __metadata:
   peerDependencies:
     leaflet: x
   checksum: b69e14030edb23c93311f964f5951fc64ea47318ec425dc619e305a7b46a3850f5afaa0c386c43151fd0fd42adaa3b6e2641f74c75ba026113da99f88c4ca730
+  languageName: node
+  linkType: hard
+
+"leaflet-doubletapdrag@npm:^0.1.0, leaflet-doubletapdrag@npm:^0.1.2":
+  version: 0.1.2
+  resolution: "leaflet-doubletapdrag@npm:0.1.2"
+  peerDependencies:
+    leaflet: ^1.0.0
+  checksum: 6a32f1754dddab59bb17b9a74a2199d0ba997999038b962a10337a3e8f406a2448691fc15a2563f13f376f1b5d905f263a7705b4c5a4e73c1a0ef99a12617694
+  languageName: node
+  linkType: hard
+
+"leaflet-doubletapdragzoom@npm:^0.3.2":
+  version: 0.3.2
+  resolution: "leaflet-doubletapdragzoom@npm:0.3.2"
+  dependencies:
+    leaflet-doubletapdrag: ^0.1.0
+  peerDependencies:
+    leaflet: ^1.0.0
+  checksum: 0cf36005c188677064f0fc071a688299d930b47f991e5a81d3b1b11f4ff8458a58a4bc0125dc261a037f4829f216d2af4d0cbbe3eb8d0d671a453759dab2ff31
   languageName: node
   linkType: hard
 
