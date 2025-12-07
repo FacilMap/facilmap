@@ -12,6 +12,8 @@
 	import { isNarrowBreakpoint } from "../../utils/bootstrap";
 	import { fixOnCleanup } from "../../utils/vue";
 	import { Control, DomUtil, type Map } from "leaflet";
+	import { useI18n } from "../../utils/i18n";
+	import config from "../../../map/config";
 
 	class CustomControl extends Control {
 		override onAdd(map: Map) {
@@ -30,6 +32,8 @@
 	}>(), {
 		interactive: true
 	});
+
+	const i18n = useI18n();
 
 	const styles = useCssModule();
 
@@ -94,6 +98,12 @@
 					@hide-sidebar="sidebarVisible = false"
 				></ToolboxHelpDropdown>
 			</ul>
+
+			<template #narrow-footer>
+				<div class="fm-donate">
+					<a :href="config.donateUrl" target="_blank" class="fm-donate">♥ {{i18n.t("common.donate")}}</a>
+				</div>
+			</template>
 		</Sidebar>
 	</div>
 </template>
@@ -139,6 +149,17 @@
 
 		@media print {
 			display: none;
+		}
+
+		.fm-donate {
+			padding: 0.5rem;
+			text-align: right;
+
+			> a {
+				color: #ff00f6;
+				font-weight: bold;
+				text-decoration: none;
+			}
 		}
 	}
 </style>

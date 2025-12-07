@@ -1,6 +1,7 @@
 {
     "common": {
-        "coordinates": "Coordinates"
+        "coordinates": "Coordinates",
+        "donate": "Donate"
     },
     "about-dialog": {
         "header": "About FacilMap {{version}}",

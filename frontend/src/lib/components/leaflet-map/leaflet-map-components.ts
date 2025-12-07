@@ -15,12 +15,13 @@ import type { MapComponents, MapContextData, MapContextEvents, WritableMapContex
 import type { ClientContext } from "../facil-map-context-provider/client-context";
 import type { FacilMapContext } from "../facil-map-context-provider/facil-map-context";
 import { requireClientContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
-import { type Optional } from "facilmap-utils";
+import { quoteHtml, type Optional } from "facilmap-utils";
 import { getI18n, i18nResourceChangeCounter } from "../../utils/i18n";
 import { AttributionControl } from "./attribution";
 import { isNarrowBreakpoint } from "../../utils/bootstrap";
 import { useWakeLock } from "../../utils/wake-lock";
 import storage from "../../utils/storage";
+import config from "../../../map/config";
 
 type MapContextWithoutComponents = Optional<WritableMapContext, 'components'>;
 
@@ -129,7 +130,9 @@ function useZoomControl(map: Ref<Map>): Ref<Raw<Control.Zoom>> {
 function useAttribution(map: Ref<Map>): Ref<Raw<AttributionControl>> {
 	return useMapComponent(
 		map,
-		() => markRaw(new AttributionControl()),
+		() => markRaw(new AttributionControl({
+			prefix: config.donateUrl ? `<a href="${quoteHtml(config.donateUrl)}" target="_blank" class="fm-donate">♥ ${quoteHtml(getI18n().t("common.donate"))}</a>` : undefined
+		})),
 		(attribution, map) => {
 			watch(() => isNarrowBreakpoint(), (isNarrow) => {
 				if (isNarrow) {

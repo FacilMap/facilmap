@@ -34,6 +34,7 @@ export interface Config {
 	openElevationApiUrl: string;
 	openElevationThrottleMs: number;
 	openElevationMaxBatchSize: number;
+	donateUrl: string;
 }
 
 const config: Config = {
@@ -77,6 +78,8 @@ const config: Config = {
 	openElevationApiUrl: process.env.OPEN_ELEVATION_URL || "https://api.open-elevation.com",
 	openElevationThrottleMs: process.env.OPEN_ELEVATION_THROTTLE_MS ? Number(process.env.OPEN_ELEVATION_THROTTLE_MS) : 1000, // Maximum one request per second, see https://github.com/Jorl17/open-elevation/issues/3
 	openElevationMaxBatchSize: process.env.OPEN_ELEVATION_MAX_BATCH_SIZE ? Number(process.env.OPEN_ELEVATION_MAX_BATCH_SIZE) : 200,
+
+	donateUrl: process.env.DONATE_URL ?? "https://docs.facilmap.org/users/contribute/", // Empty string means don't show donation button
 };
 
 setConfig({

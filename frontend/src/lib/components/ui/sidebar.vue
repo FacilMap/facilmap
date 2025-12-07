@@ -95,6 +95,9 @@
 					<nav class="navbar">
 						<div class="container-fluid" :ref="(el) => { if (el) { teleportTargetRef = el as any; } }"></div>
 					</nav>
+					<div class="fm-sidebar-footer">
+						<slot name="narrow-footer"></slot>
+					</div>
 				</div>
 			</div>
 		</template>
@@ -166,9 +169,15 @@
 			max-width: 80%;
 			height: 100%;
 			overflow: auto;
-			touch-action: pan-y;
+			touch-action: pan-y !important;
 			transform: translateX(100%);
 			transition: transform 0.3s, box-shadow 0.3s;
+
+			> .navbar {
+				display: flex;
+				flex-direction: column;
+				flex-grow: 1;
+			}
 		}
 
 		.fm-sidebar-outer.show .fm-sidebar-inner {
@@ -178,6 +187,10 @@
 		&.isNarrow {
 			&, .dropdown-menu {
 				font-size: 14px;
+			}
+
+			.dropdown-menu {
+				overflow: visible;
 			}
 		}
 

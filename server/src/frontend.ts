@@ -72,7 +72,8 @@ function getInjectedConfig(): InjectedConfig {
 		tracestrackToken: config.tracestrackToken,
 		hideCommercialMapLinks: config.hideCommercialMapLinks,
 		supportsRoutes: !!config.mapboxToken || !!config.orsToken,
-		supportsAdvancedRoutes: !!config.orsToken
+		supportsAdvancedRoutes: !!config.orsToken,
+		donateUrl: config.donateUrl
 	};
 }
 

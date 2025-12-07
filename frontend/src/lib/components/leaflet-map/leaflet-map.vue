@@ -181,6 +181,13 @@
 				}
 			}
 
+			.leaflet-control-attribution.leaflet-control-attribution {
+				.fm-donate {
+					color: #ff00f6;
+					font-weight: bold;
+				}
+			}
+
 			path.leaflet-interactive {
 				// Do not show focus ring
 				outline: none;
