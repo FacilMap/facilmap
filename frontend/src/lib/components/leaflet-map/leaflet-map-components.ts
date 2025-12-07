@@ -131,7 +131,7 @@ function useAttribution(map: Ref<Map>): Ref<Raw<AttributionControl>> {
 	return useMapComponent(
 		map,
 		() => markRaw(new AttributionControl({
-			prefix: config.donateUrl ? `<a href="${quoteHtml(config.donateUrl)}" target="_blank" class="fm-donate">♥ ${quoteHtml(getI18n().t("common.donate"))}</a>` : undefined
+			prefix: config.donateUrl ? `<a href="${quoteHtml(config.donateUrl)}" target="_blank" class="fm-donate">♥&nbsp;${quoteHtml(getI18n().t("common.donate"))}</a>` : undefined
 		})),
 		(attribution, map) => {
 			watch(() => isNarrowBreakpoint(), (isNarrow) => {

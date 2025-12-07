@@ -101,7 +101,7 @@
 
 			<template #narrow-footer>
 				<div class="fm-donate">
-					<a :href="config.donateUrl" target="_blank" class="fm-donate">♥ {{i18n.t("common.donate")}}</a>
+					<a :href="config.donateUrl" target="_blank" class="fm-donate">♥&nbsp;{{i18n.t("common.donate")}}</a>
 				</div>
 			</template>
 		</Sidebar>
