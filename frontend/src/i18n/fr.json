@@ -49,5 +49,9 @@
     "custom-import-dialog": {
         "type": "Type",
         "ok-label": "Importer"
+    },
+    "common": {
+        "donate": "Faire un don",
+        "coordinates": "Coordonnées"
     }
 }
