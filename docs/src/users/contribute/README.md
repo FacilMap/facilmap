@@ -22,7 +22,6 @@ Here are some platforms where you can donate, depending on your preference. If y
 		'Liberapay': 'https://liberapay.com/facilmap/',
 		'Ko-fi': 'https://ko-fi.com/facilmap',
 		'PayPal': 'https://www.paypal.com/donate?hosted_button_id=FWR59UXY6HGGS',
-		'Patreon': 'https://www.patreon.com/facilmap',
 		'Bitcoin': 'bitcoin:1PEfenaGXC9qNGQSuL5o6f6doZMYXRFiCv'
 	}
 }]">
