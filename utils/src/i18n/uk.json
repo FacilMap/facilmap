@@ -1,1 +1,14 @@
-{}
+{
+    "elevation": {
+        "http-error": "Пошук висот завершився невдачею зі статусом {{status}}."
+    },
+    "format": {
+        "marker-type-name": "Маркер",
+        "line-type-name": "Лінія",
+        "description-field-name": "Опис",
+        "unnamed-poi": "Безіменна точка інтересу",
+        "route-time": "{{time}} {{mode}}",
+        "distance-km": "{{distance}} км",
+        "distance-mi": "{{distance}} миль"
+    }
+}
