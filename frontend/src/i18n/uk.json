@@ -1,1 +1,86 @@
-{}
+{
+    "common": {
+        "coordinates": "Координати",
+        "donate": "Пожертвувати"
+    },
+    "about-dialog": {
+        "header": "Про FacilMap {{version}}",
+        "license-text": "{{facilmap}} доступний за ліцензією {{license}}.",
+        "license-text-license": "Загальна публічна ліцензія GNU Affero, версія 3",
+        "issues-text": "Якщо щось не працює або у вас є пропозиції щодо покращення, будь ласка, повідомте про це на {{tracker}}.",
+        "issues-text-tracker": "трекер проблем",
+        "help-text": "Якщо у вас є запитання, будь ласка, перегляньте {{documentation}}, поставте запитання в {{discussions}} або задайте його в {{chat}}.",
+        "help-text-documentation": "документація",
+        "license-text-facilmap": "FacilMap",
+        "help-text-discussions": "дискусійний форум",
+        "help-text-chat": "Матричний чат",
+        "privacy-information": "Інформація про конфіденційність",
+        "map-data": "Дані карти",
+        "map-data-search": "Пошук",
+        "map-data-directions": "Вказівки",
+        "map-data-geoip-description": "Цей продукт містить дані GeoLite2, створені MaxMind, доступні на {{maxmind}}.",
+        "attribution-osm-contributors": "Учасники OSM",
+        "programs-libraries": "Програми/бібліотеки",
+        "icons": "Іконки"
+    },
+    "add": {
+        "hidden-markers-added-title_one": "Маркер додано",
+        "hidden-markers-added-title_few": "Додано {{count}} маркери",
+        "hidden-markers-added-title_many": "Додано {{count}} маркерів",
+        "hidden-markers-added-message_one": "Маркер успішно додано, але активний фільтр запобігає його відображенню.",
+        "hidden-markers-added-message_few": "{{count}} маркери успішно додано, але активний фільтр запобігає їх відображенню.",
+        "hidden-markers-added-message_many": "{{count}} маркерів успішно додано, але активний фільтр запобігає їх відображенню.",
+        "hidden-lines-added-title_one": "Лінію додано",
+        "hidden-lines-added-title_few": "{{count}} лінії додано",
+        "hidden-lines-added-title_many": "{{count}} ліній додано",
+        "hidden-lines-added-message_one": "Лінію успішно додано, але активний фільтр запобігає її відображенню.",
+        "hidden-lines-added-message_few": "{{count}} лінії успішно додано, але активний фільтр запобігає їх відображенню.",
+        "hidden-lines-added-message_many": "{{count}} ліній успішно додано, але активний фільтр запобігає їх відображенню.",
+        "hidden-objects-added-title": "Додано {{count}} об'єктів",
+        "hidden-objects-added-message": "{{count}} об'єктів успішно додано, але активний фільтр запобігає їх відображенню.",
+        "hidden-objects-added-message-some": "{{count}} об'єктів успішно додано, але активний фільтр запобігає відображенню деяких із них."
+    },
+    "add-to-map-dropdown": {
+        "fallback-label": "Додати на карту",
+        "add-error": "Помилка додавання на карту",
+        "add-marker-items": "Позначити елементи як {{typeName}}",
+        "add-line-items": "Лінійні/полігональні елементи як {{typeName}}"
+    },
+    "alert": {
+        "fallback-ok-label": "OK"
+    },
+    "blame-results": {
+        "section-label": "{{timestamp}}, {{username}}",
+        "section-label-with-comment": "{{timestamp}}, {{username}}: {{comment}}",
+        "show-details-tooltip": "Показати деталі",
+        "zoom-to-section-tooltip": "Збільшити масштаб розділу",
+        "zoom-to-feature-label": "Наблизитись до об'єкту"
+    },
+    "blame-section-info": {
+        "changeset": "Набір змін",
+        "changeset-value": "{{id}} ({{message}})",
+        "changeset-analyze": "Аналіз набору змін",
+        "timestamp": "Позначка часу",
+        "user": "Користувач",
+        "created-modified": "Створено/змінено"
+    },
+    "blame-section-membership": {
+        "tooltip": "Показати ієрархію членства",
+        "alt": "Інформація",
+        "heading": "Ієрархія членства",
+        "member-with-name-role": "{{feature}} ({{name}}, роль: {{role}})",
+        "member-with-name": "{{feature}} ({{name}})",
+        "member-with-role": "{{feature}} (роль: {{role}})"
+    },
+    "changeset-results": {
+        "heading": "Набір змін {{id}}",
+        "created": "Час створення",
+        "closed": "Час закриття",
+        "user": "Користувач",
+        "features": "Об'єкти",
+        "created-tooltip": "Створено",
+        "deleted-tooltip": "Видалено",
+        "modified-tooltip": "Змінено",
+        "zoom-to-feature-tooltip": "Наблизитись до об'єкту"
+    }
+}
