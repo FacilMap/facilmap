@@ -1,1 +1,13 @@
-{}
+{
+    "map-not-found-error": "Карту {{mapId}} не вдалося знайти.",
+    "map-read-not-found-error": "Не вдалося знайти карту з ідентифікатором {{mapId}}, доступним лише для читання.",
+    "database": {
+        "type-not-found-error": "Тип {{typeId}} не існує.",
+        "object-not-found-in-map-error": "Не вдалося знайти {{type}} {{id}} карти {{mapId}}.",
+        "old-map-data-not-available-error": "Старі дані карти недоступні.",
+        "unknown-type-error": "Невідомий тип \"{{type}}\".",
+        "route-points-not-an-array-error": "routePoints не є масивом",
+        "route-points-less-than-two-points-error": "Лінія не може мати менше двох точок маршруту.",
+        "cannot-use-type-for-line-error": "Не можна використовувати тип {{type}} для лінії."
+    }
+}
