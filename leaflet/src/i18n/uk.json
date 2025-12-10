@@ -1,1 +1,11 @@
-{}
+{
+    "layers": {
+        "lima-name": "Лабораторії Ліма",
+        "mpnk-name": "Mapnik",
+        "mpnk-attribution": "© [Учасники OSM](https://www.openstreetmap.org/copyright)",
+        "topl-attribution": "© [Федеральне агентство картографії та геодезії](https://www.bkg.bund.de/) {{year}}",
+        "map1-attribution": "© [Map1.eu](http://map1.eu/) / [Учасники OSM](https://www.openstreetmap.org/copyright)",
+        "topo-name": "OpenTopoMap",
+        "topo-attribution": "© [OpenTopoMap](https://opentopomap.org/) ([CC-BY-SA](https://creativecommons.org/licenses/by-sa/3.0/)) / [Учасники OSM](https://www.openstreetmap.org/copyright)"
+    }
+}
