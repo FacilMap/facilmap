@@ -4368,6 +4368,7 @@ __metadata:
     dompurify: ^3.2.4
     facilmap-types: "workspace:^"
     filtrex: ^2.2.3
+    find-cache-dir: ^6.0.0
     i18next: ^24.2.2
     i18next-browser-languagedetector: ^7.2.2
     jquery: ^3.7.1
@@ -4535,6 +4536,16 @@ __metadata:
     common-path-prefix: ^3.0.0
     pkg-dir: ^7.0.0
   checksum: 1be046a2d6d98698d181352139bdd2f3e45cad4a0b3c9f06a611124ca52d823b0b327f5a629d7c5268b7fad54a202104765e572f8415b89ac35f76818fb3b75e
+  languageName: node
+  linkType: hard
+
+"find-cache-dir@npm:^6.0.0":
+  version: 6.0.0
+  resolution: "find-cache-dir@npm:6.0.0"
+  dependencies:
+    common-path-prefix: ^3.0.0
+    pkg-dir: ^7.0.0
+  checksum: 3dfd8a9f2e1bd63509e2b19b78a6f215f51adc00cf733c0b81f2656c2029f7c9d7a23df6599ffa071066d5e6ecc657a046ab352fa10664839d42e4268ccd8399
   languageName: node
   linkType: hard
 

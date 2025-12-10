@@ -3,11 +3,13 @@ import { defineConfig } from "vite";
 import dtsPlugin from "vite-plugin-dts";
 import tsconfigPaths from "vite-tsconfig-paths";
 import { isAbsolute } from "node:path";
+import languagesPlugin from "./rollup-languages.js";
 
 export default defineConfig({
 	plugins: [
 		tsconfigPaths({ loose: true }),
-		dtsPlugin({ rollupTypes: true, tsconfigPath: "./tsconfig.build.json" })
+		dtsPlugin({ rollupTypes: true, tsconfigPath: "./tsconfig.build.json" }),
+		languagesPlugin()
 	],
 	build: {
 		sourcemap: true,

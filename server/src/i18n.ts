@@ -1,13 +1,4 @@
 import { defaultI18nGetter, getRawI18n, onI18nReady, setLanguageDetector, setI18nGetter, isCustomLanguageDetector, isCustomI18nGetter, LANG_QUERY, LANG_COOKIE, setCurrentUnitsGetter } from "facilmap-utils";
-import messagesEn from "./i18n/en.json";
-import messagesCs from "./i18n/cs.json";
-import messagesDe from "./i18n/de.json";
-import messagesEs from "./i18n/es.json";
-import messagesFr from "./i18n/fr.json";
-import messagesNbNo from "./i18n/nb-NO.json";
-import messagesRu from "./i18n/ru.json";
-import messagesTa from "./i18n/ta.json";
-import messagesZhHant from "./i18n/zh-Hant.json";
 import type { i18n } from "i18next";
 import type { Domain } from "domain";
 import { Router } from "express";
@@ -42,15 +33,11 @@ declare module 'domain' {
 }
 
 onI18nReady((i18n) => {
-	i18n.addResourceBundle("en", namespace, messagesEn);
-	i18n.addResourceBundle("cs", namespace, messagesCs);
-	i18n.addResourceBundle("de", namespace, messagesDe);
-	i18n.addResourceBundle("es", namespace, messagesEs);
-	i18n.addResourceBundle("fr", namespace, messagesFr);
-	i18n.addResourceBundle("nb-NO", namespace, messagesNbNo);
-	i18n.addResourceBundle("ru", namespace, messagesRu);
-	i18n.addResourceBundle("ta", namespace, messagesTa);
-	i18n.addResourceBundle("zh-Hant", namespace, messagesZhHant);
+	for (const [filename, module] of Object.entries(import.meta.glob('./i18n/*.json', { eager: true }))) {
+		const lang = filename.match(/([^/\\]*)\.json$/i)![1];
+
+		i18n.addResourceBundle(lang, namespace, (module as any).default);
+	}
 });
 
 export function getDomainLang(): FacilMapProcessLang | undefined {

@@ -1,8 +1,9 @@
 import { Units } from "facilmap-types";
 import i18next, { type CustomPluginOptions, type Module, type Newable, type i18n } from "i18next";
 import LanguageDetector from "i18next-browser-languagedetector";
+import languageNames from "virtual:languages";
 
-export const LANGUAGES = ["en", "cs", "de", "es", "fr", "nb-NO", "ru", "ta", "zh-Hant"];
+export const LANGUAGES = Object.keys(languageNames);
 
 export const DEFAULT_LANGUAGE = "en";
 

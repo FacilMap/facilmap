@@ -1,12 +1,4 @@
 {
-    "i18n": {
-        "language-ru": "Russe",
-        "language-de": "Allemand",
-        "language-es": "Espagnol",
-        "language-en": "Anglais",
-        "language-nb-no": "Norvégien",
-        "language-zh-hant": "Chinois (Traditionnel)"
-    },
     "routing": {
         "query-via": "via",
         "query-by-hgv": "en poids lourd",

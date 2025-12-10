@@ -39,16 +39,6 @@
         "distance-mi": "{{distance}} mi",
         "elevation-ft": "{{elevation}} ft"
     },
-    "i18n": {
-        "language-en": "Inglés",
-        "language-de": "Alemán",
-        "language-ru": "Ruso",
-        "language-nb-no": "Noruego «bokmål»",
-        "language-es": "Español",
-        "language-zh-hant": "Chino (tradicional)",
-        "language-fr": "Francés",
-        "language-cs": "Checo"
-    },
     "objects": {
         "untitled-line": "Línea sin título",
         "untitled-marker": "Indicador sin título"

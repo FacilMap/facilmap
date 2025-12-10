@@ -14,17 +14,6 @@
         "elevation-m": "{{elevation}} மீ",
         "elevation-ft": "{{elevation}} ft"
     },
-    "i18n": {
-        "language-nb-no": "நோர்வே போக்மால் (நோர்வே)",
-        "language-ru": "ரச்ய",
-        "language-zh-hant": "சீன (பாரம்பரிய)",
-        "language-en": "ஆங்கிலம்",
-        "language-cs": "செக்",
-        "language-de": "செர்மன்",
-        "language-es": "ச்பானிச்",
-        "language-fr": "பிரஞ்சு",
-        "language-ta": "தமிழ்"
-    },
     "objects": {
         "untitled-marker": "பெயரிடப்படாத மார்க்கர்",
         "untitled-line": "பெயரிடப்படாத வரி"

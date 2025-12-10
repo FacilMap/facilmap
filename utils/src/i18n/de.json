@@ -14,17 +14,6 @@
         "elevation-m": "{{elevation}} m",
         "elevation-ft": "{{elevation}} ft"
     },
-    "i18n": {
-        "language-en": "Englisch",
-        "language-cs": "Tschechisch",
-        "language-de": "Deutsch",
-        "language-es": "Spanisch",
-        "language-fr": "Französisch",
-        "language-nb-no": "Norwegisch Bokmål (Norwegen)",
-        "language-ru": "Russian",
-        "language-ta": "Tamil",
-        "language-zh-hant": "Chinesisch (traditionell)"
-    },
     "objects": {
         "untitled-marker": "Unbenannter Marker",
         "untitled-line": "Unbenannte Linie"
