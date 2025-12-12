@@ -1,8 +1,5 @@
 import type { Plugin } from "rollup";
-import glob from "fast-glob";
 import { access, readFile, readdir, writeFile } from "fs/promises";
-import { createRequire } from "module";
-import { dirname } from "path";
 import { fileURLToPath } from "url";
 import findCacheDir from "find-cache-dir";
 
