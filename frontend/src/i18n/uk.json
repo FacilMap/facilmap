@@ -81,6 +81,132 @@
         "created-tooltip": "Створено",
         "deleted-tooltip": "Видалено",
         "modified-tooltip": "Змінено",
-        "zoom-to-feature-tooltip": "Наблизитись до об'єкту"
+        "zoom-to-feature-tooltip": "Наблизитись до об'єкту",
+        "show-details-tooltip": "Показати деталі",
+        "show-details-no-tag-changes-tooltip": "Показати деталі (без змін тегів)",
+        "show-details-no-tag-member-changes-tooltip": "Показати деталі (без змін тегів/учасників)",
+        "zoom-to-changeset-label": "Наблизитись до набору змін"
+    },
+    "changeset-feature-info": {
+        "zoom-to-feature-label": "Наблизитись до об'єкту",
+        "members": "Учасники"
+    },
+    "osm-feature-link": {
+        "changeset": "Набір змін {{id}}",
+        "node-tooltip": "Відкрити точку на OpenStreetMap",
+        "way-tooltip": "Відкрити лінію на OpenStreetMap",
+        "relation-tooltip": "Відкрити зв'язок на OpenStreetMap",
+        "changeset-tooltip": "Відкрити набір змін на OpenStreetMap",
+        "user-tooltip": "Відкрити користувача на OpenStreetMap"
+    },
+    "osm-feature-info": {
+        "zoom-to-node": "Наблизитись до точки",
+        "zoom-to-way": "Наблизитись до лінії",
+        "zoom-to-relation": "Наблизитись до зв'язку",
+        "show-details-tooltip": "Показати деталі об'єкту",
+        "total-length": "Загальна довжина",
+        "sections": "Розділи",
+        "nodes": "Точки",
+        "members": "Учасники зв'язку",
+        "section-label": "Розділ ({{distance}})",
+        "zoom-to-section-tooltip": "Наблизитись до розділу",
+        "role": "Роль"
+    },
+    "click-marker-tab": {
+        "look-up-error": "Помилка пошуку точки"
+    },
+    "client-provider": {
+        "loading-map-header": "Завантаження",
+        "loading-map": "Завантаження карти…",
+        "connecting-header": "Підключення",
+        "connecting": "Підключення до сервера…",
+        "map-deleted-header": "Мапу видалено",
+        "map-deleted": "Цю карту видалено.",
+        "close-map": "Закрити карту",
+        "connection-error": "Помилка підключення до сервера",
+        "open-map-error": "Помилка відкриття карти",
+        "disconnected-header": "Відключено",
+        "disconnected": "З’єднання із сервером втрачено. Спроба повторного підключення…"
+    },
+    "colour-picker": {
+        "format-error": "Повинно бути в 6-значному шістнадцятковому форматі, наприклад, 0000ff."
+    },
+    "coordinates": {
+        "copied-title": "Координати скопійовано",
+        "copied-message": "Координати були скопійовані в буфер обміну.",
+        "copy-to-clipboard": "Копіювати в буфер обміну",
+        "elevation": "Висота"
+    },
+    "copy-to-clipboard-input": {
+        "copied-fallback-title": "Посилання скопійовано",
+        "copied-fallback-message": "Посилання скопійовано в буфер обміну.",
+        "copy-fallback-tooltip": "Копіювати в буфер обміну",
+        "copy-alt": "Копіювати",
+        "qr-code-alt": "QR-код",
+        "qr-code-fallback-tooltip": "Показати QR-код"
+    },
+    "custom-import-dialog": {
+        "existing-type": "Існуючий тип «{{name}}»",
+        "import-type": "Тип імпорту «{{name}}»",
+        "no-import": "Не імпортувати",
+        "import-error": "Помилка імпорту на карту",
+        "dialog-title": "Користувацький імпорт",
+        "ok-label": "Імпорт",
+        "type": "Тип",
+        "map-to": "Карта до…",
+        "markers_one": "({{count}}) маркер типу {{typeName}}",
+        "markers_few": "({{count}}) маркери типу {{typeName}}",
+        "markers_many": "({{count}}) маркерів типу {{typeName}}",
+        "lines_one": "({{count}}) рядок типу {{typeName}}",
+        "lines_few": "({{count}}) рядки типу {{typeName}}",
+        "lines_many": "({{count}}) рядків типу {{typeName}}",
+        "untyped-markers_one": "({{count}}) нетипізований маркер",
+        "untyped-markers_few": "({{count}}) нетипізовані маркери",
+        "untyped-markers_many": "({{count}}) нетипізованих маркерів",
+        "untyped-lines_one": "({{count}}) нетипізована лінія/полігон",
+        "untyped-lines_few": "({{count}}) нетипізовані лінії/полігони",
+        "untyped-lines_many": "({{count}}) нетипізованих ліній/полігонів"
+    },
+    "draw": {
+        "add-marker-error": "Помилка додавання маркера",
+        "add-marker-title": "Додати {{typeName}}",
+        "add-marker-message": "Будь ласка, натисніть на карту, щоб додати маркер.",
+        "add-marker-current": "Додати в поточному місці розташування",
+        "add-marker-cancel": "Скасувати",
+        "move-marker-error": "Помилка переміщення маркера",
+        "move-marker-title": "Перетягніть маркер",
+        "move-marker-message": "Перетягніть маркер, щоб змінити його положення.",
+        "move-marker-save": "Зберегти",
+        "move-marker-current": "Перейти до поточного розташування",
+        "move-marker-cancel": "Скасувати",
+        "add-line-title": "Додати {{typeName}}",
+        "add-line-message": "Клацніть на карті кілька разів, щоб намалювати лінію. Потім натисніть «Готово», щоб зберегти її.",
+        "add-line-finish": "Фініш",
+        "add-line-cancel": "Скасувати",
+        "add-line-error": "Помилка додавання рядка"
+    },
+    "edit-filter-dialog": {
+        "title": "Фільтр",
+        "apply": "Застосувати",
+        "introduction": "Тут ви можете встановити розширений вираз для відображення/приховування певних маркерів/ліній на основі їхніх атрибутів. Вираз фільтра застосовується лише до вашого вигляду карти, але його можна зберегти як частину збереженого вигляду або спільного посилання.",
+        "syntax-header": "Синтаксис",
+        "variable": "Змінна",
+        "operator": "Оператор",
+        "description": "Опис",
+        "example": "Приклад",
+        "name-description": "Назва маркера/лінії",
+        "type-description": "{{marker}} / {{line}}",
+        "typeId-description": "{{items}})",
+        "typeId-description-item": "{{typeId}} ({{typeName}})",
+        "typeId-description-separator": " / ",
+        "data-description-1": "Значення полів (приклад: {{example1}} або {{example2}}).",
+        "data-description-2": "Для полів з прапорцями значення дорівнює {{uncheckedValue}} (не позначено) або {{checkedValue}} (позначено).",
+        "lon-lat-description": "Координати маркера",
+        "colour-description": "Колір маркера/лінії",
+        "size-description": "Розмір маркера",
+        "icon-description": "Значок маркера",
+        "shape-description": "Форма маркера",
+        "ele-description": "Висота маркера",
+        "mode-description": "Режим лінійного маршруту ({{straight}} / {{car}} / {{bicycle}} / {{pedestrian}} / {{track}})"
     }
 }
