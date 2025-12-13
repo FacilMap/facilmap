@@ -68,6 +68,7 @@ jobs:
           docker compose -f ./integration-tests/docker-compose.yml up --wait
           status="$?"
           if (( status != 0 )); then
+            echo "Error"
             docker compose -f ./integration-tests/docker-compose.yml logs
             exit "$status"
           fi
