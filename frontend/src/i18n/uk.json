@@ -21,7 +21,8 @@
         "map-data-geoip-description": "Цей продукт містить дані GeoLite2, створені MaxMind, доступні на {{maxmind}}.",
         "attribution-osm-contributors": "Учасники OSM",
         "programs-libraries": "Програми/бібліотеки",
-        "icons": "Іконки"
+        "icons": "Іконки",
+        "map-data-pois": "Точки інтересу"
     },
     "add": {
         "hidden-markers-added-title_one": "Маркер додано",
