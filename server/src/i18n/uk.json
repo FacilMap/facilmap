@@ -8,6 +8,37 @@
         "unknown-type-error": "Невідомий тип \"{{type}}\".",
         "route-points-not-an-array-error": "routePoints не є масивом",
         "route-points-less-than-two-points-error": "Лінія не може мати менше двох точок маршруту.",
-        "cannot-use-type-for-line-error": "Не можна використовувати тип {{type}} для лінії."
+        "cannot-use-type-for-line-error": "Не можна використовувати тип {{type}} для лінії.",
+        "cannot-use-type-for-marker-error": "Не можна використовувати тип {{type}} для маркера.",
+        "unique-map-ids-error": "Ідентифікатори \"лише читання\", \"читання-запис\" та \"адміністратор\" мають відрізнятися один від одного.",
+        "unique-map-ids-read-write-error": "Ідентифікатори лише для читання та для читання-запису не можуть бути однаковими.",
+        "unique-map-ids-read-admin-error": "Ідентифікатор лише для читання та ідентифікатор адміністратора не можуть бути однаковими.",
+        "unique-map-ids-write-admin-error": "Ідентифікатор для читання-запису та ідентифікатор адміністратора не можуть бути однаковими.",
+        "map-id-taken-error": "Ідентифікатор '{{id}}' вже зайнятий.",
+        "map-disappeared-error": "Карта зникла після оновлення."
+    },
+    "frontend": {
+        "requires-javascript": "Для роботи {{appName}} потрібен JavaScript.",
+        "loading": "Завантаження…",
+        "load-error": "Не вдалося завантажити {{appName}}!"
+    },
+    "routing": {
+        "ors-token-warning": "Токен ORS не налаштовано. Будь ласка, зверніться до адміністратора з проханням встановити ORS_TOKEN у середовищі або у файлі config.env.",
+        "too-much-distance-error": "Занадто велика відстань між точками маршруту. Спробуйте додати кілька проміжних точок.",
+        "invalid-response-error": "Недійсна відповідь від сервера маршрутизації.",
+        "mapbox-token-warning": "Токен Mapbox не налаштовано. Будь ласка, зверніться до адміністратора з проханням встановити MAPBOX_TOKEN у середовищі або у файлі config.env.",
+        "mapbox-error": "Не вдалося розрахувати маршрут ({{code}})."
+    },
+    "socket": {
+        "only-in-admin-error": "Доступно лише в режимі адміністратора.",
+        "only-in-write-error": "Доступно лише в режимі запису.",
+        "map-id-set-error": "Ідентифікатор карти вже встановлено.",
+        "map-not-exist-error": "Цієї карти не існує.",
+        "map-already-loaded-error": "Мапа вже завантажена.",
+        "no-map-open-error": "Жодної карти не відкрито.",
+        "unknown-format-error": "Невідомий формат",
+        "route-not-available-error": "Маршрут недоступний.",
+        "route-name": "Маршрут FacilMap",
+        "already-listening-to-history-error": "Вже слухаю історію."
     }
 }
