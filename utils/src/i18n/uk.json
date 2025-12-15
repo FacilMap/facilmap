@@ -40,6 +40,19 @@
         "query-by-road-bike": "на шосейному велосипеді",
         "query-by-mountain-bike": "на гірському велосипеді",
         "query-by-electric-bike": "на електричному велосипеді",
-        "query-by-wheelchair": "на інвалідному візку"
+        "query-by-wheelchair": "на інвалідному візку",
+        "query-by-bicycle": "на велосипеді|на мотоциклі",
+        "query-by-straight": "прямо|гелікоптером"
+    },
+    "search": {
+        "http-error": "Пошук не вдався, статус {{status}}."
+    },
+    "utils": {
+        "node": "Точка {{id}}",
+        "way": "Лінія {{id}}",
+        "relation": "Зв'язок {{id}}",
+        "feature-with-name-role": "{{feature}} ({{name}}, роль: {{role}})",
+        "feature-with-name": "{{feature}} ({{name}})",
+        "feature-with-role": "{{feature}} (роль: {{role}})"
     }
 }
