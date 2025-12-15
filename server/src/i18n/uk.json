@@ -39,6 +39,22 @@
         "unknown-format-error": "Невідомий формат",
         "route-not-available-error": "Маршрут недоступний.",
         "route-name": "Маршрут FacilMap",
-        "already-listening-to-history-error": "Вже слухаю історію."
+        "already-listening-to-history-error": "Вже слухаю історію.",
+        "not-listening-to-history-error": "Не прислухатися до історії.",
+        "admin-revert-error": "Такий тип змін можна скасувати лише в режимі адміністратора."
+    },
+    "search": {
+        "url-request-error": "Запит до \"{{url}}\" не вдався, статус {{status}}.",
+        "url-response-error": "Недійсна відповідь від сервера.",
+        "url-unknown-format-error": "Невідомий формат файлу."
+    },
+    "tabular": {
+        "field-name": "Ім'я",
+        "field-position": "Позиція",
+        "field-distance": "Відстань",
+        "field-time": "Час"
+    },
+    "webserver": {
+        "map-not-found-error": "Карту з ідентифікатором {{mapId}} не знайдено."
     }
 }
