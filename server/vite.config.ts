@@ -24,6 +24,7 @@ export default defineConfig({
 			external: (id) => (
 				!id.startsWith("./")
 				&& !id.startsWith("../")
+				&& !id.startsWith("virtual:")
 				&& /* resolved internal modules */ !isAbsolute(id)
 				&& !["facilmap-types", "facilmap-utils"].includes(id)
 			)
