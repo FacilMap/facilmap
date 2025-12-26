@@ -111,8 +111,8 @@
 <style lang="scss">
 	.fm-toolbox {
 		position: absolute;
-		top: calc(10px + var(--facilmap-control-margin-top));
-		right: calc(10px + var(--facilmap-control-margin-right));
+		top: calc(10px + var(--facilmap-inset-top));
+		right: calc(10px + var(--facilmap-inset-right));
 
 		&:hover {
 			z-index: 1000;

@@ -236,9 +236,9 @@
 	.fm-search-box.fm-search-box {
 		&:not(.isNarrow) {
 			position: absolute;
-			top: calc(10px + var(--facilmap-control-margin-top)) !important; /* Override drag position from narrow mode */
-			left: calc(52px + var(--facilmap-control-margin-left));
-			max-height: calc(100% - 25px - var(--facilmap-control-margin-top) - var(--facilmap-control-margin-bottom));
+			top: calc(10px + var(--facilmap-inset-top)) !important; /* Override drag position from narrow mode */
+			left: calc(52px + var(--facilmap-inset-left));
+			max-height: calc(100% - 25px - var(--facilmap-inset-top) - var(--facilmap-inset-bottom));
 			min-width: 19rem;
 			min-height: 6rem;
 			width: 29.5rem;
@@ -277,8 +277,8 @@
 
 			> .card-header {
 				padding-top: 11px;
-				padding-left: var(--facilmap-control-margin-left, 0px);
-				padding-right: var(--facilmap-control-margin-right, 0px);
+				padding-left: var(--facilmap-inset-left, 0px);
+				padding-right: var(--facilmap-inset-right, 0px);
 				position: relative;
 				-webkit-touch-callout: none;
 				cursor: row-resize;
@@ -314,9 +314,9 @@
 			flex-direction: column;
 			min-height: 0;
 			overflow: auto;
-			margin-left: var(--facilmap-control-margin-left, 0px);
-			margin-right: var(--facilmap-control-margin-right, 0px);
-			margin-bottom: var(--facilmap-control-margin-bottom, 0px);
+			margin-left: var(--facilmap-inset-left, 0px);
+			margin-right: var(--facilmap-inset-right, 0px);
+			margin-bottom: var(--facilmap-inset-bottom, 0px);
 		}
 
 		> .card-header {

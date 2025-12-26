@@ -74,16 +74,16 @@
 	.fm-legend-placeholder {
 		position: absolute;
 		pointer-events: none;
-		left: calc(10px + var(--facilmap-control-margin-left));
-		right: calc(10px + var(--facilmap-control-margin-right));
-		top: calc(69px + var(--facilmap-control-margin-top));
-		bottom: calc(25px + var(--facilmap-control-margin-bottom));
+		left: calc(10px + var(--facilmap-inset-left));
+		right: calc(10px + var(--facilmap-inset-right));
+		top: calc(69px + var(--facilmap-inset-top));
+		bottom: calc(25px + var(--facilmap-inset-bottom));
 	}
 
 	.fm-legend-absolute.fm-legend-absolute {
 		position: absolute;
-		right: calc(10px + var(--facilmap-control-margin-right));
-		bottom: calc(25px + var(--facilmap-control-margin-bottom));
+		right: calc(10px + var(--facilmap-inset-right));
+		bottom: calc(25px + var(--facilmap-inset-bottom));
 		max-width: 20rem;
 		z-index: 800;
 		transform-origin: bottom right;

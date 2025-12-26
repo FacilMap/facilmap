@@ -30,14 +30,19 @@
 
 			html {
 				height: 100%;
-				--facilmap-control-margin-top: env(safe-area-inset-top, 0px);
-				--facilmap-control-margin-right: env(safe-area-inset-right, 0px);
-				--facilmap-control-margin-bottom: env(safe-area-inset-bottom, 0px);
-				--facilmap-control-margin-left: env(safe-area-inset-left, 0px);
+			}
+
+			@supports(padding:max(0px)) {
+				html {
+					--facilmap-inset-top: env(safe-area-inset-top, 0px);
+					--facilmap-inset-right: env(safe-area-inset-right, 0px);
+					--facilmap-inset-bottom: env(safe-area-inset-bottom, 0px);
+					--facilmap-inset-left: env(safe-area-inset-left, 0px);
+				}
 			}
 
 			#loading {
-				padding: calc(var(--facilmap-control-margin-top, 0px) + 10px) calc(var(--facilmap-control-margin-right, 0px) + 10px) calc(var(--facilmap-control-margin-bottom, 0px) + 10px) calc(var(--facilmap-control-margin-left, 0px) + 10px);
+				padding: calc(var(--facilmap-inset-top, 0px) + 10px) calc(var(--facilmap-inset-right, 0px) + 10px) calc(var(--facilmap-inset-bottom, 0px) + 10px) calc(var(--facilmap-inset-left, 0px) + 10px);
 				font-size: 24.5px;
 				font-weight: 500;
 				color: #495057;

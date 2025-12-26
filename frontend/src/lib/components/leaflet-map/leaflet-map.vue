@@ -99,10 +99,10 @@
 		flex-grow: 1;
 		position: relative;
 
-		--fm-leaflet-map-container-margin-bottom: var(--facilmap-control-margin-bottom);
+		--fm-leaflet-map-inset-bottom: var(--facilmap-inset-bottom);
 
 		&.isNarrow.hasSearchBox {
-			--fm-leaflet-map-container-margin-bottom: 0px;
+			--fm-leaflet-map-inset-bottom: 0px;
 		}
 
 		.fm-leaflet-map-wrapper {
@@ -129,19 +129,19 @@
 
 			.leaflet-control-container {
 				> .leaflet-top {
-					top: var(--facilmap-control-margin-top, 0px);
+					top: var(--facilmap-inset-top, 0px);
 				}
 
 				> .leaflet-right {
-					right: var(--facilmap-control-margin-right, 0px);
+					right: var(--facilmap-inset-right, 0px);
 				}
 
 				> .leaflet-bottom {
-					bottom: var(--fm-leaflet-map-container-margin-bottom, 0px);
+					bottom: var(--fm-leaflet-map-inset-bottom, 0px);
 				}
 
 				> .leaflet-left {
-					left: var(--facilmap-control-margin-left, 0px);
+					left: var(--facilmap-inset-left, 0px);
 				}
 
 				> .fm-leaflet-center {
@@ -251,9 +251,9 @@
 
 		.fm-leaflet-map-narrow-attribution {
 			position: absolute;
-			top: var(--facilmap-control-margin-top, 0px);
-			left: var(--facilmap-control-margin-left, 0px);
-			max-width: calc(100% - 54px - var(--facilmap-control-margin-left, 0px) - var(--facilmap-control-margin-right, 0px));
+			top: var(--facilmap-inset-top, 0px);
+			left: var(--facilmap-inset-left, 0px);
+			max-width: calc(100% - 54px - var(--facilmap-inset-left, 0px) - var(--facilmap-inset-right, 0px));
 			opacity: 0;
 			transition: opacity 1s;
 			pointer-events: none;
@@ -329,8 +329,8 @@
 
 		.fm-logo {
 			position: absolute;
-			bottom: var(--fm-leaflet-map-container-margin-bottom, 0px);
-			left: calc(var(--facilmap-control-margin-left, 0px) - 25px);
+			bottom: var(--fm-leaflet-map-inset-bottom, 0px);
+			left: calc(var(--facilmap-inset-left, 0px) - 25px);
 			pointer-events: none;
 			overflow: hidden;
 			user-select: none;
