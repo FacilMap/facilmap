@@ -307,6 +307,12 @@
 					pointer-events: none;
 				}
 			}
+
+			> .card-body {
+				margin-left: var(--facilmap-inset-left, 0px);
+				margin-right: var(--facilmap-inset-right, 0px);
+				margin-bottom: var(--facilmap-inset-bottom, 0px);
+			}
 		}
 
 		> .card-body {
@@ -314,9 +320,6 @@
 			flex-direction: column;
 			min-height: 0;
 			overflow: auto;
-			margin-left: var(--facilmap-inset-left, 0px);
-			margin-right: var(--facilmap-inset-right, 0px);
-			margin-bottom: var(--facilmap-inset-bottom, 0px);
 		}
 
 		> .card-header {
