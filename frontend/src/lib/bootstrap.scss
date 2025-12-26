@@ -4,6 +4,8 @@ $enable-gradients: true;
 
 $secondary: #fff;
 
+$color-mode-type: media-query;
+
 
 // Bootstrap import, see https://getbootstrap.com/docs/5.3/customize/optimize/
 
@@ -105,6 +107,27 @@ html,body {
 // Reset btn-outline-secondary colour scheme to original, as #fff makes the text invisible
 .btn-outline-secondary {
 	@include button-outline-variant(#6c757d);
+}
+
+// Above, we override $secondary with white like in Bootstrap 3 instead of gray like in Bootstrap 4/5. In dark mode, use gray again.
+@include color-mode(dark) {
+	$color: secondary;
+	$value: $gray-600;
+
+	.btn-#{$color} {
+		@include button-variant($value, $value);
+
+		$border: darken($value, 14%);
+		--#{$prefix}btn-border-color: #{$border};
+		--#{$prefix}btn-hover-border-color: #{darken($border, 12%)};
+		--#{$prefix}btn-active-border-color: #{$border};
+
+		--#{$prefix}btn-hover-bg: #{darken($value, 12%)};
+		--#{$prefix}btn-active-bg: #{darken($value, 12%)};
+		--#{$prefix}btn-disabled-bg: #{darken($value, 12%)};
+
+		@include gradient-y($start-color: $value, $end-color: darken($value, 12%));
+	}
 }
 
 .list-group-item.active a {

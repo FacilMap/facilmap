@@ -416,9 +416,9 @@
 		cursor: nwse-resize;
 		border: 1px solid #ddd;
 		border-radius: 1000px;
-		box-shadow: 0 1px 2px rgba(0, 0, 0, .075);
-		background: #fff;
-		color: #666;
+		box-shadow: 0 1px 2px rgba(var(--bs-body-color), .075);
+		background: var(--bs-body-bg);
+		color: var(--bs-secondary-text-emphasis);
 		padding: 2px;
 
 		display: flex;

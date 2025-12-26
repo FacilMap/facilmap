@@ -102,7 +102,7 @@
 			</div>
 		</template>
 
-		<nav v-if="!context.isNarrow" class="navbar navbar-expand bg-light">
+		<nav v-if="!context.isNarrow" class="navbar navbar-expand bg-body-tertiary">
 			<div class="container-fluid" :ref="(el) => { if (el) { teleportTargetRef = el as any; } }"></div>
 		</nav>
 

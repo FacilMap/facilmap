@@ -218,6 +218,10 @@
 				outline: none;
 			}
 
+			.leaflet-pane {
+				color-scheme: only light;
+			}
+
 		}
 
 		&.isNarrow {
