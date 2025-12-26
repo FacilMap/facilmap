@@ -172,6 +172,7 @@
 			touch-action: pan-y !important;
 			transform: translateX(100%);
 			transition: transform 0.3s, box-shadow 0.3s;
+			padding: var(--facilmap-control-margin-top, 0px) var(--facilmap-control-margin-right, 0px) var(--facilmap-control-margin-bottom, 0px) 0;
 
 			> .navbar {
 				display: flex;

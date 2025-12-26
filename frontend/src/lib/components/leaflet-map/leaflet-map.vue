@@ -43,7 +43,7 @@
 </script>
 
 <template>
-	<div class="fm-leaflet-map-container" :class="{ isNarrow: context.isNarrow }">
+	<div class="fm-leaflet-map-container" :class="{ isNarrow: context.isNarrow, hasSearchBox: context.components.searchBox?.visible }">
 		<slot v-if="mapContext" name="before"></slot>
 
 		<div class="fm-leaflet-map-wrapper">
@@ -99,6 +99,12 @@
 		flex-grow: 1;
 		position: relative;
 
+		--fm-leaflet-map-container-margin-bottom: var(--facilmap-control-margin-bottom);
+
+		&.isNarrow.hasSearchBox {
+			--fm-leaflet-map-container-margin-bottom: 0px;
+		}
+
 		.fm-leaflet-map-wrapper {
 			display: flex;
 			flex-direction: column;
@@ -121,16 +127,34 @@
 			user-select: none;
 			-webkit-user-select: none;
 
-			.fm-leaflet-center {
-				left: 50%;
-				transform: translateX(-50%);
-				text-align: center;
-				width: 100%;
+			.leaflet-control-container {
+				> .leaflet-top {
+					top: var(--facilmap-control-margin-top, 0px);
+				}
 
-				.leaflet-control {
-					display: inline-block;
-					float: none;
-					clear: none;
+				> .leaflet-right {
+					right: var(--facilmap-control-margin-right, 0px);
+				}
+
+				> .leaflet-bottom {
+					bottom: var(--fm-leaflet-map-container-margin-bottom, 0px);
+				}
+
+				> .leaflet-left {
+					left: var(--facilmap-control-margin-left, 0px);
+				}
+
+				> .fm-leaflet-center {
+					left: 50%;
+					transform: translateX(-50%);
+					text-align: center;
+					width: 100%;
+
+					.leaflet-control {
+						display: inline-block;
+						float: none;
+						clear: none;
+					}
 				}
 			}
 
@@ -227,9 +251,9 @@
 
 		.fm-leaflet-map-narrow-attribution {
 			position: absolute;
-			top: 0;
-			left: 0;
-			max-width: calc(100% - 54px);
+			top: var(--facilmap-control-margin-top, 0px);
+			left: var(--facilmap-control-margin-left, 0px);
+			max-width: calc(100% - 54px - var(--facilmap-control-margin-left, 0px) - var(--facilmap-control-margin-right, 0px));
 			opacity: 0;
 			transition: opacity 1s;
 			pointer-events: none;
@@ -305,8 +329,8 @@
 
 		.fm-logo {
 			position: absolute;
-			bottom: 0;
-			left: -25px;
+			bottom: var(--fm-leaflet-map-container-margin-bottom, 0px);
+			left: calc(var(--facilmap-control-margin-left, 0px) - 25px);
 			pointer-events: none;
 			overflow: hidden;
 			user-select: none;

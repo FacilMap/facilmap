@@ -1,6 +1,6 @@
 <script setup lang="ts">
 	import Icon from "../ui/icon.vue";
-	import { type Ref, defineComponent, nextTick, onScopeDispose, reactive, readonly, ref, toRef, watch } from "vue";
+	import { type Ref, computed, defineComponent, nextTick, onScopeDispose, reactive, readonly, ref, toRef, watch } from "vue";
 	import vTooltip from "../../utils/tooltip";
 	import type { SearchBoxEventMap, SearchBoxTab, WritableSearchBoxContext } from "../facil-map-context-provider/search-box-context";
 	import mitt from "mitt";
@@ -15,6 +15,8 @@
 	const tabs = reactive(new Map<string, SearchBoxTab>());
 	const activeTabId = ref<string | undefined>();
 	const tabHistory = ref<string[]>([]);
+
+	const visible = computed(() => tabs.size > 0);
 
 	function provideTab(id: string, tabRef: Ref<SearchBoxTab>) {
 		if (tabs.has(id)) {
@@ -63,6 +65,7 @@
 	}
 
 	const searchBoxContext: WritableSearchBoxContext = reactive(Object.assign(mitt<SearchBoxEventMap>(), {
+		visible,
 		tabs,
 		activeTabId: undefined,
 		activeTab: undefined,
@@ -175,7 +178,7 @@
 <template>
 	<div
 		class="card fm-search-box"
-		v-show="searchBoxContext.tabs.size > 0"
+		v-show="visible"
 		ref="containerRef"
 		:class="{ isNarrow: context.isNarrow, hasFocus, isPanning: panDrag.isDragging }"
 		@focusin="handleFocusIn"
@@ -233,9 +236,9 @@
 	.fm-search-box.fm-search-box {
 		&:not(.isNarrow) {
 			position: absolute;
-			top: 10px !important; /* Override drag position from narrow mode */
-			left: 52px;
-			max-height: calc(100% - 25px);
+			top: calc(10px + var(--facilmap-control-margin-top)) !important; /* Override drag position from narrow mode */
+			left: calc(52px + var(--facilmap-control-margin-left));
+			max-height: calc(100% - 25px - var(--facilmap-control-margin-top) - var(--facilmap-control-margin-bottom));
 			min-width: 19rem;
 			min-height: 6rem;
 			width: 29.5rem;
@@ -274,6 +277,8 @@
 
 			> .card-header {
 				padding-top: 11px;
+				padding-left: var(--facilmap-control-margin-left, 0px);
+				padding-right: var(--facilmap-control-margin-right, 0px);
 				position: relative;
 				-webkit-touch-callout: none;
 				cursor: row-resize;
@@ -309,6 +314,9 @@
 			flex-direction: column;
 			min-height: 0;
 			overflow: auto;
+			margin-left: var(--facilmap-control-margin-left, 0px);
+			margin-right: var(--facilmap-control-margin-right, 0px);
+			margin-bottom: var(--facilmap-control-margin-bottom, 0px);
 		}
 
 		> .card-header {
