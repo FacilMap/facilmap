@@ -257,9 +257,11 @@ export function parseRouteQuery(query: string): RouteQuery {
 		}
 	}
 
-	return {
-		queries: queryParts.from.concat(queryParts.via, queryParts.to),
-		mode
+	if (queryParts.to.length === 0) {
+		// Not a route query
+		return { queries: [query], mode: null };
+	} else {
+		return { queries: [...queryParts.from, ...queryParts.via, ...queryParts.to], mode };
 	};
 }
 

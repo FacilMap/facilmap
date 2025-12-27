@@ -18,6 +18,7 @@ export interface SearchBoxTab {
 }
 
 export interface SearchBoxContextData {
+	visible: boolean;
 	tabs: Map<string, SearchBoxTab>;
 	activeTabId: string | undefined;
 	activeTab: SearchBoxTab | undefined;

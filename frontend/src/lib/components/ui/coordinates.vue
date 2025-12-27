@@ -10,6 +10,7 @@
 	import DropdownMenu from "./dropdown-menu.vue";
 	import { injectContextRequired } from "../facil-map-context-provider/facil-map-context-provider.vue";
 	import { getExternalLinks } from "../../utils/external-links";
+	import * as pluscodes from "pluscodes";
 
 	const context = injectContextRequired();
 	const toasts = useToasts();
@@ -24,6 +25,7 @@
 	const formattedCoordinates = computed(() => formatCoordinates(props.point));
 	const degrees = computed(() => formatCoordinateDegrees(props.point));
 	const geo = computed(() => `geo:${props.point.lat.toFixed(5)},${props.point.lon.toFixed(5)}${props.zoom != null ? `?z=${props.zoom}` : ""}`);
+	const plus = computed(() => pluscodes.encode({ latitude: props.point.lat, longitude: props.point.lon }));
 
 	const externalLinks = computed(() => getExternalLinks({ ...props.point, zoom: props.zoom }, "marker", context.hideCommercialMapLinks));
 
@@ -73,6 +75,19 @@
 					draggable="false"
 				>
 					<span>{{geo}}</span>
+					<Icon icon="copy" :alt="i18n.t('coordinates.copy-to-clipboard')"></Icon>
+				</a>
+			</li>
+
+			<li v-if="plus != null">
+				<a
+					href="javascript:"
+					class="dropdown-item"
+					@click="copy(plus)"
+					v-tooltip="i18n.t('coordinates.copy-to-clipboard')"
+					draggable="false"
+				>
+					<span>{{plus}}</span>
 					<Icon icon="copy" :alt="i18n.t('coordinates.copy-to-clipboard')"></Icon>
 				</a>
 			</li>

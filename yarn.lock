@@ -484,6 +484,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@kalisio/leaflet-graphicscale@npm:^1.0.0":
+  version: 1.0.0
+  resolution: "@kalisio/leaflet-graphicscale@npm:1.0.0"
+  checksum: 870245a42cb24eddc83988cc3f7c051d115b05198f1bdcf34a273d5392fc9a1ceb06d4f64bcce1574fc9ed67eb90d0c6153de8b245e6e5ea9dbccddd0c194738
+  languageName: node
+  linkType: hard
+
 "@mapbox/geojson-rewind@npm:0.5.2":
   version: 0.5.2
   resolution: "@mapbox/geojson-rewind@npm:0.5.2"
@@ -4173,6 +4180,7 @@ __metadata:
   resolution: "facilmap-frontend@workspace:frontend"
   dependencies:
     "@ckpack/vue-color": ^1.6.0
+    "@kalisio/leaflet-graphicscale": ^1.0.0
     "@tmcw/togeojson": ^6.0.1
     "@types/bootstrap": ^5.2.10
     "@types/decode-uri-component": ^0.2.2
@@ -4202,8 +4210,9 @@ __metadata:
     js-cookie: ^3.0.5
     json-stream-es: ^1.2.1
     leaflet: ^1.9.4
+    leaflet-doubletapdrag: ^0.1.2
+    leaflet-doubletapdragzoom: ^0.3.2
     leaflet-draggable-lines: ^3.2.1
-    leaflet-graphicscale: ^0.0.4
     leaflet-mouse-position: ^1.2.0
     leaflet.heightgraph: ^1.4.0
     leaflet.locatecontrol: ^0.83.1
@@ -4215,6 +4224,7 @@ __metadata:
     p-debounce: ^4.0.0
     p-throttle: ^7.0.0
     pluralize: ^8.0.0
+    pluscodes: ^3.0.1
     popper-max-size-modifier: ^0.2.0
     proj4: ^2.19.7
     qrcode.vue: ^3.6.0
@@ -4437,6 +4447,7 @@ __metadata:
     dompurify: ^3.2.4
     facilmap-types: "workspace:^"
     filtrex: ^2.2.3
+    find-cache-dir: ^6.0.0
     i18next: ^24.2.2
     i18next-browser-languagedetector: ^8.0.4
     jquery: ^3.7.1
@@ -4448,6 +4459,7 @@ __metadata:
     osm-api: ^2.4.0
     p-throttle: ^7.0.0
     parse-gps-coordinates: ^1.0.0
+    pluscodes: ^3.0.1
     rimraf: ^6.0.1
     typescript: ^5.7.3
     vite: ^6.2.0
@@ -4618,6 +4630,16 @@ __metadata:
     common-path-prefix: ^3.0.0
     pkg-dir: ^7.0.0
   checksum: 1be046a2d6d98698d181352139bdd2f3e45cad4a0b3c9f06a611124ca52d823b0b327f5a629d7c5268b7fad54a202104765e572f8415b89ac35f76818fb3b75e
+  languageName: node
+  linkType: hard
+
+"find-cache-dir@npm:^6.0.0":
+  version: 6.0.0
+  resolution: "find-cache-dir@npm:6.0.0"
+  dependencies:
+    common-path-prefix: ^3.0.0
+    pkg-dir: ^7.0.0
+  checksum: 3dfd8a9f2e1bd63509e2b19b78a6f215f51adc00cf733c0b81f2656c2029f7c9d7a23df6599ffa071066d5e6ecc657a046ab352fa10664839d42e4268ccd8399
   languageName: node
   linkType: hard
 
@@ -5867,6 +5889,26 @@ __metadata:
   languageName: node
   linkType: hard
 
+"leaflet-doubletapdrag@npm:^0.1.0, leaflet-doubletapdrag@npm:^0.1.2":
+  version: 0.1.2
+  resolution: "leaflet-doubletapdrag@npm:0.1.2"
+  peerDependencies:
+    leaflet: ^1.0.0
+  checksum: 6a32f1754dddab59bb17b9a74a2199d0ba997999038b962a10337a3e8f406a2448691fc15a2563f13f376f1b5d905f263a7705b4c5a4e73c1a0ef99a12617694
+  languageName: node
+  linkType: hard
+
+"leaflet-doubletapdragzoom@npm:^0.3.2":
+  version: 0.3.2
+  resolution: "leaflet-doubletapdragzoom@npm:0.3.2"
+  dependencies:
+    leaflet-doubletapdrag: ^0.1.0
+  peerDependencies:
+    leaflet: ^1.0.0
+  checksum: 0cf36005c188677064f0fc071a688299d930b47f991e5a81d3b1b11f4ff8458a58a4bc0125dc261a037f4829f216d2af4d0cbbe3eb8d0d671a453759dab2ff31
+  languageName: node
+  linkType: hard
+
 "leaflet-draggable-lines@npm:^3.2.1":
   version: 3.2.1
   resolution: "leaflet-draggable-lines@npm:3.2.1"
@@ -5882,13 +5924,6 @@ __metadata:
   peerDependencies:
     leaflet: x
   checksum: d9f7d7c6bf62d7d4421933b295d9226d01bc314e1c5bbe33421f6e9eda16cf3d5bf3a8c5a6e573f3b2e44b55b483fed5c2717dd4c73cbc4a431f7ac5ba093323
-  languageName: node
-  linkType: hard
-
-"leaflet-graphicscale@npm:^0.0.4":
-  version: 0.0.4
-  resolution: "leaflet-graphicscale@npm:0.0.4"
-  checksum: b4529297fdf46dafadb6f61fd110a4dd4211959a3d90e9c603d5595e88a6f4439286a16c662a7ac8c33ef4aaa04517768693e7bc10017c2ff3635f6eda57592d
   languageName: node
   linkType: hard
 
@@ -7217,6 +7252,13 @@ __metadata:
   version: 8.0.0
   resolution: "pluralize@npm:8.0.0"
   checksum: 08931d4a6a4a5561a7f94f67a31c17e6632cb21e459ab3ff4f6f629d9a822984cf8afef2311d2005fbea5d7ef26016ebb090db008e2d8bce39d0a9a9d218736e
+  languageName: node
+  linkType: hard
+
+"pluscodes@npm:^3.0.1":
+  version: 3.0.1
+  resolution: "pluscodes@npm:3.0.1"
+  checksum: 20880b189aa0f2d2b91a1098abd1ca9bc46fd685b8816aba83c3e4034516110a0f008575c73e5db116f3d8e47610365adb8dbc19a73b8920ac12b1f718c8ebf7
   languageName: node
   linkType: hard
 

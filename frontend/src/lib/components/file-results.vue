@@ -93,10 +93,10 @@
 			<template #before v-if="clientSub">
 				<template v-if="hasViews">
 					<h3>{{i18n.t("file-results.views")}}</h3>
-					<ul class="list-group">
+					<ul class="fm-results list-group">
 						<!-- eslint-disable-next-line vue/require-v-for-key -->
 						<li v-for="view in file.views" class="list-group-item">
-							<span class="text-break">
+							<span class="text-break fm-results-label">
 								<a href="javascript:" @click="showView(view)">{{view.name}}</a>
 								{{" "}}
 								<span class="result-type">({{i18n.t("file-results.view")}})</span>
@@ -122,10 +122,10 @@
 			<template #after v-if="clientSub">
 				<template v-if="hasTypes">
 					<h3>{{i18n.t("file-results.types")}}</h3>
-					<ul class="list-group">
+					<ul class="fm-results list-group">
 						<!-- eslint-disable-next-line vue/require-v-for-key -->
 						<li v-for="type in file.types" class="list-group-item">
-							<span class="text-break">
+							<span class="text-break fm-results-label">
 								{{type.name}}
 								{{" "}}
 								<span class="result-type">({{i18n.t("file-results.type")}})</span>

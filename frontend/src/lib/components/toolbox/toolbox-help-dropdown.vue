@@ -5,6 +5,7 @@
 	import { injectContextRequired } from "../facil-map-context-provider/facil-map-context-provider.vue";
 	import Icon from "../ui/icon.vue";
 	import { useI18n } from "../../utils/i18n";
+	import config from "../../../map/config";
 
 	const context = injectContextRequired();
 	const i18n = useI18n();
@@ -71,6 +72,18 @@
 				draggable="false"
 			>
 				<span>{{i18n.t("toolbox-help-dropdown.forum")}}</span>
+				<Icon icon="new-window"></Icon>
+			</a>
+		</li>
+
+		<li v-if="config.donateUrl">
+			<a
+				class="dropdown-item fm-toolbox-new-window-item"
+				:href="config.donateUrl"
+				target="_blank"
+				draggable="false"
+			>
+				<span>{{i18n.t("common.donate")}}</span>
 				<Icon icon="new-window"></Icon>
 			</a>
 		</li>

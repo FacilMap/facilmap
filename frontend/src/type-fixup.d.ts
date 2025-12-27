@@ -11,6 +11,13 @@ declare module "leaflet" {
 		_loaded?: true;
 	}
 
+	interface MapOptions {
+		doubleTapDragZoom?: boolean;
+		doubleTapDragZoomOptions?: {
+			reverse?: boolean;
+		}
+	}
+
 	interface Control {
 		_container: HTMLElement;
 	}

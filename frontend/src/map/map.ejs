@@ -9,7 +9,7 @@
 <% } else { -%>
 		<meta name="robots" content="noindex,nofollow" />
 <% } -%>
-		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
 		<meta name="fmConfig" content="<%=JSON.stringify(config)%>" />
 		<link rel="icon" href=".<%=paths.base%>static/favicon.svg">
 		<link rel="mask-icon" href=".<%=paths.base%>static/favicon.svg" color="#00272a">
@@ -30,10 +30,14 @@
 
 			html {
 				height: 100%;
+				--facilmap-inset-top: env(safe-area-inset-top, 0px);
+				--facilmap-inset-right: env(safe-area-inset-right, 0px);
+				--facilmap-inset-bottom: env(safe-area-inset-bottom, 0px);
+				--facilmap-inset-left: env(safe-area-inset-left, 0px);
 			}
 
 			#loading {
-				padding: 10px;
+				padding: calc(var(--facilmap-inset-top, 0px) + 10px) calc(var(--facilmap-inset-right, 0px) + 10px) calc(var(--facilmap-inset-bottom, 0px) + 10px) calc(var(--facilmap-inset-left, 0px) + 10px);
 				font-size: 24.5px;
 				font-weight: 500;
 				color: #495057;

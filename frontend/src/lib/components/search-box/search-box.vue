@@ -1,6 +1,6 @@
 <script setup lang="ts">
 	import Icon from "../ui/icon.vue";
-	import { type Ref, defineComponent, nextTick, onScopeDispose, reactive, readonly, ref, toRef, watch } from "vue";
+	import { type Ref, computed, defineComponent, nextTick, onScopeDispose, reactive, readonly, ref, toRef, watch } from "vue";
 	import vTooltip from "../../utils/tooltip";
 	import type { SearchBoxEventMap, SearchBoxTab, WritableSearchBoxContext } from "../facil-map-context-provider/search-box-context";
 	import mitt from "mitt";
@@ -15,6 +15,8 @@
 	const tabs = reactive(new Map<string, SearchBoxTab>());
 	const activeTabId = ref<string | undefined>();
 	const tabHistory = ref<string[]>([]);
+
+	const visible = computed(() => tabs.size > 0);
 
 	function provideTab(id: string, tabRef: Ref<SearchBoxTab>) {
 		if (tabs.has(id)) {
@@ -63,6 +65,7 @@
 	}
 
 	const searchBoxContext: WritableSearchBoxContext = reactive(Object.assign(mitt<SearchBoxEventMap>(), {
+		visible,
 		tabs,
 		activeTabId: undefined,
 		activeTab: undefined,
@@ -175,7 +178,7 @@
 <template>
 	<div
 		class="card fm-search-box"
-		v-show="searchBoxContext.tabs.size > 0"
+		v-show="visible"
 		ref="containerRef"
 		:class="{ isNarrow: context.isNarrow, hasFocus, isPanning: panDrag.isDragging }"
 		@focusin="handleFocusIn"
@@ -233,9 +236,9 @@
 	.fm-search-box.fm-search-box {
 		&:not(.isNarrow) {
 			position: absolute;
-			top: 10px !important; /* Override drag position from narrow mode */
-			left: 52px;
-			max-height: calc(100% - 25px);
+			top: calc(10px + var(--facilmap-inset-top)) !important; /* Override drag position from narrow mode */
+			left: calc(52px + var(--facilmap-inset-left));
+			max-height: calc(100% - 25px - var(--facilmap-inset-top) - var(--facilmap-inset-bottom));
 			min-width: 19rem;
 			min-height: 6rem;
 			width: 29.5rem;
@@ -274,6 +277,8 @@
 
 			> .card-header {
 				padding-top: 11px;
+				padding-left: var(--facilmap-inset-left, 0px);
+				padding-right: var(--facilmap-inset-right, 0px);
 				position: relative;
 				-webkit-touch-callout: none;
 				cursor: row-resize;
@@ -301,6 +306,12 @@
 					// Prevent click event on drag end (see https://stackoverflow.com/a/59957886/242365)
 					pointer-events: none;
 				}
+			}
+
+			> .card-body {
+				margin-left: var(--facilmap-inset-left, 0px);
+				margin-right: var(--facilmap-inset-right, 0px);
+				margin-bottom: var(--facilmap-inset-bottom, 0px);
 			}
 		}
 
@@ -405,9 +416,9 @@
 		cursor: nwse-resize;
 		border: 1px solid #ddd;
 		border-radius: 1000px;
-		box-shadow: 0 1px 2px rgba(0, 0, 0, .075);
-		background: #fff;
-		color: #666;
+		box-shadow: 0 1px 2px rgba(var(--bs-body-color), .075);
+		background: var(--bs-body-bg);
+		color: var(--bs-secondary-text-emphasis);
 		padding: 2px;
 
 		display: flex;

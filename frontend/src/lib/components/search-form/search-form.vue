@@ -21,6 +21,7 @@
 	import RelationResults from "../osm/relation-results/relation-results.vue";
 	import OsmFeatureInfo from "../osm/osm-feature-info.vue";
 	import { streamToArray } from "json-stream-es";
+	import vTooltip from "../../utils/tooltip";
 
 	const props = defineProps<{
 		active: boolean;
@@ -360,6 +361,7 @@
 						<a
 							href="javascript:"
 							class="dropdown-item"
+							v-tooltip.right="i18n.t('search-form.route-queries-tooltip')"
 							@click.capture.stop.prevent="storage.routeQueries = !storage.routeQueries"
 						>
 							<Icon :icon="storage.routeQueries ? 'check' : 'unchecked'"></Icon> {{i18n.t("search-form.route-queries")}}

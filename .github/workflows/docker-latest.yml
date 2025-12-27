@@ -64,13 +64,12 @@ jobs:
 
       -
         name: Start integration test components
-        run: |
-          docker compose -f ./integration-tests/docker-compose.yml up --wait
-          status="$?"
-          if (( status != 0 )); then
-            docker compose -f ./integration-tests/docker-compose.yml logs
-            exit "$status"
-          fi
+        run: docker compose -f ./integration-tests/docker-compose.yml up --wait
+
+      -
+        name: Show integration test component logs on failure
+        if: failure()
+        run: docker compose -f ./integration-tests/docker-compose.yml logs
 
       -
         name: Run integration tests

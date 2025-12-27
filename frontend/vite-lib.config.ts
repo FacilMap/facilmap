@@ -25,7 +25,7 @@ export default defineConfig(({ mode }) => ({
 			formats: ['es']
 		},
 		rollupOptions: {
-			external: (id) => !id.startsWith("./") && !id.startsWith("../") && /* resolved internal modules */ !isAbsolute(id)
+			external: (id) => !id.startsWith("./") && !id.startsWith("../") && !id.startsWith("virtual:") && /* resolved internal modules */ !isAbsolute(id)
 		}
 	}
 }));

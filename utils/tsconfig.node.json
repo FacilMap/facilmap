@@ -5,6 +5,7 @@
 		"outDir": "out.node"
 	},
 	"include": [
-		"vite.config.ts"
+		"vite.config.ts",
+		"rollup-languages.ts"
 	]
 }

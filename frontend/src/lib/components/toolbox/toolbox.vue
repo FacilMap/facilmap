@@ -13,6 +13,8 @@
 	import { fixOnCleanup } from "../../utils/vue";
 	import { Control, DomUtil, type Map } from "leaflet";
 	import { canConfigureMap, getCreatableTypes } from "facilmap-utils";
+	import { useI18n } from "../../utils/i18n";
+	import config from "../../../map/config";
 
 	class CustomControl extends Control {
 		override onAdd(map: Map) {
@@ -31,6 +33,8 @@
 	}>(), {
 		interactive: true
 	});
+
+	const i18n = useI18n();
 
 	const styles = useCssModule();
 
@@ -100,6 +104,12 @@
 					@hide-sidebar="sidebarVisible = false"
 				></ToolboxHelpDropdown>
 			</ul>
+
+			<template #narrow-footer>
+				<div class="fm-donate">
+					<a :href="config.donateUrl" target="_blank" class="fm-donate">♥&nbsp;{{i18n.t("common.donate")}}</a>
+				</div>
+			</template>
 		</Sidebar>
 	</div>
 </template>
@@ -107,8 +117,8 @@
 <style lang="scss">
 	.fm-toolbox {
 		position: absolute;
-		top: 10px;
-		right: 10px;
+		top: calc(10px + var(--facilmap-inset-top));
+		right: calc(10px + var(--facilmap-inset-right));
 
 		&:hover {
 			z-index: 1000;
@@ -145,6 +155,17 @@
 
 		@media print {
 			display: none;
+		}
+
+		.fm-donate {
+			padding: 0.5rem;
+			text-align: right;
+
+			> a {
+				color: #ff00f6;
+				font-weight: bold;
+				text-decoration: none;
+			}
 		}
 	}
 </style>

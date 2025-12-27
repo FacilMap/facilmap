@@ -6,6 +6,7 @@ import { paths } from "./build";
 import vuePlugin from "@vitejs/plugin-vue";
 import tsconfigPaths from "vite-tsconfig-paths";
 import iconsPlugin from "facilmap-leaflet/rollup-icons";
+import languagesPlugin from "facilmap-utils/rollup-languages";
 import definePlugin from "./vite-define";
 
 export default defineConfig({
@@ -14,6 +15,7 @@ export default defineConfig({
 		vuePlugin(),
 		tsconfigPaths({ loose: true }),
 		iconsPlugin(),
+		languagesPlugin(),
 		definePlugin()
 	],
 	assetsInclude: [

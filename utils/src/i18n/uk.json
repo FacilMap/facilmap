@@ -1,0 +1,58 @@
+{
+    "elevation": {
+        "http-error": "Пошук висот завершився невдачею зі статусом {{status}}."
+    },
+    "format": {
+        "marker-type-name": "Маркер",
+        "line-type-name": "Лінія",
+        "description-field-name": "Опис",
+        "unnamed-poi": "Безіменна точка інтересу",
+        "route-time": "{{time}} {{mode}}",
+        "distance-km": "{{distance}} км",
+        "distance-mi": "{{distance}} миль",
+        "time": "{{hours}}:{{minutes}} год",
+        "elevation-m": "{{elevation}} м",
+        "elevation-ft": "{{elevation}} футів"
+    },
+    "objects": {
+        "untitled-marker": "Маркер без назви",
+        "untitled-line": "Безіменна лінія"
+    },
+    "maps": {
+        "unnamed-map": "Безіменна карта",
+        "page-title": "{{mapName}} – {{appName}}",
+        "fallback-page-description": "Повнофункціональна карта на базі OpenStreetMap, де маркери та лінії можна додавати за допомогою співпраці в реальному часі."
+    },
+    "routing": {
+        "format-by-hgv": "великовантажним транспортним засобом",
+        "format-by-car": "автомобілем",
+        "format-by-road-bike": "на шосейному велосипеді",
+        "format-by-mountain-bike": "на гірському велосипеді",
+        "format-by-electric-bike": "на електричному велосипеді",
+        "format-by-bicycle": "на велосипеді",
+        "format-by-wheelchair": "на інвалідному візку",
+        "format-by-foot": "пішки",
+        "query-from": "з",
+        "query-to": "до",
+        "query-via": "через",
+        "query-by-hgv": "великовантажним транспортним засобом",
+        "query-by-car": "автомобілем",
+        "query-by-road-bike": "на шосейному велосипеді",
+        "query-by-mountain-bike": "на гірському велосипеді",
+        "query-by-electric-bike": "на електричному велосипеді",
+        "query-by-wheelchair": "на інвалідному візку",
+        "query-by-bicycle": "на велосипеді|на мотоциклі",
+        "query-by-straight": "прямо|гелікоптером"
+    },
+    "search": {
+        "http-error": "Пошук не вдався, статус {{status}}."
+    },
+    "utils": {
+        "node": "Точка {{id}}",
+        "way": "Лінія {{id}}",
+        "relation": "Зв'язок {{id}}",
+        "feature-with-name-role": "{{feature}} ({{name}}, роль: {{role}})",
+        "feature-with-name": "{{feature}} ({{name}})",
+        "feature-with-role": "{{feature}} (роль: {{role}})"
+    }
+}

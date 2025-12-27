@@ -4,8 +4,8 @@ import "leaflet/dist/leaflet.css";
 import { BboxHandler, ChangesetLayer, getIconHtml, getVisibleLayers, HashHandler, LinesLayer, MarkersLayer, SearchResultsLayer, OverpassLayer, OverpassLoadStatus, displayView, getInitialView, coreIconList, defaultVisibleLayers, FeatureBlameLayer } from "facilmap-leaflet";
 import { LocateControl, type LocateOptions } from "leaflet.locatecontrol";
 import "leaflet.locatecontrol/dist/L.Control.Locate.css";
-import "leaflet-graphicscale";
-import "leaflet-graphicscale/dist/Leaflet.GraphicScale.min.css";
+import "@kalisio/leaflet-graphicscale";
+import "@kalisio/leaflet-graphicscale/dist/Leaflet.GraphicScale.min.css";
 import "leaflet-mouse-position";
 import "leaflet-mouse-position/src/L.Control.MousePosition.css";
 import SelectionHandler from "../../utils/selection";
@@ -15,12 +15,15 @@ import type { MapComponents, MapContextData, MapContextEvents, WritableMapContex
 import type { ClientContext } from "../facil-map-context-provider/client-context";
 import type { FacilMapContext } from "../facil-map-context-provider/facil-map-context";
 import { requireClientContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
-import { type Optional } from "facilmap-utils";
+import { quoteHtml, type Optional } from "facilmap-utils";
 import { getI18n, i18nResourceChangeCounter, useI18n } from "../../utils/i18n";
 import { AttributionControl } from "./attribution";
 import { isNarrowBreakpoint } from "../../utils/bootstrap";
 import { useWakeLock } from "../../utils/wake-lock";
 import storage from "../../utils/storage";
+import config from "../../../map/config";
+import "leaflet-doubletapdrag";
+import "leaflet-doubletapdragzoom";
 import { useToasts } from "../ui/toasts/toasts.vue";
 
 type MapContextWithoutComponents = Optional<WritableMapContext, 'components'>;
@@ -33,9 +36,14 @@ function useMap(element: Ref<HTMLElement>, mapContext: MapContextWithoutComponen
 		const map = mapRef.value = markRaw(leafletMap(element.value, {
 			boxZoom: false,
 			attributionControl: false,
-			zoomControl: false
+			zoomControl: false,
+			doubleTapDragZoom: true,
+			doubleTapDragZoomOptions: {
+				reverse: true
+			}
 		}));
 
+		map._controlCorners.topcenter = DomUtil.create("div", "leaflet-top fm-leaflet-center", map._controlContainer);
 		map._controlCorners.bottomcenter = DomUtil.create("div", "leaflet-bottom fm-leaflet-center", map._controlContainer);
 
 		map.on("moveend", () => {
@@ -131,7 +139,9 @@ function useZoomControl(map: Ref<Map>): Ref<Raw<Control.Zoom>> {
 function useAttribution(map: Ref<Map>): Ref<Raw<AttributionControl>> {
 	return useMapComponent(
 		map,
-		() => markRaw(new AttributionControl()),
+		() => markRaw(new AttributionControl({
+			prefix: config.donateUrl ? `<a href="${quoteHtml(config.donateUrl)}" target="_blank" class="fm-donate">♥&nbsp;${quoteHtml(getI18n().t("common.donate"))}</a>` : undefined
+		})),
 		(attribution, map) => {
 			watch(() => isNarrowBreakpoint(), (isNarrow) => {
 				if (isNarrow) {
@@ -168,14 +178,12 @@ function useBboxHandler(map: Ref<Map>, clientContext: Ref<ClientContext>): Ref<R
 function useGraphicScale(map: Ref<Map>): Ref<Raw<any>> {
 	return useMapComponent(
 		map,
-		() => markRaw(control.graphicScale({ fill: "hollow", position: "bottomcenter" })),
+		() => markRaw(control.graphicScale({ fill: "hollow" })),
 		(graphicScale, map) => {
 			watch(() => isNarrowBreakpoint(), (isNarrow) => {
-				if (isNarrow) {
-					graphicScale.remove();
-				} else {
-					graphicScale.addTo(map);
-				}
+				graphicScale.remove();
+				graphicScale.options.position = isNarrow ? "topcenter" : "bottomcenter";
+				graphicScale.addTo(map);
 			}, { immediate: true });
 
 			onScopeDispose(() => {

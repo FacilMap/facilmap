@@ -19,4 +19,5 @@ export interface InjectedConfig {
 	hideCommercialMapLinks?: boolean;
 	supportsRoutes: boolean;
 	supportsAdvancedRoutes: boolean;
+	donateUrl: string;
 }

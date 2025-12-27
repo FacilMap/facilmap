@@ -6,12 +6,14 @@ describe("storageValidator", () => {
 		expect(storageValidator.parse(undefined)).toEqual({
 			zoomToAll: false,
 			autoZoom: true,
+			routeQueries: true,
 			favourites: []
 		});
 
 		expect(storageValidator.parse({})).toEqual({
 			zoomToAll: false,
 			autoZoom: true,
+			routeQueries: true,
 			favourites: []
 		});
 	});
@@ -20,10 +22,12 @@ describe("storageValidator", () => {
 		expect(storageValidator.parse({
 			zoomToAll: "invalid",
 			autoZoom: "invalid",
+			routeQueries: "invalid",
 			favourites: "invalid"
 		})).toEqual({
 			zoomToAll: false,
 			autoZoom: true,
+			routeQueries: true,
 			favourites: []
 		});
 	});
@@ -32,6 +36,7 @@ describe("storageValidator", () => {
 		const value = {
 			zoomToAll: true,
 			autoZoom: false,
+			routeQueries: false,
 			favourites: [
 				{ mapSlug: "adminId1", mapId: 1, name: "Test map" },
 				{ mapSlug: "adminId2", mapId: 2, name: "Test map", customName: "Custom name" }

@@ -10,6 +10,7 @@ import { validateResponse, type OnProgress } from "./utils.js";
 import type { OsmFeatureBlame } from "./osm/feature-blame.js";
 import type { AnalyzedOsmFeature } from "./osm/feature.js";
 import type { OsmFeatureType } from "osm-api";
+import * as pluscodes from "pluscodes";
 
 interface NominatimResult {
 	place_id: number;
@@ -234,6 +235,16 @@ export async function find(query: string, options: FindOptions = {}): Promise<Ar
 	if(lonlat_match) {
 		const result = await _findLonLat(lonlat_match, options);
 		return result.map((res) => ({ ...res, id: query }));
+	}
+
+	const plus_match = query.match(/^[23456789CFGHJMPQRVWX]+\+[23456789CFGHJMPQRVWX]+$/);
+	console.log(plus_match);
+	if (plus_match) {
+		const decoded = pluscodes.decode(query);
+		if (decoded) {
+			const result = await _findLonLat({ lat: decoded.latitude, lon: decoded.longitude }, options);
+			return result.map((res) => ({ ...res, id: query }));
+		}
 	}
 
 	const osm_match = query.match(/^([nwr])(\d+)$/i);

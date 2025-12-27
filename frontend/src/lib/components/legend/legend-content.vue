@@ -220,4 +220,8 @@
 			}
 		}
 	}
+
+	.fm-legend-icon {
+		color-scheme: only light;
+	}
 </style>

@@ -4,6 +4,7 @@ import { defineConfig } from "vite";
 import cssInjectedByJsPlugin from "vite-plugin-css-injected-by-js";
 import dtsPlugin from "vite-plugin-dts";
 import iconsPlugin from "./rollup-icons";
+import languagesPlugin from "facilmap-utils/rollup-languages";
 import { appendFile, readFile } from "fs/promises";
 import tsconfigPaths from "vite-tsconfig-paths";
 import { isAbsolute } from "node:path";
@@ -23,6 +24,7 @@ export default defineConfig({
 			},
 		}),
 		iconsPlugin(),
+		languagesPlugin(),
 		tsconfigPaths({ loose: true })
 	],
 	build: {
@@ -35,7 +37,7 @@ export default defineConfig({
 			formats: ['es']
 		},
 		rollupOptions: {
-			external: (id) => !id.startsWith("./") && !id.startsWith("../") && !id.startsWith("virtual:icons:") && /* resolved internal modules */ !isAbsolute(id)
+			external: (id) => !id.startsWith("./") && !id.startsWith("../") && !id.startsWith("virtual:") && /* resolved internal modules */ !isAbsolute(id)
 		}
 	},
 	resolve: {

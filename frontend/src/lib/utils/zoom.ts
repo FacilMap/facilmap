@@ -211,19 +211,19 @@ export async function openSpecialQuery(query: string, context: FacilMapContext, 
 	const routeFormTabContext = toRef(() => context.components.routeFormTab);
 
 	if(searchBoxContext.value && routeFormTabContext.value) {
-		if (storage.routeQueries || forceRouteQuery) {
-			const split1 = decodeRouteQuery(query); // A route hash query encoded in a predictable format in English by the route form
-			if (split1.queries.length >= 2) {
-				routeFormTabContext.value.setQuery(query, zoom, smooth);
+		if (storage.routeQueries) {
+			const split2 = parseRouteQuery(query); // A free-text route query specified by the user in the current language
+			if (split2.queries.length >= 2) {
+				routeFormTabContext.value.setQuery(encodeRouteQuery(split2), zoom, smooth);
 				searchBoxContext.value.activateTab(`fm${context.id}-route-form-tab`, { autofocus: true });
 				return true;
 			}
 		}
 
-		if (storage.routeQueries) {
-			const split2 = parseRouteQuery(query); // A free-text route query specified by the user in the current language
-			if (split2.queries.length >= 2) {
-				routeFormTabContext.value.setQuery(encodeRouteQuery(split2), zoom, smooth);
+		if (storage.routeQueries || forceRouteQuery) {
+			const split1 = decodeRouteQuery(query); // A route hash query encoded in a predictable format in English by the route form
+			if (split1.queries.length >= 2) {
+				routeFormTabContext.value.setQuery(query, zoom, smooth);
 				searchBoxContext.value.activateTab(`fm${context.id}-route-form-tab`, { autofocus: true });
 				return true;
 			}

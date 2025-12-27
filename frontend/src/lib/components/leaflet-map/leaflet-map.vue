@@ -45,7 +45,7 @@
 </script>
 
 <template>
-	<div class="fm-leaflet-map-container" :class="{ isNarrow: context.isNarrow }">
+	<div class="fm-leaflet-map-container" :class="{ isNarrow: context.isNarrow, hasSearchBox: context.components.searchBox?.visible }">
 		<slot v-if="mapContext" name="before"></slot>
 
 		<div class="fm-leaflet-map-wrapper">
@@ -101,6 +101,12 @@
 		flex-grow: 1;
 		position: relative;
 
+		--fm-leaflet-map-inset-bottom: var(--facilmap-inset-bottom);
+
+		&.isNarrow.hasSearchBox {
+			--fm-leaflet-map-inset-bottom: 0px;
+		}
+
 		.fm-leaflet-map-wrapper {
 			display: flex;
 			flex-direction: column;
@@ -123,15 +129,34 @@
 			user-select: none;
 			-webkit-user-select: none;
 
-			.fm-leaflet-center {
-				left: 50%;
-				transform: translateX(-50%);
-				text-align: center;
+			.leaflet-control-container {
+				> .leaflet-top {
+					top: var(--facilmap-inset-top, 0px);
+				}
 
-				.leaflet-control {
-					display: inline-block;
-					float: none;
-					clear: none;
+				> .leaflet-right {
+					right: var(--facilmap-inset-right, 0px);
+				}
+
+				> .leaflet-bottom {
+					bottom: var(--fm-leaflet-map-inset-bottom, 0px);
+				}
+
+				> .leaflet-left {
+					left: var(--facilmap-inset-left, 0px);
+				}
+
+				> .fm-leaflet-center {
+					left: 50%;
+					transform: translateX(-50%);
+					text-align: center;
+					width: 100%;
+
+					.leaflet-control {
+						display: inline-block;
+						float: none;
+						clear: none;
+					}
 				}
 			}
 
@@ -154,8 +179,11 @@
 			}
 
 			.leaflet-control.leaflet-control-graphicscale {
-				margin-bottom: 0;
+				margin-top: 0; // Narrow screens (topcenter)
+				margin-bottom: 0; // Wide screens (bottomcenter)
+
 				pointer-events: none;
+				color-scheme: only light;
 
 				.label {
 					color: #000;
@@ -180,9 +208,20 @@
 				}
 			}
 
+			.leaflet-control-attribution.leaflet-control-attribution {
+				.fm-donate {
+					color: #ff00f6;
+					font-weight: bold;
+				}
+			}
+
 			path.leaflet-interactive {
 				// Do not show focus ring
 				outline: none;
+			}
+
+			.leaflet-pane {
+				color-scheme: only light;
 			}
 
 		}
@@ -210,15 +249,20 @@
 					background-clip: padding-box;
 				}
 			}
+
+			.leaflet-control.leaflet-control-graphicscale {
+				opacity: 0.6;
+			}
 		}
 
 		.fm-leaflet-map-narrow-attribution {
 			position: absolute;
-			top: 0;
-			left: 0;
-			max-width: calc(100% - 54px);
+			top: var(--facilmap-inset-top, 0px);
+			left: var(--facilmap-inset-left, 0px);
+			max-width: calc(100% - 54px - var(--facilmap-inset-left, 0px) - var(--facilmap-inset-right, 0px));
 			opacity: 0;
 			transition: opacity 1s;
+			pointer-events: none;
 
 			// Style like attribution control
 			background: rgba(255, 255, 255, 0.8);
@@ -230,6 +274,7 @@
 
 		&.isNarrow .fm-leaflet-map-narrow-attribution.visible {
 			opacity: 1;
+			pointer-events: auto;
 		}
 
 		.fm-leaflet-map-disabled-cover {
@@ -290,12 +335,13 @@
 
 		.fm-logo {
 			position: absolute;
-			bottom: 0;
-			left: -25px;
+			bottom: var(--fm-leaflet-map-inset-bottom, 0px);
+			left: calc(var(--facilmap-inset-left, 0px) - 25px);
 			pointer-events: none;
 			overflow: hidden;
 			user-select: none;
 			-webkit-user-select: none;
+			color-scheme: only light;
 
 			img {
 				margin-bottom: -24px;
