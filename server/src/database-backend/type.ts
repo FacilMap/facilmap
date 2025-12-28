@@ -78,7 +78,7 @@ export default class DatabaseTypesBackend {
 	}
 
 	async* getTypes(mapId: ID): AsyncIterable<Type> {
-		for await (const type of findAllStreamed(this.TypeModel, { where: { mapId } })) {
+		for await (const type of findAllStreamed(this.TypeModel, { where: { mapId }, order: [["idx", "asc"]] })) {
 			yield this.prepareType(type);
 		}
 	}

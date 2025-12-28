@@ -421,6 +421,7 @@ function _formatAddress(result: NominatimResult) {
 			case "ar":
 			case "at":
 			case "ca":
+			case "ch":
 			case "de":
 			case "hr":
 			case "cz":

@@ -79,12 +79,11 @@
 		</div>
 
 		<template v-for="(type, idx) in items" :key="type.key">
-			<hr v-if="idx > 0">
-			<h3 @click="toggleFilter(type)" :class="{ filtered: type.filtered }">{{type.name}}</h3>
+			<hr v-if="idx > 0 && (type.items.length > 1 || items[idx - 1].items.length > 1)">
 			<dl>
 				<template v-for="(item, idx) in type.items" :key="item.key">
 					<dt
-						:class="[ 'fm-legend-icon', 'fm-' + type.type, { filtered: item.filtered, first: (item.first && idx !== 0), bright: item.bright } ]"
+						:class="[ 'fm-legend-icon', 'fm-' + type.type, { filtered: item.filtered, first: (item.first && idx !== 0), bright: item.bright, main: idx === 0 } ]"
 						@click="toggleFilter(type, item)"
 						v-html-async="makeIcon(type, item)"
 						@mouseenter="togglePopover(item.key, true)"
@@ -93,7 +92,7 @@
 					></dt>
 					<dd
 						class="text-break"
-						:class="[ 'fm-' + type.type, { filtered: item.filtered, first: (item.first && idx !== 0), bright: item.bright } ]"
+						:class="[ 'fm-' + type.type, { filtered: item.filtered, first: (item.first && idx !== 0), bright: item.bright, main: idx === 0 } ]"
 						@click="toggleFilter(type, item)"
 						:style="item.strikethrough ? {'text-decoration': 'line-through'} : {}"
 						@mouseenter="togglePopover(item.key, true)"
@@ -176,6 +175,11 @@
 				cursor: pointer;
 			}
 
+			dt, dd {
+				display: inline-flex;
+				align-items: center;
+			}
+
 			dt.fm-marker {
 				grid-column: 1 / 2;
 			}
@@ -199,6 +203,11 @@
 			.first {
 				margin-top: 6px;
 			}
+		}
+
+		.main {
+			font-size: 1.1em;
+			font-weight: bold;
 		}
 
 		.filtered {

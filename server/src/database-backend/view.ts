@@ -55,7 +55,7 @@ export default class DatabaseViewsBackend {
 	}
 
 	async* getViews(mapId: ID): AsyncIterable<View> {
-		for await (const obj of findAllStreamed(this.ViewModel, { where: { mapId } })) {
+		for await (const obj of findAllStreamed(this.ViewModel, { where: { mapId }, order: [["idx", "asc"]] })) {
 			yield this.prepareView(obj);
 		}
 	}
