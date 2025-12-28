@@ -63,7 +63,7 @@ export default class DatabaseViews {
 	}
 
 	getViews(mapId: MapId): AsyncIterable<View> {
-		return this._db.helpers._getMapObjects<View>("View", mapId);
+		return this._db.helpers._getMapObjects<View>("View", mapId, { order: [["idx", "asc"]] });
 	}
 
 	async _freeViewIdx(mapId: MapId, viewId: ID | undefined, newIdx: number | undefined): Promise<number> {

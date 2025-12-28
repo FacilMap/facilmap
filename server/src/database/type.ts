@@ -90,7 +90,7 @@ export default class DatabaseTypes {
 	}
 
 	getTypes(mapId: MapId): AsyncIterable<Type> {
-		return this._db.helpers._getMapObjects<Type>("Type", mapId);
+		return this._db.helpers._getMapObjects<Type>("Type", mapId, { order: [["idx", "asc"]] } );
 	}
 
 	getType(mapId: MapId, typeId: ID): Promise<Type> {
