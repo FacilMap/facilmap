@@ -41,41 +41,37 @@ export function getLegendItems(context: FacilMapContext): LegendType[] {
 		const items: LegendItem[] = [ ];
 		const fields: Record<string, string[]> = Object.create(null);
 
-		if (
-			type.colourFixed ||
-			(type.type == "marker" && type.iconFixed && type.defaultIcon && (iconList.includes(type.defaultIcon) || type.defaultIcon.length == 1)) ||
-			(type.type == "marker" && type.shapeFixed) ||
-			(type.type == "line" && type.widthFixed) ||
-			(type.type === "line" && type.strokeFixed)
-		) {
-			const item: LegendItem = {
-				key: `legend-item-${type.id}`,
-				value: type.name,
-				label: formatTypeName(type.name),
-				filtered: true
-			};
+		const mainItem: LegendItem = {
+			key: `legend-item-${type.id}`,
+			value: type.name,
+			label: formatTypeName(type.name),
+			filtered: true
+		};
 
-			if (type.colourFixed) {
-				item.colour = type.defaultColour ? `#${type.defaultColour}` : undefined;
-			}
-			if (type.type == "marker" && type.iconFixed && type.defaultIcon && (iconList.includes(type.defaultIcon) || type.defaultIcon.length == 1)) {
-				item.icon = type.defaultIcon;
-			}
-			if (type.type == "marker" && type.shapeFixed) {
-				item.shape = type.defaultShape ?? "";
-			}
-			if (type.type == "line" && type.widthFixed) {
-				item.width = type.defaultWidth ?? undefined;
-			}
-			if (type.type === "line" && type.strokeFixed) {
-				item.stroke = type.defaultStroke;
-			}
-
-			if (item.colour)
-				item.bright = isBright(item.colour);
-
-			items.push(item);
+		if (type.colourFixed) {
+			mainItem.colour = type.defaultColour ? `#${type.defaultColour}` : undefined;
 		}
+		if (type.type == "marker" && type.iconFixed && type.defaultIcon && (iconList.includes(type.defaultIcon) || type.defaultIcon.length == 1)) {
+			mainItem.icon = type.defaultIcon;
+		}
+		if (type.type == "marker") {
+			if (type.shapeFixed) {
+				mainItem.shape = type.defaultShape ?? "";
+			} else {
+				mainItem.shape = "drop";
+			}
+		}
+		if (type.type == "line" && type.widthFixed) {
+			mainItem.width = type.defaultWidth ?? undefined;
+		}
+		if (type.type === "line" && type.strokeFixed) {
+			mainItem.stroke = type.defaultStroke;
+		}
+
+		if (mainItem.colour)
+			mainItem.bright = isBright(mainItem.colour);
+
+		items.push(mainItem);
 
 		for (const field of type.fields) {
 			if (
@@ -145,20 +141,6 @@ export function getLegendItems(context: FacilMapContext): LegendType[] {
 				items.push(item);
 				fields[field.name].push(item.value);
 			});
-		}
-
-		if(items.length == 0) {
-			const item: LegendItem = {
-				key: `legend-item-${type.id}`,
-				value: type.name,
-				label: formatTypeName(type.name),
-				filtered: true
-			};
-
-			if(type.type == "marker")
-				item.shape = "drop";
-
-			items.push(item);
 		}
 
 		const legendType: LegendType = {
