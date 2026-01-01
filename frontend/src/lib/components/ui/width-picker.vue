@@ -46,5 +46,6 @@
 <style lang="scss">
 	.fm-width-picker input {
 		width: 100%;
+		touch-action: pan-x;
 	}
 </style>
