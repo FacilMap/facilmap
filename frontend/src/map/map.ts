@@ -14,10 +14,11 @@ if (import.meta.hot) {
 	});
 }
 
-if ('serviceWorker' in navigator && location.hostname !== "localhost") {
-	navigator.serviceWorker.register('./_app/static/sw.js', { scope: "./" }).catch((err) => {
-		console.error("Error registering service worker", err);
-	});
+if ('serviceWorker' in navigator) {
+	// Uninstall legacy service worker
+	navigator.serviceWorker.getRegistrations().then(async (registrations) => {
+		await Promise.all(registrations.map((r) => r.unregister()));
+	}).catch((err) => { console.warn("Error unregistering service worker", err); });
 }
 
 setLayerOptions({

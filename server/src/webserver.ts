@@ -93,11 +93,6 @@ export async function initWebserver(database: Database, port: number, host?: str
 		}
 	});
 
-	app.use(`${paths.base}static/sw.js`, (req, res, next) => {
-		res.setHeader("Service-Worker-Allowed", "/");
-		next();
-	});
-
 	app.use(`${paths.base}oembed`, async (req, res, next) => {
 		const query = z.object({
 			url: z.string(),
