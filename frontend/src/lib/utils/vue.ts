@@ -30,6 +30,14 @@ export function computedOnResize<T>(getValue: () => T): Readonly<Ref<T>> {
 	return shallowReadonly(value);
 }
 
+/**
+ * Returns a ref that represents the value of a prop but falls back to an internal state if the prop is not specified. This can be used to make a model prop
+ * optional, so that if a v-model directive is used on the component, its state is persisted in the external model, but if v-model is not used, its state
+ * is persisted in an internal value.
+ * @param fallbackValue The initial value if the prop is undefined
+ * @param getProp A getter for the model value prop. If it returns undefined, the prop is considered not set and the internal value is used instead.
+ * @param onUpdate This is called when the value is set. This should emit the update:modelValue (or similar) event.
+ */
 export function useRefWithOverride<Value>(fallbackValue: Value, getProp: () => Value | undefined, onUpdate: (newValue: Value) => void): Ref<Value> {
 	const internalValue = ref(getProp() ?? fallbackValue);
 	return computed({
@@ -40,6 +48,28 @@ export function useRefWithOverride<Value>(fallbackValue: Value, getProp: () => V
 		set: (val: Value) => {
 			internalValue.value = val as any;
 			onUpdate(val);
+		}
+	});
+}
+
+/**
+ * Returns a ref that represents the internal value of a form field whose value is only applied to a model if it passes a certain validation. An example for this would be
+ * a text field that is bound to a number field. The user should be able to type in the field freely, even if the value is temporarily not a valid number (such as an empty
+ * string or a number ending in a decimal point), but the value should only be applied to a model of type `number` when it actually is a valid number.
+ * options.set() is only called with validated values.
+ */
+export function useValidatedModel<Value>(options: { get: () => Value; set: (newValue: Value) => void; validators: Array<(value: Value) => (string | undefined)> }): Ref<Value> {
+	const internalValue = ref(options.get());
+	watch(() => options.get(), (val) => {
+		internalValue.value = val;
+	});
+	return computed({
+		get: () => internalValue.value,
+		set: (val: Value) => {
+			internalValue.value = val;
+			if (options.validators.every((v) => v(val) == null)) {
+				options.set(val);
+			}
 		}
 	});
 }

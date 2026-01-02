@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { ref, watchEffect, computed, watchSyncEffect } from "vue";
+	import { ref, watchEffect, computed, watchSyncEffect, readonly } from "vue";
 	import { isPromise } from "facilmap-utils";
 	import { useDomEventListener } from "../../../utils/utils";
 	import { getValidatedForm } from "./validated-form.vue";
@@ -172,6 +172,12 @@
 	function setInputRef(el: any | null): void {
 		inputRef.value = el as FormElement ?? undefined;
 	}
+
+	const expose = readonly({
+		isValidating,
+		validationError: resolvedValidationError
+	});
+	defineExpose(expose);
 </script>
 
 <template>

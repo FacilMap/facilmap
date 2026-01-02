@@ -345,7 +345,6 @@
 							<SizePicker
 								:modelValue="option.size ?? type.defaultSize"
 								@update:modelValue="option.size = $event"
-								class="fm-custom-range-with-label"
 							></SizePicker>
 						</td>
 						<td v-if="fieldValue.controlIcon" class="field">
@@ -364,7 +363,6 @@
 							<WidthPicker
 								:modelValue="option.width ?? type.defaultWidth"
 								@update:modelValue="option.width = $event"
-								class="fm-custom-range-with-label"
 							></WidthPicker>
 						</td>
 						<td v-if="fieldValue.controlStroke" class="field">
