@@ -4379,7 +4379,7 @@ __metadata:
     marked: ^15.0.7
     osm-api: ^2.4.0
     p-throttle: ^7.0.0
-    parse-gps-coordinates: ^1.0.0
+    parse-gps-coordinates: ^1.1.0
     pluscodes: ^3.0.1
     rimraf: ^6.0.1
     typescript: ^5.7.3
@@ -6807,10 +6807,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"parse-gps-coordinates@npm:^1.0.0":
-  version: 1.0.0
-  resolution: "parse-gps-coordinates@npm:1.0.0"
-  checksum: fdbf91ef6e805a99c85a88ed2b19f659db268b92145fc7a6cf4b0ee91df10fc65b6a0af9995d705a23371c68d0db1743cd52675825a4719f4b43efa2bf22be86
+"parse-gps-coordinates@npm:^1.1.0":
+  version: 1.1.0
+  resolution: "parse-gps-coordinates@npm:1.1.0"
+  checksum: 7b9d9ecb53dc95da73318ec1a1e0c4b7f3e1d39e968e298c2933c735528922b889d671aa0c3b847a1a632054fa62a23d957cefc81ec731c838ed4648b5b035c7
   languageName: node
   linkType: hard
 

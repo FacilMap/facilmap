@@ -48,7 +48,7 @@
     "marked": "^15.0.7",
     "osm-api": "^2.4.0",
     "p-throttle": "^7.0.0",
-    "parse-gps-coordinates": "^1.0.0",
+    "parse-gps-coordinates": "^1.1.0",
     "pluscodes": "^3.0.1"
   },
   "devDependencies": {
