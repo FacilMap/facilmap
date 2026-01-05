@@ -40,6 +40,11 @@ export default class DatabaseBackendMigrations {
 		await this._mapIdMigration();
 		await this._fieldIdMigration();
 		await this._dropdownKeyMigration(); // This is very old, but now it only works after migrating to field IDs
+	}
+
+	async _runMigrationsAfterSync2(): Promise<void> {
+		await this._addColMigrations();
+		await this._mapLinkMigration(); // This needs MapLink.mapId to exist, which can only be created after mapIdMigration
 
 		(async () => {
 			await this._elevationMigration();
@@ -48,11 +53,6 @@ export default class DatabaseBackendMigrations {
 		}).finally(() => {
 			console.log("DB migration: All migrations finished");
 		});
-	}
-
-	async _runMigrationsAfterSync2(): Promise<void> {
-		await this._addColMigrations();
-		await this._mapLinkMigration(); // This needs MapLink.mapId to exist, which can only be created after mapIdMigration
 	}
 
 	/** Rename Pads table to Maps */
