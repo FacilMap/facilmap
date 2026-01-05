@@ -74,7 +74,7 @@ jobs:
       -
         name: Run integration tests
         run: >-
-          docker run --rm -u root --add-host host.docker.internal:host-gateway facilmap-ci sh -c "
+          docker run --rm -e RUN_AS_ROOT=1 --add-host host.docker.internal:host-gateway facilmap-ci sh -c "
           yarn workspaces focus facilmap-integration-tests &&
           FACILMAP_URL=http://host.docker.internal:8080 yarn workspace facilmap-integration-tests run integration-tests &&
           FACILMAP_URL=http://host.docker.internal:8081 yarn workspace facilmap-integration-tests run integration-tests

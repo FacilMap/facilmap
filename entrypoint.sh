@@ -2,4 +2,8 @@
 
 chown facilmap:facilmap "$CACHE_DIR"
 
-exec su facilmap -c "$@"
+if [[ "$RUN_AS_ROOT" = 1 ]]; then
+	exec "$@"
+else
+	exec su facilmap -c "$@"
+fi
