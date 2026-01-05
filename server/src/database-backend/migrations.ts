@@ -819,8 +819,7 @@ export default class DatabaseBackendMigrations {
 		if (mapIdMigrationCompleted === "1") {
 			console.log("DB migration: Generate values for Map.id");
 
-			// Copy back readId to id, in case the last ID generation failed (otherwise the ID generation below would crash with duplicate
-			// primary keys).
+			// Copy back readId to id, in case the last ID generation failed (otherwise we might create duplicate IDs below).
 			await queryInterface.bulkUpdate("Maps", { id: col("readId") }, {});
 
 			const maps = await this.backend.maps.MapModel.findAll({
@@ -828,15 +827,15 @@ export default class DatabaseBackendMigrations {
 			});
 
 			// First generate increasing ID numbers as strings in the existing column
-			for (let i = 0; i < maps.length; i++) {
-				await this.backend.maps.MapModel.update({
-					id: `${i + 1}` as any
-				}, {
-					where: {
-						id: maps[i].id
-					}
-				});
-			}
+			// for (let i = 0; i < maps.length; i++) {
+			// 	await this.backend.maps.MapModel.update({
+			// 		id: `${i + 1}` as any
+			// 	}, {
+			// 		where: {
+			// 			id: maps[i].id
+			// 		}
+			// 	});
+			// }
 
 			await this.backend.meta.setMeta("mapIdMigrationCompleted", "2");
 			mapIdMigrationCompleted = "2";
