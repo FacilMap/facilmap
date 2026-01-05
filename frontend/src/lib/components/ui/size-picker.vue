@@ -1,51 +1,22 @@
 <script setup lang="ts">
-	import { computed } from "vue";
-	import vTooltip from "../../utils/tooltip";
-	import ValidatedField, { type Validator } from "./validated-form/validated-field.vue";
+	import { type Validator } from "./validated-form/validated-field.vue";
+	import NumberInput from "./number-input.vue";
 
 	const props = defineProps<{
-		modelValue: number;
 		id?: string;
 		validators?: Array<Validator<number>>;
 	}>();
 
-	const emit = defineEmits<{
-		"update:modelValue": [value: number];
-	}>();
-
-	const value = computed({
-		get: () => props.modelValue,
-		set: (value) => {
-			emit("update:modelValue", value!);
-		}
-	});
+	const value = defineModel<number>({ required: true });
 </script>
 
 <template>
-	<ValidatedField
-		class="fm-size-picker position-relative"
-		:value="value"
+	<NumberInput
+		v-model="value"
+		class="fm-size-picker"
+		:id="props.id"
+		:min="15"
+		:steps="[1, 5]"
 		:validators="props.validators"
-	>
-		<template #default="slotProps">
-			<input
-				type="range"
-				class="custom-range"
-				min="15"
-				:id="props.id"
-				v-model.number="value"
-				:ref="slotProps.inputRef"
-				v-tooltip="`${value}`"
-			/>
-			<div class="invalid-tooltip">
-				{{slotProps.validationError}}
-			</div>
-		</template>
-	</ValidatedField>
+	></NumberInput>
 </template>
-
-<style lang="scss">
-	.fm-size-picker input {
-		width: 100%;
-	}
-</style>

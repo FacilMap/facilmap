@@ -134,7 +134,6 @@
 						<SizePicker
 							:id="`${id}-size-input`"
 							v-model="marker.size"
-							class="fm-custom-range-with-label"
 						></SizePicker>
 					</div>
 				</div>

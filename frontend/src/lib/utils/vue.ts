@@ -61,6 +61,28 @@ export function useRefWithOverride<Value>(fallbackValue: Value, override: Ref<Va
 }
 
 /**
+ * Returns a ref that represents the internal value of a form field whose value is only applied to a model if it passes a certain validation. An example for this would be
+ * a text field that is bound to a number field. The user should be able to type in the field freely, even if the value is temporarily not a valid number (such as an empty
+ * string or a number ending in a decimal point), but the value should only be applied to a model of type `number` when it actually is a valid number.
+ * options.set() is only called with validated values.
+ */
+export function useValidatedModel<Value>(options: { get: () => Value; set: (newValue: Value) => void; validators: Array<(value: Value) => (string | undefined)> }): Ref<Value> {
+	const internalValue = ref(options.get());
+	watch(() => options.get(), (val) => {
+		internalValue.value = val;
+	});
+	return computed({
+		get: () => internalValue.value,
+		set: (val: Value) => {
+			internalValue.value = val;
+			if (options.validators.every((v) => v(val) == null)) {
+				options.set(val);
+			}
+		}
+	});
+}
+
+/**
  * Returns a ref callback that allows storing an element ref inside a map of refs.
  * This can be used to keep multiple refs, for example for a list of elements that is dynamically generated. The refs will be stored in a
  * map = reactive(new Map<Key, Element | ComponentPublicInstance>), where Key is a unique identifier for each item in the collection.

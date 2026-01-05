@@ -230,7 +230,6 @@
 								<SizePicker
 									:id="`${id}-default-size-input`"
 									v-model="type.defaultSize"
-									class="fm-custom-range-with-label"
 								></SizePicker>
 							</div>
 							<div class="col-sm-3">
@@ -312,7 +311,6 @@
 								<WidthPicker
 									:id="`${id}-default-width-input`"
 									v-model="type.defaultWidth"
-									class="fm-custom-range-with-label"
 								></WidthPicker>
 							</div>
 							<div class="col-sm-3">

@@ -36,7 +36,9 @@ services:
             MAXMIND_USER_ID: # Sign up here https://www.maxmind.com/en/geolite2/signup (needed for geoip lookup to show initial map state)
             MAXMIND_LICENSE_KEY:
             LIMA_LABS_TOKEN: # Get an API key on https://maps.lima-labs.com/ (optional, needed for double-resolution tiles)
-        restart: unless-stopped
+        volumes:
+            - ./cache:/opt/facilmap/cache
+        restart: always
     mariadb:
         image: mariadb
         environment:
@@ -49,7 +51,7 @@ services:
             test: healthcheck.sh --su-mysql --connect --innodb_initialized
         volumes:
             - ./mysql:/var/lib/mysql
-        restart: unless-stopped
+        restart: always
 ```
 
 Here is an example with Postgres:
@@ -78,7 +80,9 @@ services:
             MAXMIND_USER_ID: # Sign up here https://www.maxmind.com/en/geolite2/signup (needed for geoip lookup to show initial map state)
             MAXMIND_LICENSE_KEY:
             LIMA_LABS_TOKEN: # Get an API key on https://maps.lima-labs.com/ (optional, needed for double-resolution tiles)
-        restart: unless-stopped
+        volumes:
+            - ./cache:/opt/facilmap/cache
+        restart: always
     postgres:
         image: postgis/postgis
         environment:
@@ -89,7 +93,7 @@ services:
             test: pg_isready -d $$POSTGRES_DB
         volumes:
             - ./postgis:/var/lib/postgresql/data
-        restart: unless-stopped
+        restart: always
 ```
 
 To start FacilMap, run `docker-compose up -d` in the directory of the `docker-compose.yml` file. To upgrade FacilMap, run `docker-compose pull` and then restart it by running `docker-compose up -d`.

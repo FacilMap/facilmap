@@ -142,7 +142,6 @@
 						<WidthPicker
 							:id="`${id}-width-input`"
 							v-model="line.width"
-							class="fm-custom-range-with-label"
 						></WidthPicker>
 					</div>
 				</div>

@@ -784,6 +784,11 @@
         "attributes-description": "The permissions for changing the marker/line name, location/waypoints, style attributes and any field values that do not have custom permissions, for markers/lines of this type.",
         "field": "Field"
     },
+    "number-input": {
+        "integer-error": "Please enter a valid integer.",
+        "min-error": "Please enter a number not smaller than {{min}}.",
+        "max-error": "Please enter a number not greater than {{max}}."
+    },
     "pagination": {
         "first-label": "First",
         "previous-label": "Previous",
