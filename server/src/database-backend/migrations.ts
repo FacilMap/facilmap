@@ -794,9 +794,16 @@ export default class DatabaseBackendMigrations {
 		let mapIdMigrationCompleted = await this.backend.meta.getMeta("mapIdMigrationCompleted");
 
 		if (mapIdMigrationCompleted == null) {
-			console.log("DB migration: Copy values of Map.id to Map.readId");
+			// For this migration we need the readId column. It was added at some point and later removed again.
+			// If we are starting this migration at a point _before_ the readId column, we need to temporarily add it so that the migration will be run.
+			// It will then be deleted again by the mapLinkMigration below.
+			const attributes = await queryInterface.describeTable(this.backend.maps.MapModel.getTableName());
+			if (!attributes.readId) {
+				console.log(`DB migration: Temporarily add column ${this.backend.maps.MapModel.getTableName() as string}.readId`);
+				await queryInterface.addColumn(this.backend.maps.MapModel.getTableName(), "readId", { type: DataTypes.STRING, allowNull: false });
+			}
 
-			// readId column was added in addColMigrations()
+			console.log("DB migration: Copy values of Map.id to Map.readId");
 			await queryInterface.bulkUpdate("Maps", { readId: col("id") }, {});
 
 			// We store this completion separately so that if the migration aborts later while generating new IDs, we don't copy
