@@ -67,6 +67,7 @@ export default class DatabaseBackend {
 
 		this.maps.afterMigration1();
 		await this._conn.sync();
+		await this.migrations._runMigrationsAfterSync2();
 
 		// Delete all route points, clients will have to reconnect and recalculate their routes anyways
 		await this.routes.truncateRoutePoints();
