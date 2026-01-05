@@ -1,7 +1,7 @@
 FROM node:22-alpine
 MAINTAINER Candid Dauth <cdauth@cdauth.eu>
 
-ENTRYPOINT /opt/facilmap/entrypoint.sh
+ENTRYPOINT ["/opt/facilmap/entrypoint.sh"]
 CMD yarn run prod-server
 EXPOSE 8080
 ENV CACHE_DIR=/opt/facilmap/cache
