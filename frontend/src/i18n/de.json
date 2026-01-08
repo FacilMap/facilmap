@@ -985,5 +985,10 @@
         "bing-maps-satellite": "Bing Maps (Satellit)",
         "mapy-cz": "Mapy.cz",
         "park4night": "park4night"
+    },
+    "number-input": {
+        "integer-error": "Gib bitte eine gültige ganze Zahl ein.",
+        "min-error": "Gib bitte eine Zahl ein, die nicht kleiner als {{min}} ist.",
+        "max-error": "Gib bitte eine Zahl ein, die nicht größer als {{max}} ist."
     }
 }
