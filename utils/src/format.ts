@@ -220,7 +220,7 @@ export function renderOsmTag(key: string, value: string): string {
 		return replaceLink((v) => `https://www.wikidata.org/wiki/${encodeURIComponent(v)}`);
 	} else if (isTag("wikimedia_commons")) {
 		return replaceLink((v) => `https://commons.wikimedia.org/wiki/${encodeURIComponent(v)}`);
-	} else if (isTag("flag")) {
+	} else if (isTag("flag") || isTag("coat_of_arms")) {
 		return replaceLink((v) => v.startsWith("File:") ? `https://commons.wikimedia.org/wiki/${encodeURIComponent(v)}` : undefined);
 	} else if (isTag("wiki:symbol")) {
 		return replaceLink((v) => `https://wiki.openstreetmap.org/wiki/Image:${encodeURIComponent(v)}`);
