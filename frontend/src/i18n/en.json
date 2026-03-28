@@ -317,9 +317,7 @@
         "ascent-alt": "Ascent",
         "descent-alt": "Descent",
         "show-tooltip": "Show elevation statistics",
-        "show-alt": "Show stats",
-        "total-ascent": "Total ascent",
-        "total-descent": "Total descent"
+        "show-alt": "Show stats"
     },
     "export-dialog": {
         "format-option-gpx": "GPX",

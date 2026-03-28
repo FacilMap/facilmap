@@ -316,9 +316,7 @@
         "ascent-alt": "Aufstieg",
         "descent-alt": "Abstieg",
         "show-tooltip": "Höhenstatistik einblenden",
-        "show-alt": "Höhenstatistik",
-        "total-ascent": "Gesamtaufstieg",
-        "total-descent": "Gesamtabstieg"
+        "show-alt": "Höhenstatistik"
     },
     "export-dialog": {
         "format-option-gpx": "GPX",

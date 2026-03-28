@@ -574,9 +574,7 @@
         "ascent-alt": "ஏற்றம்",
         "descent-alt": "இறக்கம்",
         "show-tooltip": "உயர புள்ளிவிவரங்களைக் காட்டு",
-        "show-alt": "புள்ளிவிவரங்களைக் காட்டு",
-        "total-ascent": "மொத்த ஏற்றம்",
-        "total-descent": "மொத்த வம்சாவளி"
+        "show-alt": "புள்ளிவிவரங்களைக் காட்டு"
     },
     "export-dropdown": {
         "export-error": "பிழை ஏற்றுமதி பாதை",

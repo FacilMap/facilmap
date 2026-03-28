@@ -15,22 +15,28 @@ export const R = 6371; // km
 /**
  * Returns the distance of the given path in kilometers.
  */
-export function calculateDistance(posList: ReadonlyArray<{ readonly lat: number; readonly lon: number; }>): number {
+export function calculateDistance(posList: { readonly [idx: number]: { readonly lat: number; readonly lon: number }; readonly length: number }): number {
 	// From http://stackoverflow.com/a/365853/242365
 	let ret = 0;
+	let last: { readonly lat: number; readonly lon: number } | undefined;
+	for (let i = 0; i < posList.length; i++) {
+		if (posList[i] != null) {
+			if (last != null) {
+				const lat1 = last.lat * Math.PI / 180;
+				const lon1 = last.lon * Math.PI / 180;
+				const lat2 = posList[i].lat * Math.PI / 180;
+				const lon2 = posList[i].lon * Math.PI / 180;
+				const dLat = lat2 - lat1;
+				const dLon = lon2 - lon1;
 
-	for (let i = 1; i < posList.length; i++) {
-		const lat1 = posList[i - 1].lat * Math.PI / 180;
-		const lon1 = posList[i - 1].lon * Math.PI / 180;
-		const lat2 = posList[i].lat * Math.PI / 180;
-		const lon2 = posList[i].lon * Math.PI / 180;
-		const dLat = lat2 - lat1;
-		const dLon = lon2 - lon1;
+				const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+					Math.sin(dLon / 2) * Math.sin(dLon / 2) * Math.cos(lat1) * Math.cos(lat2);
+				const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+				ret += R * c;
+			}
 
-		const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-			Math.sin(dLon / 2) * Math.sin(dLon / 2) * Math.cos(lat1) * Math.cos(lat2);
-		const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-		ret += R * c;
+			last = posList[i];
+		}
 	}
 
 	return ret;

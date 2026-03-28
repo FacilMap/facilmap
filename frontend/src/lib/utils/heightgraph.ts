@@ -5,7 +5,7 @@ import "./heightgraph.scss";
 import type { TrackPoints } from "facilmap-client";
 import { type ExtraInfo, type TrackPoint } from "facilmap-types";
 import type { FeatureCollection } from "geojson";
-import { calculateDistance, formatDistance, formatElevation, getCurrentUnits } from "facilmap-utils";
+import { calculateDistance, formatDistance, formatElevation, getCurrentUnits, round } from "facilmap-utils";
 import { getI18n } from "./i18n";
 
 function trackSegment(trackPoints: TrackPoints, fromIdx: number, toIdx: number): TrackPoint[] {
@@ -72,65 +72,173 @@ function createGeoJsonForHeightGraph(extraInfo: ExtraInfo | undefined, trackPoin
 	return geojson;
 }
 
-function getDistancesByInfoType(extraInfo: ExtraInfo[string] | undefined, trackPoints: TrackPoints): Record<number, number> {
-	const ret: Record<number, number> = { };
-
-	if (!extraInfo)
-		return ret;
-
-	for(let segment in extraInfo) {
-		if (ret[extraInfo[segment][2]] == null)
-			ret[extraInfo[segment][2]] = 0;
-
-		ret[extraInfo[segment][2]] += calculateDistance(trackSegment(trackPoints, extraInfo[segment][0], extraInfo[segment][1]));
-	}
-
-	return ret;
+export function createElevationStats(extraInfo: ExtraInfo, trackPoints: TrackPoints): Record<keyof ExtraInfo, Record<number, { distanceKm: number; percent: number }>> {
+	const totalDistance = calculateDistance(trackPoints);
+	return Object.fromEntries(Object.entries(extraInfo).map(([key, info]) => {
+		const result: Record<number, number> = {};
+		for (const segment in info) {
+			result[info[segment][2]] = (result[info[segment][2]] ?? 0) + calculateDistance(trackSegment(trackPoints, info[segment][0], info[segment][1]));
+		}
+		return [key, Object.fromEntries(Object.entries(result).map(([k, v]) => {
+			const percent = 100 * v / totalDistance;
+			return [k, {
+				distanceKm: v,
+				percent: percent < 1 ? round(percent, 1) : Math.round(percent)
+			}];
+		}))];
+	}));
 }
 
-export function createElevationStats(extraInfo: ExtraInfo | undefined, trackPoints: TrackPoints): Record<number, number> | null {
-	if (!extraInfo || !extraInfo.steepness)
-		return null;
-
-	const stats = getDistancesByInfoType(extraInfo.steepness, trackPoints);
-
-	const sum = (filter: (i: number) => boolean): number => Object.keys(stats).map((i) => parseInt(i, 10)).filter(filter).reduce((acc, cur) => acc + stats[cur], 0);
-
+export function getTranslatedExtraInfoTypes(): Record<string, string> {
+	const i18n = getI18n();
 	return {
-		"-16": sum((i) => (i <= -5)),
-		"-10": sum((i) => (i <= -4)),
-		"-7": sum((i) => (i <= -3)),
-		"-4": sum((i) => (i <= -2)),
-		"-1": sum((i) => (i <= -1)),
-		"0": sum((i) => (i == 0)),
-		"1": sum((i) => (i >= 1)),
-		"4": sum((i) => (i >= 2)),
-		"7": sum((i) => (i >= 3)),
-		"10": sum((i) => (i >= 4)),
-		"16": sum((i) => (i >= 5))
+		steepness: i18n.t("heightgraph.steepness"),
+		waytype: i18n.t("heightgraph.waytype"),
+		surface: i18n.t("heightgraph.surface"),
+		suitablity: i18n.t("heightgraph.suitability"),
+		green: i18n.t("heightgraph.green"),
+		noise: i18n.t("heightgraph.noise"),
+		tollways: i18n.t("heightgraph.tollways"),
+		avgspeed: i18n.t("heightgraph.avgspeed"),
+		traildifficulty: i18n.t("heightgraph.traildifficulty"),
+		roadaccessrestrictions: i18n.t("heightgraph.roadaccessrestrictions")
+	};
+}
+
+export function getTranslatedExtraInfoValues(): Record<string, Record<number, { text: string; color: string }>> {
+	const i18n = getI18n();
+	return {
+		steepness: {
+			"-5": { text: "−16 % +", color: "#028306" },
+			"-4": { text: "−10–15 %", color: "#2AA12E" },
+			"-3": { text: "−7–9 %", color: "#53BF56" },
+			"-2": { text: "−4–6 %", color: "#7BDD7E" },
+			"-1": { text: "−1–3 %", color: "#A4FBA6" },
+			"0": { text: "0 %", color: "#ffcc99" },
+			"1": { text: "1–3 %", color: "#F29898" },
+			"2": { text: "4–6 %", color: "#E07575" },
+			"3": { text: "7–9 %", color: "#CF5352" },
+			"4": { text: "10–15 %", color: "#BE312F" },
+			"5": { text: "16 % +", color: "#AD0F0C" }
+		},
+		waytype: {
+			"0": { text: i18n.t("heightgraph.waytype-other"), color: "#30959e" },
+			"1": { text: i18n.t("heightgraph.waytype-state-road"), color: "#3f9da6" },
+			"2": { text: i18n.t("heightgraph.waytype-road"), color: "#4ea5ae" },
+			"3": { text: i18n.t("heightgraph.waytype-street"), color: "#5baeb5" },
+			"4": { text: i18n.t("heightgraph.waytype-path"), color: "#67b5bd" },
+			"5": { text: i18n.t("heightgraph.waytype-track"), color: "#73bdc4" },
+			"6": { text: i18n.t("heightgraph.waytype-cycleway"), color: "#7fc7cd" },
+			"7": { text: i18n.t("heightgraph.waytype-footway"), color: "#8acfd5" },
+			"8": { text: i18n.t("heightgraph.waytype-steps"), color: "#96d7dc" },
+			"9": { text: i18n.t("heightgraph.waytype-ferry"), color: "#a2dfe5" },
+			"10": { text: i18n.t("heightgraph.waytype-construction"), color: "#ade8ed" }
+		},
+		surface: {
+			"0": { text: i18n.t("heightgraph.surface-other"), color: "#ddcdeb" },
+			"1": { text: i18n.t("heightgraph.surface-paved"), color: "#cdb8df" },
+			"2": { text: i18n.t("heightgraph.surface-unpaved"), color: "#d2c0e3" },
+			"3": { text: i18n.t("heightgraph.surface-asphalt"), color: "#bca4d3" },
+			"4": { text: i18n.t("heightgraph.surface-contrete"), color: "#c1abd7" },
+			"5": { text: i18n.t("heightgraph.surface-cobblestone"), color: "#c7b2db" },
+			"6": { text: i18n.t("heightgraph.surface-metal"), color: "#e8dcf3" },
+			"7": { text: i18n.t("heightgraph.surface-wood"), color: "#eee3f7" },
+			"8": { text: i18n.t("heightgraph.surface-compacted-gravel"), color: "#d8c6e7" },
+			"9": { text: i18n.t("heightgraph.surface-fine-gravel"), color: "#8f9de4" },
+			"10": { text: i18n.t("heightgraph.surface-gravel"), color: "#e3d4ef" },
+			"11": { text: i18n.t("heightgraph.surface-dirt"), color: "#99a6e7" },
+			"12": { text: i18n.t("heightgraph.surface-ground"), color: "#a3aeeb" },
+			"13": { text: i18n.t("heightgraph.surface-ice"), color: "#acb6ee" },
+			"14": { text: i18n.t("heightgraph.surface-paving-stones"), color: "#b6c0f2" },
+			"15": { text: i18n.t("heightgraph.surface-sand"), color: "#c9d1f8" },
+			"16": { text: i18n.t("heightgraph.surface-woodchips"), color: "#c0c8f5" },
+			"17": { text: i18n.t("heightgraph.surface-grass"), color: "#d2dafc" },
+			"18": { text: i18n.t("heightgraph.surface-grass-paver"), color: "#dbe3ff" }
+		},
+		suitability: {
+			"3": { text: "3/10", color: "#3D3D3D" },
+			"4": { text: "4/10", color: "#4D4D4D" },
+			"5": { text: "5/10", color: "#5D5D5D" },
+			"6": { text: "6/10", color: "#6D6D6D" },
+			"7": { text: "7/10", color: "#7C7C7C" },
+			"8": { text: "8/10", color: "#8D8D8D" },
+			"9": { text: "9/10", color: "#9D9D9D" },
+			"10": { text: "10/10", color: "#ADADAD" }
+		},
+		green: {
+			"3": { text: "10/10", color: "#8ec639" },
+			"4": { text: "9/10", color: "#99c93c" },
+			"5": { text: "8/10", color: "#a4cc40" },
+			"6": { text: "7/10", color: "#afcf43" },
+			"7": { text: "6/10", color: "#bbd246" },
+			"8": { text: "5/10", color: "#c6d54a" },
+			"9": { text: "4/10", color: "#d1d84e" },
+			"10": { text: "3/10", color: "#dcdc51" }
+		},
+		noise: {
+			"7": { text: "7/10", color: "#F8A056" },
+			"8": { text: "8/10", color: "#EA7F27" },
+			"9": { text: "9/10", color: "#A04900" },
+			"10": { text: "10/10", color: "#773600" }
+		},
+		tollways: {
+			"0": { text: i18n.t("heightgraph.tollway-no"), color: "#6ca97b" },
+			"1": { text: i18n.t("heightgraph.tollway-yes"), color: "#ffb347" }
+		},
+		avgspeed: {
+			// TODO: Make these available in miles
+			"3": { text: "3 km/h", color: "#f2fdff" },
+			"4": { text: "4 km/h", color: "#D8FAFF" },
+			"5": { text: "5 km/h", color: "bff7ff" },
+			"6": { text: "6–8 km/h", color: "#f2f7ff" },
+			"9": { text: "9–12 km/h", color: "#d8e9ff" },
+			"13": { text: "13–16 km/h", color: "#bedaff" },
+			"17": { text: "17–20 km/h", color: "#a5cbff" },
+			"21": { text: "21–24 km/h", color: "#8cbcff" },
+			"25": { text: "25–29 km/h", color: "#72aeff" },
+			"30": { text: "30–34 km/h", color: "#599fff" },
+			"35": { text: "35–39 km/h", color: "#3f91ff" },
+			"40": { text: "40–44 km/h", color: "#2682ff" },
+			"45": { text: "45–49 km/h", color: "#0d73ff" },
+			"50": { text: "50–59 km/h", color: "#0067f2" },
+			"60": { text: "60–69 km/h", color: "#005cd9" },
+			"70": { text: "70–79 km/h", color: "#0051c0" },
+			"80": { text: "80–99 km/h", color: "#0046a6" },
+			"100": { text: "100–119 km/h", color: "#003c8d" },
+			"120": { text: "+120 km/h", color: "#003174" }
+		},
+		traildifficulty: {
+			"0": { text: i18n.t("heightgraph.traildifficulty-unknown"), color: "#dfecec" },
+			"1": { text: "S0", color: "#9fc6c6" },
+			"2": { text: "S1", color: "#80b3b3" },
+			"3": { text: "S2", color: "#609f9f" },
+			"4": { text: "S3", color: "#4d8080" },
+			"5": { text: "S4", color: "#396060" },
+			"6": { text: "S5", color: "#264040" },
+			"7": { text: ">S5", color: "#132020" }
+		},
+		roadaccessrestrictions: {
+			"0": { text: i18n.t("heightgraph.access-yes"), color: "#fe7f6c" },
+			"1": { text: i18n.t("heightgraph.access-no"), color: "#FE7F9C" },
+			"2": { text: i18n.t("heightgraph.access-customers"), color: "#FDAB9F" },
+			"4": { text: i18n.t("heightgraph.access-destination"), color: "#FF66CC" },
+			"8": { text: i18n.t("heightgraph.access-delivery"), color: "#FDB9C8" },
+			"16": { text: i18n.t("heightgraph.access-private"), color: "#F64A8A" },
+			"32": { text: i18n.t("heightgraph.access-permissive"), color: "#E0115F" }
+		}
 	};
 }
 
 export default class FmHeightgraph extends Control.Heightgraph {
-	private translatedMapping: Record<"steepness" | "waytype" | "surface" | "suitablity" | "green" | "noise" | "tollways" | "avgspeed" | "traildifficulty" | "roadaccessrestrictions", string>;
+	private translatedTypes: Record<string, string>;
 
 	constructor(options?: any) {
 		// Consume current units in constructor to mark it as a reactive dependency
 		getCurrentUnits();
 
 		const i18n = getI18n();
-		const translatedMapping: typeof FmHeightgraph["translatedMapping"] = {
-			steepness: i18n.t("heightgraph.steepness"),
-			waytype: i18n.t("heightgraph.waytype"),
-			surface: i18n.t("heightgraph.surface"),
-			suitablity: i18n.t("heightgraph.suitability"),
-			green: i18n.t("heightgraph.green"),
-			noise: i18n.t("heightgraph.noise"),
-			tollways: i18n.t("heightgraph.tollways"),
-			avgspeed: i18n.t("heightgraph.avgspeed"),
-			traildifficulty: i18n.t("heightgraph.traildifficulty"),
-			roadaccessrestrictions: i18n.t("heightgraph.roadaccessrestrictions")
-		};
+
+		const translatedTypes = getTranslatedExtraInfoTypes();
 
 		super({
 			margins: {
@@ -150,133 +258,16 @@ export default class FmHeightgraph extends Control.Heightgraph {
 				"": {
 					"": { text: i18n.t("heightgraph.unknown"), color: '#4682B4' }
 				},
-				[translatedMapping.steepness]: {
-					"-5": { text: "−16 % +", color: "#028306" },
-					"-4": { text: "−10–15 %", color: "#2AA12E" },
-					"-3": { text: "−7–9 %", color: "#53BF56" },
-					"-2": { text: "−4–6 %", color: "#7BDD7E" },
-					"-1": { text: "−1–3 %", color: "#A4FBA6" },
-					"0": { text: "0 %", color: "#ffcc99" },
-					"1": { text: "1–3 %", color: "#F29898" },
-					"2": { text: "4–6 %", color: "#E07575" },
-					"3": { text: "7–9 %", color: "#CF5352" },
-					"4": { text: "10–15 %", color: "#BE312F" },
-					"5": { text: "16 % +", color: "#AD0F0C" }
-				},
-				[translatedMapping.waytype]: {
-					"0": { text: i18n.t("heightgraph.waytype-other"), color: "#30959e" },
-					"1": { text: i18n.t("heightgraph.waytype-state-road"), color: "#3f9da6" },
-					"2": { text: i18n.t("heightgraph.waytype-road"), color: "#4ea5ae" },
-					"3": { text: i18n.t("heightgraph.waytype-street"), color: "#5baeb5" },
-					"4": { text: i18n.t("heightgraph.waytype-path"), color: "#67b5bd" },
-					"5": { text: i18n.t("heightgraph.waytype-track"), color: "#73bdc4" },
-					"6": { text: i18n.t("heightgraph.waytype-cycleway"), color: "#7fc7cd" },
-					"7": { text: i18n.t("heightgraph.waytype-footway"), color: "#8acfd5" },
-					"8": { text: i18n.t("heightgraph.waytype-steps"), color: "#96d7dc" },
-					"9": { text: i18n.t("heightgraph.waytype-ferry"), color: "#a2dfe5" },
-					"10": { text: i18n.t("heightgraph.waytype-construction"), color: "#ade8ed" }
-				},
-				[translatedMapping.surface]: {
-					"0": { text: i18n.t("heightgraph.surface-other"), color: "#ddcdeb" },
-					"1": { text: i18n.t("heightgraph.surface-paved"), color: "#cdb8df" },
-					"2": { text: i18n.t("heightgraph.surface-unpaved"), color: "#d2c0e3" },
-					"3": { text: i18n.t("heightgraph.surface-asphalt"), color: "#bca4d3" },
-					"4": { text: i18n.t("heightgraph.surface-contrete"), color: "#c1abd7" },
-					"5": { text: i18n.t("heightgraph.surface-cobblestone"), color: "#c7b2db" },
-					"6": { text: i18n.t("heightgraph.surface-metal"), color: "#e8dcf3" },
-					"7": { text: i18n.t("heightgraph.surface-wood"), color: "#eee3f7" },
-					"8": { text: i18n.t("heightgraph.surface-compacted-gravel"), color: "#d8c6e7" },
-					"9": { text: i18n.t("heightgraph.surface-fine-gravel"), color: "#8f9de4" },
-					"10": { text: i18n.t("heightgraph.surface-gravel"), color: "#e3d4ef" },
-					"11": { text: i18n.t("heightgraph.surface-dirt"), color: "#99a6e7" },
-					"12": { text: i18n.t("heightgraph.surface-ground"), color: "#a3aeeb" },
-					"13": { text: i18n.t("heightgraph.surface-ice"), color: "#acb6ee" },
-					"14": { text: i18n.t("heightgraph.surface-paving-stones"), color: "#b6c0f2" },
-					"15": { text: i18n.t("heightgraph.surface-sand"), color: "#c9d1f8" },
-					"16": { text: i18n.t("heightgraph.surface-woodchips"), color: "#c0c8f5" },
-					"17": { text: i18n.t("heightgraph.surface-grass"), color: "#d2dafc" },
-					"18": { text: i18n.t("heightgraph.surface-grass-paver"), color: "#dbe3ff" }
-				},
-				[translatedMapping.suitability]: {
-					"3": { text: "3/10", color: "#3D3D3D" },
-					"4": { text: "4/10", color: "#4D4D4D" },
-					"5": { text: "5/10", color: "#5D5D5D" },
-					"6": { text: "6/10", color: "#6D6D6D" },
-					"7": { text: "7/10", color: "#7C7C7C" },
-					"8": { text: "8/10", color: "#8D8D8D" },
-					"9": { text: "9/10", color: "#9D9D9D" },
-					"10": { text: "10/10", color: "#ADADAD" }
-				},
-				[translatedMapping.green]: {
-					"3": { text: "10/10", color: "#8ec639" },
-					"4": { text: "9/10", color: "#99c93c" },
-					"5": { text: "8/10", color: "#a4cc40" },
-					"6": { text: "7/10", color: "#afcf43" },
-					"7": { text: "6/10", color: "#bbd246" },
-					"8": { text: "5/10", color: "#c6d54a" },
-					"9": { text: "4/10", color: "#d1d84e" },
-					"10": { text: "3/10", color: "#dcdc51" }
-				},
-				[translatedMapping.noise]: {
-					"7": { text: "7/10", color: "#F8A056" },
-					"8": { text: "8/10", color: "#EA7F27" },
-					"9": { text: "9/10", color: "#A04900" },
-					"10": { text: "10/10", color: "#773600" }
-				},
-				[translatedMapping.tollways]: {
-					"0": { text: i18n.t("heightgraph.tollway-no"), color: "#6ca97b" },
-					"1": { text: i18n.t("heightgraph.tollway-yes"), color: "#ffb347" }
-				},
-				[translatedMapping.avgspeed]: {
-					// TODO: Make these available in miles
-					"3": { text: "3 km/h", color: "#f2fdff" },
-					"4": { text: "4 km/h", color: "#D8FAFF" },
-					"5": { text: "5 km/h", color: "bff7ff" },
-					"6": { text: "6–8 km/h", color: "#f2f7ff" },
-					"9": { text: "9–12 km/h", color: "#d8e9ff" },
-					"13": { text: "13–16 km/h", color: "#bedaff" },
-					"17": { text: "17–20 km/h", color: "#a5cbff" },
-					"21": { text: "21–24 km/h", color: "#8cbcff" },
-					"25": { text: "25–29 km/h", color: "#72aeff" },
-					"30": { text: "30–34 km/h", color: "#599fff" },
-					"35": { text: "35–39 km/h", color: "#3f91ff" },
-					"40": { text: "40–44 km/h", color: "#2682ff" },
-					"45": { text: "45–49 km/h", color: "#0d73ff" },
-					"50": { text: "50–59 km/h", color: "#0067f2" },
-					"60": { text: "60–69 km/h", color: "#005cd9" },
-					"70": { text: "70–79 km/h", color: "#0051c0" },
-					"80": { text: "80–99 km/h", color: "#0046a6" },
-					"100": { text: "100–119 km/h", color: "#003c8d" },
-					"120": { text: "+120 km/h", color: "#003174" }
-				},
-				[translatedMapping.traildifficulty]: {
-					"0": { text: i18n.t("heightgraph.traildifficulty-unknown"), color: "#dfecec" },
-					"1": { text: "S0", color: "#9fc6c6" },
-					"2": { text: "S1", color: "#80b3b3" },
-					"3": { text: "S2", color: "#609f9f" },
-					"4": { text: "S3", color: "#4d8080" },
-					"5": { text: "S4", color: "#396060" },
-					"6": { text: "S5", color: "#264040" },
-					"7": { text: ">S5", color: "#132020" }
-				},
-				[translatedMapping.roadaccessrestrictions]: {
-					"0": { text: i18n.t("heightgraph.access-yes"), color: "#fe7f6c" },
-					"1": { text: i18n.t("heightgraph.access-no"), color: "#FE7F9C" },
-					"2": { text: i18n.t("heightgraph.access-customers"), color: "#FDAB9F" },
-					"4": { text: i18n.t("heightgraph.access-destination"), color: "#FF66CC" },
-					"8": { text: i18n.t("heightgraph.access-delivery"), color: "#FDB9C8" },
-					"16": { text: i18n.t("heightgraph.access-private"), color: "#F64A8A" },
-					"32": { text: i18n.t("heightgraph.access-permissive"), color: "#E0115F" }
-				}
+				...Object.fromEntries(Object.entries(getTranslatedExtraInfoValues()).map(([k, v]) => [translatedTypes[k], v]))
 			},
 			...options
 		});
 
-		this.translatedMapping = translatedMapping;
+		this.translatedTypes = translatedTypes;
 	}
 
 	addData(extraInfo: ExtraInfo | undefined, trackPoints: TrackPoints): void {
-		const translatedExtraInfo = extraInfo && Object.fromEntries(Object.entries(extraInfo).map(([k, v]) => [(this.translatedMapping as any)[k] ?? k, v]));
+		const translatedExtraInfo = extraInfo && Object.fromEntries(Object.entries(extraInfo).map(([k, v]) => [this.translatedTypes[k] ?? k, v]));
 
 		const data = createGeoJsonForHeightGraph(translatedExtraInfo, trackPoints);
 

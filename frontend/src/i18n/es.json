@@ -724,9 +724,7 @@
         "show-alt": "Mostrar estadísticas",
         "show-tooltip": "Mostrar estadísticas de elevación",
         "ascent-alt": "Ascenso",
-        "descent-alt": "Descenso",
-        "total-ascent": "Ascenso total",
-        "total-descent": "Descenso total"
+        "descent-alt": "Descenso"
     },
     "validated-field": {
         "validation-error": "Error al validar el campo del formulario"

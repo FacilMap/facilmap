@@ -1,13 +1,13 @@
 <script setup lang="ts">
-	import { sortBy } from "lodash-es";
 	import type { LineWithTrackPoints, RouteWithTrackPoints } from "facilmap-client";
-	import { createElevationStats } from "../../utils/heightgraph";
+	import { createElevationStats, getTranslatedExtraInfoTypes, getTranslatedExtraInfoValues } from "../../utils/heightgraph";
 	import Icon from "./icon.vue";
-	import { formatAscentDescent, formatDistance, numberKeys } from "facilmap-utils";
+	import { formatAscentDescent, formatDistance } from "facilmap-utils";
 	import { computed, ref } from "vue";
 	import Popover from "./popover.vue";
 	import vTooltip from "../../utils/tooltip";
 	import { useI18n } from "../../utils/i18n";
+	import { sortBy } from "lodash-es";
 
 	const i18n = useI18n();
 
@@ -15,13 +15,33 @@
 		route: LineWithTrackPoints | RouteWithTrackPoints;
 	}>();
 
+	const translatedTypes = computed(() => getTranslatedExtraInfoTypes());
+	const translatedValues = computed(() => getTranslatedExtraInfoValues());
+
+	const stats = computed(() => createElevationStats(props.route.extraInfo ?? {}, props.route.trackPoints));
+	const hasStats = computed(() => Object.keys(stats.value).length > 0);
+
+	const tabValue = ref<string>();
+	const tab = computed({
+		get: () => tabValue.value != null && Object.hasOwn(stats.value, tabValue.value) ? tabValue.value : Object.keys(translatedTypes.value).find((k) => Object.hasOwn(stats.value, k)),
+		set: (v) => {
+			tabValue.value = v;
+		}
+	});
+	const values = computed(() => tab.value != null ? sortBy(Object.entries(translatedValues.value[tab.value] ?? {}).flatMap(([k, v]) => {
+		if (!Object.hasOwn(stats.value[tab.value!], k)) {
+			return [];
+		}
+
+		return [{
+			key: Number(k),
+			label: v.text,
+			value: `${formatDistance(stats.value[tab.value!][k as `${number}`].distanceKm)} (${stats.value[tab.value!][k as `${number}`].percent}\u202f%)`
+		}];
+	}), (v) => v.key) : []);
+
 	const statsButtonContainerRef = ref<HTMLElement>();
 	const showStatsPopover = ref(false);
-
-	const statsArr = computed(() => {
-		const stats = createElevationStats(props.route.extraInfo ?? {}, props.route.trackPoints)
-		return stats && sortBy([...numberKeys(stats)].map((i) => ({ i, distance: stats[i] })), 'i');
-	});
 </script>
 
 <template>
@@ -30,36 +50,47 @@
 			<Icon icon="triangle-top" :alt="i18n.t('elevation-stats.ascent-alt')"></Icon> {{formatAscentDescent(route.ascent)}} / <Icon icon="triangle-bottom" :alt="i18n.t('elevation-status.descent-alt')"></Icon> {{formatAscentDescent(route.descent)}}
 		</span>
 
-		<span ref="statsButtonContainerRef">
-			<button
-				type="button"
-				class="btn btn-secondary"
-				v-tooltip="i18n.t('elevation-stats.show-tooltip')"
-				@click="showStatsPopover = !showStatsPopover"
+		<template v-if="hasStats && tab">
+			<span ref="statsButtonContainerRef">
+				<button
+					type="button"
+					class="btn btn-secondary"
+					v-tooltip="i18n.t('elevation-stats.show-tooltip')"
+					@click="showStatsPopover = !showStatsPopover"
+				>
+					<Icon icon="circle-info" :alt="i18n.t('elevation-stats.show-alt')"></Icon>
+				</button>
+			</span>
+
+			<Popover
+				:element="statsButtonContainerRef"
+				v-model:show="showStatsPopover"
+				hideOnOutsideClick
+				class="fm-elevation-stats-popover"
 			>
-				<Icon icon="circle-info" :alt="i18n.t('elevation-stats.show-alt')"></Icon>
-			</button>
-		</span>
+				<ul class="nav nav-tabs mb-2">
+					<template v-for="(v, k) in translatedTypes" :key="k">
+						<template v-if="stats[k] != null">
+							<li class="nav-item">
+								<a
+									class="nav-link"
+									href="javascript:"
+									:class="{ active: tab === k }"
+									@click="tab = k"
+								>{{v}}</a>
+							</li>
+						</template>
+					</template>
+				</ul>
 
-		<Popover
-			:element="statsButtonContainerRef"
-			v-model:show="showStatsPopover"
-			hideOnOutsideClick
-			class="fm-elevation-stats-popover"
-		>
-			<dl class="row">
-				<dt class="col-6">{{i18n.t("elevation-stats.total-ascent")}}</dt>
-				<dd class="col-6">{{formatAscentDescent(route.ascent)}}</dd>
-
-				<dt class="col-6">{{i18n.t("elevation-stats.total-descent")}}</dt>
-				<dd class="col-6">{{formatAscentDescent(route.descent)}}</dd>
-
-				<template v-for="stat in statsArr" :key="stat.i">
-					<dt class="col-6">{{stat.i == 0 ? '0%' : stat.i < 0 ? "≤ "+stat.i+"%" : "≥ "+stat.i+"%"}}</dt>
-					<dd class="col-6">{{formatDistance(stat.distance)}}</dd>
-				</template>
-			</dl>
-		</Popover>
+				<dl class="row">
+					<template v-for="v in values" :key="v.key">
+						<dt>{{v.label}}</dt>
+						<dd>{{v.value}}</dd>
+					</template>
+				</dl>
+			</Popover>
+		</template>
 	</span>
 </template>
 
