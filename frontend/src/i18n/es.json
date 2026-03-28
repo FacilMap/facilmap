@@ -722,7 +722,7 @@
     },
     "elevation-stats": {
         "show-alt": "Mostrar estadísticas",
-        "show-tooltip": "Mostrar estadísticas de elevación",
+        "show-tooltip": "Mostrar estadísticas",
         "ascent-alt": "Ascenso",
         "descent-alt": "Descenso"
     },

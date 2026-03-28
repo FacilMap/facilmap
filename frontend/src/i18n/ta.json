@@ -572,9 +572,7 @@
     },
     "elevation-stats": {
         "ascent-alt": "ஏற்றம்",
-        "descent-alt": "இறக்கம்",
-        "show-tooltip": "உயர புள்ளிவிவரங்களைக் காட்டு",
-        "show-alt": "புள்ளிவிவரங்களைக் காட்டு"
+        "descent-alt": "இறக்கம்"
     },
     "export-dropdown": {
         "export-error": "பிழை ஏற்றுமதி பாதை",

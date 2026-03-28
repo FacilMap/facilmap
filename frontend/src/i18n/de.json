@@ -315,8 +315,8 @@
     "elevation-stats": {
         "ascent-alt": "Aufstieg",
         "descent-alt": "Abstieg",
-        "show-tooltip": "Höhenstatistik einblenden",
-        "show-alt": "Höhenstatistik"
+        "show-tooltip": "Statistik einblenden",
+        "show-alt": "Statistik"
     },
     "export-dialog": {
         "format-option-gpx": "GPX",

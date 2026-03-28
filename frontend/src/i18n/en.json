@@ -316,7 +316,7 @@
     "elevation-stats": {
         "ascent-alt": "Ascent",
         "descent-alt": "Descent",
-        "show-tooltip": "Show elevation statistics",
+        "show-tooltip": "Show statistics",
         "show-alt": "Show stats"
     },
     "export-dialog": {
