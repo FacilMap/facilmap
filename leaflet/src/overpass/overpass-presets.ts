@@ -2,13 +2,17 @@ import { getI18n } from "../utils/i18n";
 
 export interface OverpassPresetCategory {
 	label: string;
-	presets: OverpassPreset[][];
+	presets: OverpassPresetWithVariants[][];
 }
 
 export interface OverpassPreset {
 	key: string;
 	label: string;
 	query: string;
+}
+
+export interface OverpassPresetWithVariants extends OverpassPreset {
+	variants?: OverpassPreset[];
 }
 
 // These are mostly copied from OpenPoiMap. See https://github.com/marczoutendijk/openpoimap/blob/master/js_source/opm.js.
@@ -34,7 +38,10 @@ export function getAllOverpassPresets(): OverpassPresetCategory[] {
 					{ key: "hospital", query: "nwr[amenity=hospital]", label: i18n.t("overpass-presets.hospital") },
 					{ key: "library", query: "nwr[amenity=library]", label: i18n.t("overpass-presets.library") },
 					{ key: "musicschool", query: "nwr[amenity=music_school]", label: i18n.t("overpass-presets.musicschool") },
-					{ key: "parking", query: "nwr[amenity=parking]", label: i18n.t("overpass-presets.parking") },
+					{ key: "parking", query: "nwr[amenity=parking]", label: i18n.t("overpass-presets.parking"), variants: [
+						{ key: "parkingN", query: "nwr[amenity=parking][fee=no]", label: i18n.t("overpass-presets.parking-no-fee") },
+						{ key: "parkingU", query: "nwr[amenity=parking][fee!=yes]", label: i18n.t("overpass-presets.parking-unknown-fee") }
+					] },
 					{ key: "pharmacy", query: "nwr[amenity=pharmacy]", label: i18n.t("overpass-presets.pharmacy") },
 					{ key: "playground", query: "nwr[leisure=playground]", label: i18n.t("overpass-presets.playground") },
 					{ key: "police", query: "nwr[amenity=police]", label: i18n.t("overpass-presets.police") },
@@ -44,7 +51,10 @@ export function getAllOverpassPresets(): OverpassPresetCategory[] {
 					{ key: "shower", query: "(nwr[amenity=shower];nwr[shower=yes];)", label: i18n.t("overpass-presets.shower") },
 					{ key: "taxi", query: "nwr[amenity=taxi]", label: i18n.t("overpass-presets.taxi") },
 					{ key: "theatre", query: "nwr[amenity=theatre]", label: i18n.t("overpass-presets.theatre") },
-					{ key: "toilets", query: "nwr[amenity=toilets]", label: i18n.t("overpass-presets.toilets") },
+					{ key: "toilets", query: "nwr[amenity=toilets]", label: i18n.t("overpass-presets.toilets"), variants: [
+						{ key: "toiletsN", query: "nwr[amenity=toilets][fee=no]", label: i18n.t("overpass-presets.toilets-no-fee") },
+						{ key: "toiletsU", query: "nwr[amenity=toilets][fee!=yes]", label: i18n.t("overpass-presets.toilets-unknown-fee") }
+					]},
 					{ key: "university", query: "nwr[amenity=university]", label: i18n.t("overpass-presets.university") },
 					{ key: "watertap", query: "(nwr[man_made=water_tap];nwr[man_made=water_well][pump][pump!=no];nwr[amenity=water_point];nwr[waterway=water_point];)", label: i18n.t("overpass-presets.watertap") },
 				], [
@@ -256,10 +266,10 @@ export function getAllOverpassPresets(): OverpassPresetCategory[] {
 // For backwards compatibility. Does not provide i18n reactivity.
 export const overpassPresets = getAllOverpassPresets();
 
-export function getOverpassPreset(key: string): OverpassPreset | undefined {
-	return getAllOverpassPresets().map((p) => p.presets).flat().flat().find((p) => p.key == key) as OverpassPreset | undefined;
+export function getOverpassPresets(keys: string[]): Array<OverpassPresetWithVariants | OverpassPreset> {
+	return getAllOverpassPresets().map((p) => p.presets).flat().flat().flatMap((p) => [p, ...p.variants ?? []]).filter((p) => keys.includes(p.key));
 }
 
-export function getOverpassPresets(keys: string[]): OverpassPreset[] {
-	return getAllOverpassPresets().map((p) => p.presets).flat().flat().filter((p) => keys.includes(p.key)) as OverpassPreset[];
+export function getOverpassPreset(key: string): OverpassPresetWithVariants | OverpassPreset | undefined {
+	return getOverpassPresets([key])[0];
 }

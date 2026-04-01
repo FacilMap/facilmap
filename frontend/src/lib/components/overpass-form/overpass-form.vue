@@ -1,10 +1,11 @@
 <script setup lang="ts">
 	import { getAllOverpassPresets, getOverpassPreset, validateOverpassQuery } from "facilmap-leaflet";
-	import { computed, ref, watch } from "vue";
+	import { computed, reactive, ref, watch, watchEffect } from "vue";
 	import { injectContextRequired, requireMapContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
 	import ValidatedField from "../ui/validated-form/validated-field.vue";
 	import { T, useI18n } from "../../utils/i18n";
-import { sortBy } from "lodash-es";
+	import { sortBy } from "lodash-es";
+	import DropdownMenu from "../ui/dropdown-menu.vue";
 
 	const context = injectContextRequired();
 	const mapContext = requireMapContext(context);
@@ -14,17 +15,20 @@ import { sortBy } from "lodash-es";
 	const searchTerm = ref("");
 	const customQuery = ref("");
 
+	const selectedVariants = reactive(new Map<string, string>());
+
 	const categories = computed(() => {
 		return getAllOverpassPresets().map((cat) => {
 			const presets = cat.presets.map((presets) => sortBy(presets.map((preset) => ({
 				...preset,
-				isChecked: mapContext.value.overpassPresets.some((p) => p.key === preset.key)
+				isChecked: mapContext.value.overpassPresets.some((p) => p.key === preset.key || preset.variants?.some((v) => p.key === v.key)),
+				selectedVariant: preset.variants?.find((v) => mapContext.value.overpassPresets.some((p) => p.key === v.key)) ?? undefined
 			})), (preset) => preset.label.toLowerCase()));
 			return {
 				...cat,
 				presets,
 				checked: presets.flat().filter((preset) => preset.isChecked).length
-			}
+			};
 		});
 	});
 
@@ -40,11 +44,48 @@ import { sortBy } from "lodash-es";
 		customQuery.value = mapContext.value.overpassCustom;
 	}, { immediate: true });
 
+	watchEffect(() => {
+		// If a variant has been activated externally (in particular through the location hash), let's select it in selectedVariants as well
+		for (const preset of categories.value.flatMap((c) => c.presets).flat()) {
+			if (preset.isChecked) {
+				if (preset.selectedVariant != null) {
+					selectedVariants.set(preset.key, preset.selectedVariant.key);
+				} else if (selectedVariants.has(preset.key)) {
+					selectedVariants.delete(preset.key);
+				}
+			}
+		}
+	});
+
 	function togglePreset(key: string, enable: boolean): void {
-		const without = mapContext.value.overpassPresets.filter((p) => p.key != key);
+		if (enable) {
+			disableEnablePresets([], [selectedVariants.get(key) ?? key]);
+		} else {
+			const preset = getOverpassPreset(key);
+			disableEnablePresets(preset ? [preset.key, ..."variants" in preset && preset.variants?.map((p) => p.key) || []] : [], []);
+		}
+	}
+
+	function setSelectedVariant(key: string, variantKey: string | undefined): void {
+		if (variantKey != null) {
+			selectedVariants.set(key, variantKey);
+		} else {
+			selectedVariants.delete(key);
+		}
+
+		const preset = categories.value.flatMap((c) => c.presets).flat().find((p) => p.key === key);
+		if (preset?.isChecked) {
+			disableEnablePresets([preset.key, ...preset.variants?.map((p) => p.key) ?? []], [variantKey ?? key]);
+		}
+	}
+
+	function disableEnablePresets(disable: string[], enable: string[]): void {
 		mapContext.value.components.overpassLayer.setQuery([
-			...without,
-			...(enable ? [getOverpassPreset(key)!] : [])
+			...mapContext.value.overpassPresets.filter((p) => !disable.includes(p.key)),
+			...enable.flatMap((key) => {
+				const p = getOverpassPreset(key);
+				return p ? [p] : [];
+			})
 		]);
 	}
 
@@ -138,6 +179,29 @@ import { sortBy } from "lodash-es";
 									<label :for="`fm${context.id}-overpass-form-preset-${preset.key}`" class="form-check-label">
 										{{preset.label}}
 									</label>
+									<DropdownMenu
+										v-if="preset.variants && preset.variants.length > 0"
+										isLink
+										class="d-inline-block"
+										buttonClass="ps-1 pe-1"
+									>
+										<li>
+											<a
+												href="javascript:"
+												class="dropdown-item"
+												:class="{ active: !selectedVariants.has(preset.key) }"
+												@click="setSelectedVariant(preset.key, undefined)"
+											>{{preset.label}}</a>
+										</li>
+										<li v-for="variant in preset.variants" :key="variant.key">
+											<a
+												href="javascript:"
+												class="dropdown-item"
+												:class="{ active: selectedVariants.get(preset.key) === variant.key }"
+												@click="setSelectedVariant(preset.key, variant.key)"
+											>{{variant.label}}</a>
+										</li>
+									</DropdownMenu>
 								</div>
 							</template>
 						</div>
