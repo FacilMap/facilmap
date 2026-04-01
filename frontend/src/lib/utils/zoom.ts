@@ -11,6 +11,7 @@ import type { FacilMapContext } from "../components/facil-map-context-provider/f
 import { requireClientContext, requireMapContext } from "../components/facil-map-context-provider/facil-map-context-provider.vue";
 import { toRef, type DeepReadonly } from "vue";
 import storage from "./storage";
+import { orderBy } from "lodash-es";
 
 export type ZoomDestination = {
 	center?: LatLng;
@@ -210,22 +211,19 @@ export async function openSpecialQuery(query: string, context: FacilMapContext, 
 	const routeFormTabContext = toRef(() => context.components.routeFormTab);
 
 	if(searchBoxContext.value && routeFormTabContext.value) {
-		if (storage.routeQueries) {
-			const split2 = parseRouteQuery(query); // A free-text route query specified by the user in the current language
-			if (split2.queries.length >= 2) {
-				routeFormTabContext.value.setQuery(encodeRouteQuery(split2), zoom, smooth);
-				searchBoxContext.value.activateTab(`fm${context.id}-route-form-tab`, { autofocus: true });
-				return true;
-			}
-		}
+		// A route query can be both a free-text query in the current language and a serialized query in English. Particularly when the current language is English,
+		// the queries "Berlin to Hamburg on foot" and "Berlin to Hamburg pedestrian details" can both be interpreted as both, but will result with a destination of
+		// "Hamburg on foot" or "Hamburg pedestrian details" if interpreted using the wrong method. For backwards compatibility with existing links, we cannot change
+		// the format to one that is unambiguous. Thus we simply make a guess which method to use based on which produces a more specific result.
+		const splitOptions = orderBy([
+			...storage.routeQueries ? [parseRouteQuery(query)] : [], // A free-text route query specified by the user in the current language
+			...storage.routeQueries || forceRouteQuery ? [decodeRouteQuery(query)] : [] // A route hash query encoded in a predictable format in English by the route form
+		], (split) => split.queries.length + 1000 * (split.mode ? split.mode.split(" ").length : 0), "desc").filter((split) => split.queries.length >= 2);
 
-		if (storage.routeQueries || forceRouteQuery) {
-			const split1 = decodeRouteQuery(query); // A route hash query encoded in a predictable format in English by the route form
-			if (split1.queries.length >= 2) {
-				routeFormTabContext.value.setQuery(query, zoom, smooth);
-				searchBoxContext.value.activateTab(`fm${context.id}-route-form-tab`, { autofocus: true });
-				return true;
-			}
+		if (splitOptions.length > 0) {
+			routeFormTabContext.value.setQuery(encodeRouteQuery(splitOptions[0]), zoom, smooth);
+			searchBoxContext.value.activateTab(`fm${context.id}-route-form-tab`, { autofocus: true });
+			return true;
 		}
 	}
 
