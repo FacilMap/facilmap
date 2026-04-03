@@ -197,7 +197,11 @@
         "town": "Stadt",
         "village": "Dorf",
         "hamlet": "Weiler",
-        "suburb": "Stadtteil"
+        "suburb": "Stadtteil",
+        "parking-no-fee": "Parkplätze (kostenlos)",
+        "parking-unknown-fee": "Parkplätze (kostenlos oder Preis unbekannt)",
+        "toilets-no-fee": "Toiletten (kostenlos)",
+        "toilets-unknown-fee": "Toiletten (kostenlos oder Preis unbekannt)"
     },
     "search-result-geojson": {
         "invalid-geojson-error": "Ungültiges GeoJSON-Objekt."
