@@ -5,22 +5,22 @@ test("encodeRouteQuery", async () => {
 	expect(encodeRouteQuery({
 		queries: ["Hamburg", "Berlin"],
 		mode: null
-	})).toEqual("Hamburg to Berlin");
+	})).toEqual("\"Hamburg\" to \"Berlin\"");
 
 	expect(encodeRouteQuery({
 		queries: ["Hamburg", "Hannover", "Berlin"],
 		mode: null
-	})).toEqual("Hamburg to Hannover to Berlin");
+	})).toEqual("\"Hamburg\" to \"Hannover\" to \"Berlin\"");
 
 	expect(encodeRouteQuery({
 		queries: ["Hamburg", "Hannover", "Berlin"],
 		mode: "car"
-	})).toEqual("Hamburg to Hannover to Berlin by car");
+	})).toEqual("\"Hamburg\" to \"Hannover\" to \"Berlin\" by car");
 
 	expect(encodeRouteQuery({
 		queries: ["Test To Test", "To", "To Test", "Test To", "Test \" Test \\ Test", "Test to \" Test to \\ Test"],
-		mode: "by"
-	})).toEqual("\"Test To Test\" to \"To\" to \"To Test\" to \"Test To\" to \"Test \\\" Test \\\\ Test\" to \"Test to \\\" Test to \\\\ Test\" by \"by\"");
+		mode: "car"
+	})).toEqual("\"Test To Test\" to \"To\" to \"To Test\" to \"Test To\" to \"Test \\\" Test \\\\ Test\" to \"Test to \\\" Test to \\\\ Test\" by car");
 });
 
 test("decodeRouteQuery", async () => {

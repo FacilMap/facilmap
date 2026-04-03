@@ -211,6 +211,8 @@ export function encodeRouteQuery(query: RouteQuery): string {
 		]),
 		...query.mode != null ? [
 			{ keyword: true, value: "by" } as const,
+			// Since mode is not a free-text field, conflicts with keyword translations are unlikely. Thus we declare it a a keyword here
+			// (it is not a keyword when it comes out of decodeRouteQuery() below) so that it is not quoted.
 			{ keyword: true, value: query.mode } as const
 		] : []
 	];
