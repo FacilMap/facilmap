@@ -1,1 +1,9 @@
-{}
+{
+    "objects": {
+        "untitled-line": "Линия без названия"
+    },
+    "routing": {
+        "query-from": "откуда",
+        "query-to": "куда"
+    }
+}
