@@ -1,1 +1,80 @@
-{}
+{
+    "common": {
+        "coordinates": "Koordinaadid",
+        "donate": "Toeta meid rahaliselt"
+    },
+    "about-dialog": {
+        "header": "Veebirakenduse teave: FacilMap {{version}}",
+        "license-text": "{{facilmap}} on avaldatud {{license}} litsentsi alusel.",
+        "license-text-facilmap": "FacilMap",
+        "icons": "Ikoonid",
+        "help-text-documentation": "dokumentatsioon",
+        "map-data-search": "Otsing",
+        "map-data-pois": "Huvipunktid",
+        "map-data-directions": "Tee juhatamine",
+        "map-data-geoip": "GeoIP",
+        "programs-libraries": "Programmid ja teegid"
+    },
+    "user-preferences-dialog": {
+        "external-links-delete-tooltip": "Kustuta",
+        "external-links-reorder-alt": "Muuda järjekorda",
+        "external-links-create": "Loo"
+    },
+    "utils": {
+        "required-error": "Ei tohi jääda tühjaks."
+    },
+    "alert": {
+        "fallback-ok-label": "Sobib"
+    },
+    "blame-section-info": {
+        "changeset": "Muudatuskogum",
+        "timestamp": "Ajatempel",
+        "user": "Kasutaja",
+        "created-modified": "Loodud/muudetud"
+    },
+    "blame-section-membership": {
+        "alt": "Teave"
+    },
+    "changeset-results": {
+        "user": "Kasutaja",
+        "features": "Funktsionaalsused",
+        "created-tooltip": "Loodud",
+        "deleted-tooltip": "Kustutatud",
+        "modified-tooltip": "Muudetud"
+    },
+    "changeset-feature-info": {
+        "members": "Liikmed"
+    },
+    "osm-feature-info": {
+        "sections": "Alajaotused",
+        "nodes": "Sõlmed",
+        "role": "Roll"
+    },
+    "client-provider": {
+        "loading-map-header": "Laadin andmeid",
+        "connecting-header": "Ühendan",
+        "disconnected-header": "Ühendus on katkestatud"
+    },
+    "coordinates": {
+        "elevation": "Kõrgus"
+    },
+    "copy-to-clipboard-input": {
+        "copy-alt": "Kopeeri"
+    },
+    "custom-import-dialog": {
+        "ok-label": "Impordi",
+        "type": "Tüüp"
+    },
+    "draw": {
+        "add-marker-cancel": "Katkesta",
+        "move-marker-save": "Salvesta",
+        "move-marker-cancel": "Katkesta",
+        "add-line-finish": "Lõpeta",
+        "add-line-cancel": "Katkesta"
+    },
+    "edit-filter-dialog": {
+        "title": "Filtreeri",
+        "apply": "Rakenda",
+        "syntax-header": "Süntaks"
+    }
+}
