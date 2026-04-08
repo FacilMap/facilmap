@@ -1,1 +1,21 @@
-{}
+{
+    "format": {
+        "marker-type-name": "Marker",
+        "line-type-name": "Joon",
+        "description-field-name": "Kirjeldus",
+        "unnamed-poi": "Ilma nimeta huvipunkt",
+        "time": "{{hours}}:{{minutes}} t",
+        "route-time": "{{time}} {{mode}}",
+        "distance-km": "{{distance}} km",
+        "distance-mi": "{{distance}} mi",
+        "elevation-m": "{{elevation}} m",
+        "elevation-ft": "{{elevation}} jlg"
+    },
+    "objects": {
+        "untitled-marker": "Ilma nimeta marker",
+        "untitled-line": "Ilma nimeta joon"
+    },
+    "maps": {
+        "unnamed-map": "Ilma nimeta kaart"
+    }
+}
