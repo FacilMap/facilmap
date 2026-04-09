@@ -16,6 +16,7 @@
 	import ExportDropdown from "../ui/export-dropdown.vue";
 	import { useI18n } from "../../utils/i18n";
 	import DropdownMenu from "../ui/dropdown-menu.vue";
+	import { vKeyboardShortcut } from "../../utils/vue";
 
 	const context = injectContextRequired();
 	const client = requireClientContext(context);
@@ -217,6 +218,7 @@
 				size="sm"
 				@click="showEditDialog = true"
 				:disabled="isDeleting || mapContext.interaction"
+				v-keyboard-shortcut="'e'"
 			>{{i18n.t("line-info.edit-data")}}</button>
 
 			<DropdownMenu
@@ -240,6 +242,7 @@
 						href="javascript:"
 						class="dropdown-item"
 						@click="deleteLine()"
+						v-keyboard-shortcut="['Delete', 'Backspace']"
 					>{{i18n.t("line-info.delete")}}</a>
 				</li>
 			</DropdownMenu>

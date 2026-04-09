@@ -12,6 +12,6 @@ Alternatively, you can hold Shift and draw a box on the map using your mouse. Al
 
 ## Remove multiple objects
 
-To remove multiple objects at once, select them and then click “Remove” in the bottom of the search box tab and confirm the alert box.
+To remove multiple objects at once, select them and then click “Delete” in the bottom of the search box tab (or press the delete/backspace key on your keyboard) and confirm the alert box.
 
 Note that removed objects will remain in the [edit history](../history/) for admins to see and restore.

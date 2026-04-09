@@ -15,6 +15,7 @@
 	import type { RouteDestination } from "../facil-map-context-provider/route-form-tab-context";
 	import { useI18n } from "../../utils/i18n";
 	import DropdownMenu from "../ui/dropdown-menu.vue";
+	import { vKeyboardShortcut } from "../../utils/vue";
 
 	const context = injectContextRequired();
 	const client = requireClientContext(context);
@@ -120,6 +121,7 @@
 				class="btn btn-secondary btn-sm"
 				@click="showEditDialog = true"
 				:disabled="isBusy || mapContext.interaction"
+				v-keyboard-shortcut="['e']"
 			>{{i18n.t("marker-info.edit-data")}}</button>
 
 			<DropdownMenu
@@ -142,6 +144,7 @@
 						href="javascript:"
 						class="dropdown-item"
 						@click="deleteMarker()"
+						v-keyboard-shortcut="['Delete', 'Backspace']"
 					>{{i18n.t("marker-info.delete")}}</a>
 				</li>
 			</DropdownMenu>

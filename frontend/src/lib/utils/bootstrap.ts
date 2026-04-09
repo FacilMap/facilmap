@@ -89,3 +89,18 @@ export const getMaxSizeModifiers = ({ maxWidth = "30rem" }: { maxWidth?: string 
 		}
 	}
 ];
+
+/**
+ * Returns true if any modal dialog is currently open.
+ */
+export function isModalOpen(): boolean {
+	return !!document.querySelector(".modal");
+}
+
+/**
+ * Returns true if any dropdown menu is currently open.
+ */
+export function isDropdownOpen(except?: HTMLElement): boolean {
+	const openMenu = document.querySelector(".dropdown-menu.show");
+	return !!openMenu && (!except || openMenu !== except);
+}

@@ -13,6 +13,7 @@
 	import type { ResultsItem } from "../ui/results.vue";
 	import Results from "../ui/results.vue";
 	import Carousel, { CarouselTab } from "../ui/carousel.vue";
+	import { vKeyboardShortcut } from "../../utils/vue";
 
 	const context = injectContextRequired();
 	const client = requireClientContext(context);
@@ -130,6 +131,7 @@
 						class="btn btn-secondary btn-sm"
 						@click="deleteObjects()"
 						:disabled="isDeleting || mapContext.interaction"
+						v-keyboard-shortcut="['Delete', 'Backspace']"
 					>
 						<div v-if="isDeleting" class="spinner-border spinner-border-sm"></div>
 						{{i18n.t("multiple-info.delete")}}
