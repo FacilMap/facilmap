@@ -34,3 +34,12 @@
 	// Same padding-top as .col-form-label plus half line-height (1.5) minus half range input height (16px)
 	padding-top: calc(0.375rem + var(--bs-border-width) + 0.75rem - 8px);
 }
+
+kbd.fm-shortcut {
+	background: none;
+	color: inherit;
+	font-size: inherit;
+	font-family: inherit;
+	padding: 0;
+	text-decoration: underline;
+}

@@ -1,4 +1,4 @@
-import { cloneDeep, isEqual } from "lodash-es";
+import { cloneDeep, isEqual, sortBy } from "lodash-es";
 import { type ComponentPublicInstance, type DeepReadonly, type Directive, type Ref, computed, onScopeDispose, readonly, ref, shallowReadonly, shallowRef, watch, type ComputedGetter, type Component, type VNodeProps, type AllowedComponentProps, onBeforeUnmount, onMounted, toRaw, type FunctionDirective, effectScope, toRef } from "vue";
 import { shouldHandleGlobalShortcut, useDomEventListener, type AnyRef } from "./utils";
 
@@ -219,5 +219,42 @@ export function useKeyboardShortcut(el: Ref<HTMLElement | undefined>, key: AnyRe
 }
 
 export const vKeyboardShortcut = vDirectiveWithScope<HTMLElement, string[] | string | undefined>((el, binding) => {
-	useKeyboardShortcut(toRef(el), binding.value);
+	const keys = Array.isArray(binding.value) ? binding.value : binding.value ? [binding.value] : [];
+	useKeyboardShortcut(toRef(el), keys);
+
+	// If the shortcut is a letter key and the letter is contained in the element text, wrap it in a <kbd> element to indicate the shortcut
+	if (!el.querySelector("kbd")) {
+		const letterKeys = keys.flatMap((k) => k.length === 1 ? [k.toLowerCase()] : []);
+		if (letterKeys.length > 0) {
+			const nodeIterator = document.createNodeIterator(el, NodeFilter.SHOW_TEXT);
+			let currentNode: Text | null;
+			while (currentNode = nodeIterator.nextNode() as Text | null) {
+				const node = currentNode;
+
+				const lowerText = node.data.toLowerCase();
+				const positions = sortBy(letterKeys.map((k) => [k, lowerText.indexOf(k)] as const).filter(([k, i]) => i !== -1), ([k, i]) => i);
+				if (positions.length > 0) {
+					const text = node.data;
+
+					node.data = text.slice(positions[0][1] + 1);
+
+					const beforeNode = document.createTextNode(text.slice(0, positions[0][1]));
+					node.parentNode!.insertBefore(beforeNode, node);
+
+					const kbd = document.createElement("kbd");
+					kbd.classList.add("fm-shortcut");
+					kbd.appendChild(document.createTextNode(text.slice(positions[0][1], positions[0][1] + 1)));
+					node.parentNode!.insertBefore(kbd, node);
+
+					onScopeDispose(() => {
+						beforeNode.remove();
+						kbd.remove();
+						node.data = text;
+					});
+
+					break;
+				}
+			}
+		}
+	}
 });
