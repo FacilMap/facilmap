@@ -30,20 +30,36 @@
         "changeset": "Muudatuskogum",
         "timestamp": "Ajatempel",
         "user": "Kasutaja",
-        "created-modified": "Loodud/muudetud"
+        "created-modified": "Loodud/muudetud",
+        "changeset-value": "{{id}} ({{message}})",
+        "changeset-analyze": "Analüüsi muudatuskogumit"
     },
     "blame-section-membership": {
-        "alt": "Teave"
+        "alt": "Teave",
+        "tooltip": "Näita liikmelisuse hierarhiat",
+        "heading": "Liikmelisuse hierarhia",
+        "member-with-name-role": "{{feature}} ({{name}}, roll: {{role}})",
+        "member-with-name": "{{feature}} ({{name}})",
+        "member-with-role": "{{feature}} (roll: {{role}})"
     },
     "changeset-results": {
         "user": "Kasutaja",
         "features": "Funktsionaalsused",
         "created-tooltip": "Loodud",
         "deleted-tooltip": "Kustutatud",
-        "modified-tooltip": "Muudetud"
+        "modified-tooltip": "Muudetud",
+        "heading": "Muudatuskogum {{id}}",
+        "created": "Loomise aeg",
+        "closed": "Sulgemise aeg",
+        "zoom-to-feature-tooltip": "Suumi objektini",
+        "show-details-tooltip": "Näita üksikasju",
+        "show-details-no-tag-changes-tooltip": "Näita üksikasju (ilma sildimuudatusteta)",
+        "show-details-no-tag-member-changes-tooltip": "Näita üksikasju (ilma sildi- ja liikmelisuse muudatusteta)",
+        "zoom-to-changeset-label": "Suumi muudatuskogumini"
     },
     "changeset-feature-info": {
-        "members": "Liikmed"
+        "members": "Liikmed",
+        "zoom-to-feature-label": "Suumi objektini"
     },
     "osm-feature-info": {
         "sections": "Alajaotused",
@@ -53,13 +69,16 @@
     "client-provider": {
         "loading-map-header": "Laadin andmeid",
         "connecting-header": "Ühendan",
-        "disconnected-header": "Ühendus on katkestatud"
+        "disconnected-header": "Ühendus on katkestatud",
+        "loading-map": "Laadin kaarti…"
     },
     "coordinates": {
         "elevation": "Kõrgus"
     },
     "copy-to-clipboard-input": {
-        "copy-alt": "Kopeeri"
+        "copy-alt": "Kopeeri",
+        "qr-code-alt": "QR-kood",
+        "qr-code-fallback-tooltip": "Näita QR-koodi"
     },
     "custom-import-dialog": {
         "ok-label": "Impordi",
@@ -76,5 +95,13 @@
         "title": "Filtreeri",
         "apply": "Rakenda",
         "syntax-header": "Süntaks"
+    },
+    "add-to-map-dropdown": {
+        "fallback-label": "Lisa kaardile",
+        "add-error": "Viga kaardile lisamisel"
+    },
+    "blame-results": {
+        "zoom-to-section-tooltip": "Suumi lõiguni",
+        "zoom-to-feature-label": "Suumi objektini"
     }
 }
