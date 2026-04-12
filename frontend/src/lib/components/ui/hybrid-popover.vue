@@ -3,7 +3,7 @@
 	import { useModal } from "../../utils/modal";
 	import { useMaxBreakpoint } from "../../utils/bootstrap";
 	import Popover from "./popover.vue";
-	import { useRefWithOverride } from "../../utils/vue";
+	import { useModelWithFallback } from "../../utils/vue";
 	import AttributePreservingElement from "./attribute-preserving-element.vue";
 	import { useI18n } from "../../utils/i18n";
 
@@ -18,28 +18,24 @@
 <script setup lang="ts">
 	const i18n = useI18n();
 
-	const props = withDefaults(defineProps<{
-		show?: boolean;
+	const props = defineProps<{
 		title?: string;
 		customClass?: string;
 		/** If true, the width of the popover will be fixed to the width of the element. */
 		enforceElementWidth?: boolean;
 		/** If true, a click of the reference element will not toggle the popover. */
 		ignoreClick?: boolean;
-	}>(), {
-		show: undefined
-	});
+	}>();
 
 	const emit = defineEmits<{
-		"update:show": [show: boolean];
 		shown: [];
 		hide: [];
 		hidden: [];
 	}>();
 
-	const show = useRefWithOverride(false, () => props.show, (show) => {
-		emit("update:show", show);
-	});
+	const showModel = defineModel<boolean>("show", { default: undefined });
+
+	const show = useModelWithFallback(showModel, false);
 	const showModal = ref(false);
 	const showPopover = ref(false);
 

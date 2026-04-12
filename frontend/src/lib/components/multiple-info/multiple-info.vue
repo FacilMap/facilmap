@@ -107,7 +107,7 @@
 
 <template>
 	<div class="fm-multiple-info">
-		<Carousel ref="carouselRef">
+		<Carousel ref="carouselRef" noWrap>
 			<CarouselTab>
 				<Results
 					class="fm-search-box-collapse-point"

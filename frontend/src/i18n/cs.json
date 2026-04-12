@@ -1,6 +1,6 @@
 {
     "about-dialog": {
-        "header": "O FacilMap {{version}}",
+        "about-header": "O FacilMap",
         "license-text-facilmap": "FacilMap",
         "issues-text-tracker": "sledování problémů",
         "help-text": "Pokud máte dotaz, podívejte se na {{documentation}}, vzneste dotaz v {{discussions}} nebo se zeptejte v {{chat}}.",

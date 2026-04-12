@@ -156,8 +156,6 @@
 			text-align: right;
 
 			> a {
-				color: #ff00f6;
-				font-weight: bold;
 				text-decoration: none;
 			}
 		}
