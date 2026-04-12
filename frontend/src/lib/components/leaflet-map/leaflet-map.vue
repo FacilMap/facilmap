@@ -5,7 +5,7 @@
 	import type { WritableMapContext } from "../facil-map-context-provider/map-context";
 	import { injectContextRequired, requireClientContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
 	import { useI18n, vReplaceLinks } from "../../utils/i18n";
-	import AboutDialog from "../about-dialog.vue";
+	import AboutDialog from "../about-dialog/about-dialog.vue";
 	import { markdownInline, quoteMarkdown } from "facilmap-utils";
 
 	const context = injectContextRequired();
@@ -203,13 +203,6 @@
 
 				&.following a {
 					color: rgb(252, 132, 40);
-				}
-			}
-
-			.leaflet-control-attribution.leaflet-control-attribution {
-				.fm-donate {
-					color: #ff00f6;
-					font-weight: bold;
 				}
 			}
 

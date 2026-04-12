@@ -1,6 +1,6 @@
 {
     "about-dialog": {
-        "header": "Om FaciiMap {{version}}",
+        "about-header": "Om FaciiMap",
         "license-text-facilmap": "FaciiMap",
         "help-text-documentation": "dokumentasjon",
         "help-text-discussions": "diskusjonsforum",

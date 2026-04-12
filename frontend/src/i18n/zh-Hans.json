@@ -1,5 +1,5 @@
 {
     "about-dialog": {
-        "header": "关于 FacilMap {{version}}"
+        "about-header": "关于 FacilMap"
     }
 }

@@ -17,7 +17,7 @@
         "example": "Пример"
     },
     "about-dialog": {
-        "header": "О FacilMap {{version}}",
+        "about-header": "О FacilMap",
         "license-text": "{{facilmap}} доступен под лицензией {{license}}.",
         "license-text-facilmap": "FacilMap",
         "license-text-license": "GNU Affero General Public License, Version 3",

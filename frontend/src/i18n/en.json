@@ -1,10 +1,18 @@
 {
     "common": {
         "coordinates": "Coordinates",
-        "donate": "Donate"
+        "donate": "Donate",
+        "first": "First",
+        "previous": "Previous",
+        "next": "Next",
+        "last": "Last"
     },
     "about-dialog": {
-        "header": "About FacilMap {{version}}",
+        "header": "Welcome to {{appName}}!",
+        "start-header": "Get started",
+        "help-header": "Get help",
+        "about-header": "About FacilMap",
+        "news-header": "What’s new",
         "license-text": "{{facilmap}} is available under the {{license}}.",
         "license-text-facilmap": "FacilMap",
         "license-text-license": "GNU Affero General Public License, Version 3",
@@ -729,12 +737,6 @@
         "integer-error": "Please enter a valid integer.",
         "min-error": "Please enter a number not smaller than {{min}}.",
         "max-error": "Please enter a number not greater than {{max}}."
-    },
-    "pagination": {
-        "first-label": "First",
-        "previous-label": "Previous",
-        "next-label": "Next",
-        "last-label": "Last"
     },
     "results": {
         "zoom-alt": "Zoom",

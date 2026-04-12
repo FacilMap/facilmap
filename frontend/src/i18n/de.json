@@ -1,10 +1,14 @@
 {
     "common": {
         "coordinates": "Koordinaten",
-        "donate": "Spenden"
+        "donate": "Spenden",
+        "first": "Erste Seite",
+        "previous": "Vorige Seite",
+        "next": "Nächste Seite",
+        "last": "Letzte Seite"
     },
     "about-dialog": {
-        "header": "Über FacilMap {{version}}",
+        "about-header": "Über FacilMap",
         "license-text": "{{facilmap}} is unter der {{license}} verfügbar.",
         "license-text-facilmap": "FacilMap",
         "license-text-license": "GNU Affero General Public License, Version 3",
@@ -723,12 +727,6 @@
         "delete-map-button": "Karte löschen",
         "delete-description": "Um die Karte zu löschen, tippen Sie {{code}} in das Feld und klicken Sie „Karte löschen“.",
         "delete-code": "LÖSCHEN"
-    },
-    "pagination": {
-        "first-label": "Erste Seite",
-        "previous-label": "Vorige Seite",
-        "next-label": "Nächste Seite",
-        "last-label": "Letzte Seite"
     },
     "results": {
         "zoom-alt": "Zoomen",

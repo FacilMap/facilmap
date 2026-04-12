@@ -1,20 +1,10 @@
 <script setup lang="ts">
 	import { onMounted, ref } from "vue";
-	import { useRefWithOverride } from "../../utils/vue";
+	import { useModelWithFallback } from "../../utils/vue";
 	import { injectContextRequired } from "../facil-map-context-provider/facil-map-context-provider.vue";
-	import { useDrag } from "../../utils/drag";
+	import { applySwipeTransition, isSwipe, useDrag } from "../../utils/drag";
 
 	const context = injectContextRequired();
-
-	const props = withDefaults(defineProps<{
-		visible?: boolean;
-	}>(), {
-		visible: undefined
-	});
-
-	const emit = defineEmits<{
-		"update:visible": [visible: boolean];
-	}>();
 
 	const innerSidebarRef = ref<HTMLElement>();
 
@@ -24,9 +14,8 @@
 		isMounted.value = true;
 	});
 
-	const sidebarVisible = useRefWithOverride(false, () => props.visible, (visible) => {
-		emit("update:visible", visible);
-	});
+	const visibleModel = defineModel<boolean>("visible", { default: undefined });
+	const sidebarVisible = useModelWithFallback(visibleModel, false);
 
 	const drag = useDrag(innerSidebarRef, {
 		onDrag: ({ deltaX }) => {
@@ -37,39 +26,15 @@
 		},
 
 		onDragEnd: ({ deltaX, velocityX }) => {
-			Object.assign(innerSidebarRef.value!.style, {
-				transform: "",
-				transition: ""
-			});
+			innerSidebarRef.value!.style.transition = "";
 
-			if (velocityX > 0.3 || deltaX > innerSidebarRef.value!.offsetWidth / 2) {
-				// If the dragging is happening with a high velocity and we then use the default CSS transition to close the sidebar,
-				// the sliding of the sidebar does not feel smooth, since the initial velocity of the CSS animation might be slower
-				// than the drag velocity.
-				// The default easing function of a CSS transition is "ease", which is equivalent to cubic-bezier(0.25, 0.1, 0.25, 1).
-				// Since x1 is 0.25 und y1 is 0.1, the initial speed is 0.1/0.25 = 0.4 (in the unit total distance / total time,
-				// so in this case the number of pixels that the sidebar still needs to move divided by the transition time (300 ms)).
-				// To avoid the perceived stutter in the animation, we try to adjust the initial speed of the transition to the speed
-				// of the drag operation by adjusting x1.
+			const swiped = isSwipe({ size: innerSidebarRef.value!.offsetWidth, delta: deltaX, velocity: velocityX });
+			const distance = swiped ? innerSidebarRef.value!.offsetWidth - Math.max(0, deltaX) : Math.max(0, deltaX);
+			void applySwipeTransition(innerSidebarRef.value!, { distance, duration: 300, velocity: velocityX });
 
-				// Total distance of the transition (number of pixels that the sidebar has to move to slide out)
-				const totalDistance = innerSidebarRef.value!.offsetWidth - Math.max(0, deltaX);
-				// Total time in ms of the transition (defined below in the CSS)
-				const totalTime = 300;
-				// Convert px/ms velocity of the drag operation to the desired initial transition speed in the unit total distance / total time
-				const speed = velocityX * totalTime / totalDistance;
-				// x1 for the CSS easing function with the desired initial speed (y1 stays 0.1 as in the default)
-				const x1 = 0.1 / speed;
-				innerSidebarRef.value!.style.transitionTimingFunction = `cubic-bezier(${x1}, 0.1, 0.25, 1)`;
+			innerSidebarRef.value!.style.transform = "";
 
-				const handleTransitionEnd = () => {
-					innerSidebarRef.value!.style.transitionTimingFunction = "";
-					innerSidebarRef.value!.removeEventListener("transitionend", handleTransitionEnd);
-					innerSidebarRef.value!.removeEventListener("transitioncancel", handleTransitionEnd);
-				};
-				innerSidebarRef.value!.addEventListener("transitionend", handleTransitionEnd);
-				innerSidebarRef.value!.addEventListener("transitioncancel", handleTransitionEnd);
-
+			if (swiped) {
 				sidebarVisible.value = false;
 			}
 		}

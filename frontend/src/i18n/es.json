@@ -1,6 +1,10 @@
 {
     "general": {
-        "coordinates": "Coordenadas"
+        "coordinates": "Coordenadas",
+        "next": "Siguiente",
+        "previous": "Anterior",
+        "first": "Primero",
+        "last": "Último"
     },
     "about-dialog": {
         "license-text-license": "Licencia Pública General Affero de GNU, versión 3",
@@ -12,7 +16,7 @@
         "programs-libraries": "Programas/bibliotecas",
         "icons": "Iconos",
         "attribution-osm-contributors": "Contribuidores de OSM",
-        "header": "Acerca de FacilMap {{version}}",
+        "about-header": "Acerca de FacilMap",
         "license-text": "{{facilmap}} está disponible en virtud de la {{license}}.",
         "license-text-facilmap": "FacilMap",
         "privacy-information": "Información sobre la privacidad",
@@ -860,12 +864,6 @@
         "label": "Utilizar como",
         "from": "Inicio de la ruta",
         "via": "Ruta a través de"
-    },
-    "pagination": {
-        "next-label": "Siguiente",
-        "previous-label": "Anterior",
-        "first-label": "Primero",
-        "last-label": "Último"
     },
     "results": {
         "zoom-alt": "Zum",

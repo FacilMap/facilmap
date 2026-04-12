@@ -32,23 +32,19 @@ export function computedOnResize<T>(getValue: () => T): Readonly<Ref<T>> {
 }
 
 /**
- * Returns a ref that represents the value of a prop but falls back to an internal state if the prop is not specified. This can be used to make a model prop
- * optional, so that if a v-model directive is used on the component, its state is persisted in the external model, but if v-model is not used, its state
- * is persisted in an internal value.
- * @param fallbackValue The initial value if the prop is undefined
- * @param getProp A getter for the model value prop. If it returns undefined, the prop is considered not set and the internal value is used instead.
- * @param onUpdate This is called when the value is set. This should emit the update:modelValue (or similar) event.
+ * Returns a ref to a model value that falls back to an internal state if it is undefined. This can be used to create hybrid stateless/stateful components.
+ * @param modelRef The ref to the model. Usually created using defineModel() (using `required: false` and for boolean values `default: undefined`).
+ * @param initialValue The initial value if the model is undefined.
  */
-export function useRefWithOverride<Value>(fallbackValue: Value, getProp: () => Value | undefined, onUpdate: (newValue: Value) => void): Ref<Value> {
-	const internalValue = ref(getProp() ?? fallbackValue);
+export function useModelWithFallback<Value>(modelRef: Ref<Value | undefined>, initialValue: Value): Ref<Value> {
+	const internalValue = ref(modelRef.value ?? initialValue);
 	return computed({
 		get: (): Value => {
-			const propValue = getProp();
-			return propValue !== undefined ? propValue : internalValue.value as Value;
+			return modelRef.value !== undefined ? modelRef.value : internalValue.value as Value;
 		},
 		set: (val: Value) => {
 			internalValue.value = val as any;
-			onUpdate(val);
+			modelRef.value = val;
 		}
 	});
 }
