@@ -223,6 +223,10 @@ export function quoteSearchTerm(term: string): string {
 	return joinRawRouteQuery([{ keyword: false, value: term }]);
 }
 
+export function unquoteSearchTerm(term: string): string {
+	return splitRawRouteQuery(term, [])[0]?.value ?? "";
+}
+
 /**
  * Decodes a route query as encoded into English by encodeRouteQuery().
  */

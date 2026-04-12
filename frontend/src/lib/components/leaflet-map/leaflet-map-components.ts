@@ -15,7 +15,7 @@ import type { MapComponents, MapContextData, MapContextEvents, WritableMapContex
 import type { ClientContext } from "../facil-map-context-provider/client-context";
 import type { FacilMapContext } from "../facil-map-context-provider/facil-map-context";
 import { requireClientContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
-import { quoteHtml, type Optional } from "facilmap-utils";
+import { quoteHtml, unquoteSearchTerm, type Optional } from "facilmap-utils";
 import { getI18n, i18nResourceChangeCounter } from "../../utils/i18n";
 import { AttributionControl } from "./attribution";
 import { isNarrowBreakpoint } from "../../utils/bootstrap";
@@ -454,7 +454,7 @@ function useHashHandler(map: Ref<Map>, client: Ref<ClientContext>, context: Faci
 						if (!e.query)
 							await searchFormTab?.setQuery("", false, false).zoomed;
 						else if (!await openSpecialQuery(e.query, context, e.zoom, { smooth, forceRouteQuery: true }))
-							await searchFormTab?.setQuery(e.query, e.zoom, smooth, autofocus).zoomed;
+							await searchFormTab?.setQuery(unquoteSearchTerm(e.query), e.zoom, smooth, autofocus).zoomed;
 					})();
 					await queryChangePromise;
 				})
