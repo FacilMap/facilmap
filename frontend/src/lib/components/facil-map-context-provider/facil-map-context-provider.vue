@@ -3,7 +3,7 @@
 	import { useIsNarrow } from "../../utils/bootstrap";
 	import type { FacilMapComponents, FacilMapContext, FacilMapSettings } from "./facil-map-context";
 
-	const contextInject = Symbol("contextInject") as InjectionKey<FacilMapContext>;
+	const contextInject = Symbol.for("fm-inject-context") as InjectionKey<FacilMapContext>;
 
 	export function injectContextOptional(): FacilMapContext | undefined {
 		return inject(contextInject);
