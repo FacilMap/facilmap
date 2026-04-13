@@ -1,7 +1,6 @@
 /// <reference types="vite/client" />
 import type { i18n } from "i18next";
 import { getRawI18n, onI18nReady } from "./i18n-utils";
-import languageNames from "virtual:languages";
 
 const namespace = "facilmap-utils";
 
@@ -23,10 +22,3 @@ export function getI18n(): Pick<i18n, "t"> {
 		t: getRawI18n().getFixedT(null, namespace)
 	};
 }
-
-/**
- * Returns a map of each existing language key to its language name in the language itself.
- */
-export function getLocalizedLanguageList(): Record<string, string> {
-	return languageNames;
-};
