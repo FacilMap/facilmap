@@ -1,0 +1,14 @@
+{
+    "map-not-found-error": "Kaarti tunnusega {{mapId}} ei õnnestu leida.",
+    "map-read-not-found-error": "Kaarti ainult lugemisõigustes tunnusega {{mapId}} ei õnnestu leida.",
+    "database": {
+        "type-not-found-error": "Tüüpi „{{typeId}}“ pole olemas.",
+        "unknown-type-error": "Tundmatu tüüp „{{type}}“.",
+        "old-map-data-not-available-error": "Vanad kaardiandmed pole saadaval."
+    },
+    "socket": {
+        "map-already-loaded-error": "Kaart on juba laaditud.",
+        "no-map-open-error": "Ühtegi kaarti pole avatud.",
+        "unknown-format-error": "Tundmatu vorming"
+    }
+}

@@ -27,7 +27,10 @@
         "help-text-chat": "Matrix-чат",
         "icons": "Иконки",
         "map-data-geoip": "GeoIP",
-        "map-data-pois": "POI"
+        "map-data-pois": "POI",
+        "issues-text": "Если что-то не работает или у вас есть предложение по улучшению, пожалуйста, сообщите об этом в {{tracker}}.",
+        "privacy-information": "Информация о конфиденциальности",
+        "map-data": "Данные карты"
     },
     "route-form-tab": {
         "tab-label": "Навигация"
@@ -69,5 +72,12 @@
         "google-maps": "Google Карты",
         "bing-maps": "Bing Maps",
         "google-maps-satellite": "Google Карты (Спутник)"
+    },
+    "edit-type-dropdown-dialog": {
+        "option-add": "Добавить"
+    },
+    "common": {
+        "donate": "Сделать пожертвование",
+        "coordinates": "Координаты"
     }
 }
