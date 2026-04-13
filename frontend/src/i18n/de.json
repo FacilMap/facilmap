@@ -985,8 +985,8 @@
         "park4night": "park4night"
     },
     "number-input": {
-        "integer-error": "Gib bitte eine gültige ganze Zahl ein.",
-        "min-error": "Gib bitte eine Zahl ein, die nicht kleiner als {{min}} ist.",
-        "max-error": "Gib bitte eine Zahl ein, die nicht größer als {{max}} ist."
+        "integer-error": "Bitte geben Sie eine gültige Ganzzahl ein.",
+        "min-error": "Bitte geben Sie eine Zahl ein, die nicht kleiner als {{min}} ist.",
+        "max-error": "Bitte geben Sie eine Zahl ein, die nicht größer als {{max}} ist."
     }
 }
