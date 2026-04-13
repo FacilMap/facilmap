@@ -1,5 +1,5 @@
 import { computed, createApp, defineComponent, h, ref, watch, watchEffect } from "vue";
-import { FacilMap } from "../lib";
+import { FacilMap, theme } from "../lib";
 import { decodeQueryString, encodeQueryString, normalizeMapName } from "facilmap-utils";
 import decodeURIComponent from "decode-uri-component";
 import "../lib/bootstrap.scss"; // Not imported in lib/index.ts because we don't want it to be bundled
@@ -115,4 +115,8 @@ watchEffect(() => {
 			});
 		}
 	}
+});
+
+watchEffect(() => {
+	document.documentElement.setAttribute("data-bs-theme", theme.value);
 });

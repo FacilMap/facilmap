@@ -13,7 +13,8 @@ export type DragData<CustomData> = {
 	customData: CustomData;
 };
 
-export function useDrag<CustomData>(element: AnyRef<HTMLElement | undefined>, handlers: {
+export function useDrag<CustomData>(element: AnyRef<HTMLElement | undefined>, options: {
+	onlyTouch?: boolean;
 	onDragStart?: () => CustomData;
 	onDrag?: (data: DragData<CustomData>) => void;
 	onDragEnd?: (data: DragData<CustomData>) => void;
@@ -50,6 +51,10 @@ export function useDrag<CustomData>(element: AnyRef<HTMLElement | undefined>, ha
 	}, { immediate: true });
 
 	useDomEventListener(elementRef, "pointerdown", (e) => {
+		if (options.onlyTouch && e.pointerType !== "touch") {
+			return;
+		}
+
 		// Is called when starting to drag, but also when clicking. To distinguish, we set "started" to true only in the first pointermove event.
 		dragData.value = {
 			startX: e.clientX,
@@ -77,7 +82,7 @@ export function useDrag<CustomData>(element: AnyRef<HTMLElement | undefined>, ha
 
 				elementRef.value!.setPointerCapture(e.pointerId);
 				Object.assign(dragData.value, {
-					customData: handlers.onDragStart?.(),
+					customData: options.onDragStart?.(),
 					started: true
 				});
 			}
@@ -93,7 +98,7 @@ export function useDrag<CustomData>(element: AnyRef<HTMLElement | undefined>, ha
 				lastTime: time
 			});
 
-			handlers.onDrag?.({
+			options.onDrag?.({
 				deltaX: dragData.value.deltaX,
 				deltaY: dragData.value.deltaY,
 				velocityX: dragData.value.velocityX,
@@ -114,7 +119,7 @@ export function useDrag<CustomData>(element: AnyRef<HTMLElement | undefined>, ha
 	const handlePointerUp = (e: PointerEvent) => {
 		if (dragData.value && e.pointerId === dragData.value.pointerId) {
 			if (dragData.value?.started) {
-				handlers.onDragEnd?.({
+				options.onDragEnd?.({
 					deltaX: dragData.value.deltaX,
 					deltaY: dragData.value.deltaY,
 					velocityX: dragData.value.velocityX,
@@ -145,7 +150,7 @@ export function useDrag<CustomData>(element: AnyRef<HTMLElement | undefined>, ha
 
 	useDomEventListener(elementRef, "click", () => {
 		if (!dragData.value?.started) {
-			handlers.onClick?.();
+			options.onClick?.();
 		}
 	});
 
@@ -208,6 +213,10 @@ export function getSwipeTransition({ distance, duration, velocity }: { distance:
 	return `cubic-bezier(${x1}, 0.1, 0.25, 1)`;
 }
 
+/**
+ * Temporarily applies the transition timing function returned by {@link getSwipeTransition()} to the given element(s) and removes it
+ * again once the transition has completed.
+ */
 export async function applySwipeTransition(element: HTMLElement | HTMLElement[], params: { distance: number; duration: number; velocity: number }): Promise<void> {
 	const transition = getSwipeTransition(params);
 	await Promise.all((Array.isArray(element) ? element : [element]).map((el) => new Promise<void>((resolve) => {

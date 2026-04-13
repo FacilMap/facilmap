@@ -61,6 +61,18 @@ export type ThemeColour = "primary" | "secondary" | "success" | "danger" | "warn
 export type ButtonVariant = ThemeColour | "link" | "outline-primary" | "outline-secondary" | "outline-success" | "outline-danger" | "outline-warning" | "outline-info" | "outline-light" | "outline-dark";
 export type ButtonSize = "lg" | "sm";
 
+const prefersDarkModeQuery = matchMedia('(prefers-color-scheme: dark)');
+const prefersDarkModeUpdate = ref(0);
+const prefersDarkMode = computed(() => {
+	prefersDarkModeUpdate.value;
+	return prefersDarkModeQuery.matches;
+});
+prefersDarkModeQuery.addEventListener("change", () => {
+	prefersDarkModeUpdate.value++;
+});
+
+export const theme = computed(() => prefersDarkMode.value ? "dark" : "light");
+
 /**
  * An array of popper modifiers that uses popper-max-size-modifier to shrink the popover to prevent overflow
  * rather than move it, as is the default in Bootstrap.

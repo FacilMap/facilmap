@@ -8,6 +8,7 @@
 	import Accordion from "../ui/accordion/accordion.vue";
 	import AccordionItem from "../ui/accordion/accordion-item.vue";
 	import Carousel, { CarouselTab } from "../ui/carousel.vue";
+import { markdownInline } from "facilmap-utils";
 
 	const i18n = useI18n();
 
@@ -48,22 +49,16 @@
 			<AccordionItem id="start" :header="i18n.t('about-dialog.start-header')">
 				<Carousel showControls showIndicators>
 					<CarouselTab>
-						<div style="height: 250px; background: #444;"></div>
-						<div class="carousel-caption">
-							<p><strong>Explore</strong> places, routes and community-sourced points of interest.</p>
-						</div>
+						<img src="./explore.png" alt="">
+						<div class="carousel-caption" v-html="markdownInline(i18n.t('about-dialog.start-explore'), true)"></div>
 					</CarouselTab>
 					<CarouselTab>
 						<div style="height: 250px; background: #555;"></div>
-						<div class="carousel-caption">
-							<p><strong>Create</strong> a custom map. Add your own markers, lines and routes.</p>
-						</div>
+						<div class="carousel-caption" v-html="markdownInline(i18n.t('about-dialog.start-create'), true)"></div>
 					</CarouselTab>
 					<CarouselTab>
 						<div style="height: 250px; background: #666;"></div>
-						<div class="carousel-caption">
-							<p><strong>Share</strong> private links to your friends or publish to everyone.</p>
-						</div>
+						<div class="carousel-caption" v-html="markdownInline(i18n.t('about-dialog.start-share'), true)"></div>
 					</CarouselTab>
 				</Carousel>
 			</AccordionItem>

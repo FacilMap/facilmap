@@ -10,6 +10,9 @@
     "about-dialog": {
         "header": "Welcome to {{appName}}!",
         "start-header": "Get started",
+        "start-explore": "**Explore** places, routes and community-sourced points of interest.",
+        "start-create": "**Create** a custom map. Add your own markers, lines and routes.",
+        "start-share": "**Share** private links with your friends or publish to everyone.",
         "help-header": "Get help",
         "about-header": "About FacilMap",
         "news-header": "What’s new",
