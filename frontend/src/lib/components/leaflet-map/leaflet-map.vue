@@ -40,6 +40,14 @@
 	});
 
 	context.provideComponent("map", mapContext);
+
+	function zoomIn(ev: MouseEvent) {
+		mapContext.value!.components.map.zoomIn(mapContext.value!.components.map.options.zoomDelta! * (ev.shiftKey ? 3 : 1));
+	}
+
+	function zoomOut(ev: MouseEvent) {
+		mapContext.value!.components.map.zoomOut(mapContext.value!.components.map.options.zoomDelta! * (ev.shiftKey ? 3 : 1));
+	}
 </script>
 
 <template>
@@ -79,6 +87,29 @@
 				</div>
 
 				<div class="spinner-border fm-leaflet-map-spinner" v-show="client.loading > 0 || (mapContext && mapContext.loading > 0)"></div>
+
+				<div class="fm-leaflet-map-controls" v-if="mapContext">
+					<div class="btn-group-vertical fm-leaflet-map-controls-zoom bg-body rounded" role="group">
+						<button
+							type="button"
+							class="btn btn-outline-dark"
+							aria-label="Zoom in"
+							:disabled="mapContext.zoom >= mapContext.maxZoom"
+							@click="zoomIn($event)"
+						>
+							<span aria-hidden="true">+</span>
+						</button>
+						<button
+							type="button"
+							class="btn btn-outline-dark"
+							aria-label="Zoom out"
+							:disabled="mapContext.zoom <= mapContext.minZoom"
+							@click="zoomOut($event)"
+						>
+							<span aria-hidden="true">&minus;</span>
+						</button>
+					</div>
+				</div>
 
 				<slot v-if="mapContext"></slot>
 			</div>
@@ -336,6 +367,20 @@
 
 			img {
 				margin-bottom: -24px;
+			}
+		}
+
+		.fm-leaflet-map-controls {
+			position: absolute;
+			top: calc(var(--fm-leaflet-map-inset-top, 0px) + 10px);
+			left: calc(var(--facilmap-inset-left, 0px) + 10px);
+
+			.fm-leaflet-map-controls-zoom button {
+				font-size: 22px;
+				line-height: 30px;
+				width: 34px;
+				height: 34px;
+				padding: 0;
 			}
 		}
 

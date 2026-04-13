@@ -17,7 +17,7 @@
 		next(): void;
 	}
 
-	export function useCarousel(element: Ref<HTMLElement | undefined>, options: { noWrap?: boolean } = {}): DeepReadonly<CarouselContext> {
+	export function useCarousel(element: Ref<HTMLElement | undefined>, options: { noWrap?: boolean; ride?: boolean } = {}): DeepReadonly<CarouselContext> {
 		let slide = Promise.resolve();
 
 		const context = reactive<CarouselContext>({
@@ -61,7 +61,7 @@
 			}
 		});
 
-		watch([element, () => options.noWrap], ([newRef, noWrap], [oldRef], onCleanup) => {
+		watch([element, () => options.noWrap, () => options.ride], ([newRef, noWrap, ride], [oldRef], onCleanup) => {
 			if (newRef) {
 				function onSlide(ev: any) {
 					context.tab = ev.to;
@@ -75,9 +75,9 @@
 				newRef.addEventListener("slid.bs.carousel", onSlid);
 
 				const carousel = new Carousel(newRef, {
-					interval: 0,
 					wrap: !noWrap,
-					touch: false
+					touch: false,
+					ride: ride ? "carousel" : false
 				});
 
 				if (context.tab !== 0) {
@@ -150,14 +150,15 @@
 		showIndicators?: boolean;
 		noDrag?: boolean;
 		noWrap?: boolean;
+		ride?: boolean;
 	}>();
-
-	// TODO: Enable/disable keyboard
-	// TODO: Drag only on touch?
 
 	const carouselRef = ref<HTMLElement>();
 
-	const context = useCarousel(carouselRef, readonly({ noWrap: toRef(() => props.noWrap) }));
+	const context = useCarousel(carouselRef, readonly({
+		noWrap: toRef(() => props.noWrap),
+		ride: toRef(() => props.ride)
+	}));
 	defineExpose(context);
 
 	const i18n = useI18n();
@@ -196,15 +197,11 @@
 	// Carousel does not deal very well with tabs that disappear. If a tab that is open disappears, it gets stuck and navigating away
 	// from it is not possible anymore, even when the animation away from it is already in progress. We commonly have this scenario
 	// in places where we use Carousel to dive down in a hierarchy, for example in SelectionCarousel. As a workaround, we keep track
-	// of the maximium number of tabs here and keep it by filling the gap with "virtual" (empty) tabs.
-	const totalTabCount = ref(0);
-	watchEffect(() => {
-		if (internalContext.tabs.length > totalTabCount.value) {
-			totalTabCount.value = internalContext.tabs.length;
-		}
-	});
-
-	const virtualTabCount = computed(() => totalTabCount.value - actualTabCount.value);
+	// of the maximium number of tabs here and temporarily keep it by filling the gap with "virtual" (empty) tabs. Only once the virtual
+	// tabs have slid out of sight, we remove them.
+	const neededTabs = computed(() => Math.max(actualTabCount.value, internalContext.tab + 1, internalContext.slidTab + 1));
+	watchEffect(() => { console.log(neededTabs.value) });
+	const virtualTabCount = computed(() => neededTabs.value - actualTabCount.value);
 
 	const nextTabIdx = computed(() => internalContext.tab < actualTabCount.value - 1 ? internalContext.tab + 1 : 0);
 	const prevTabIdx = computed(() => internalContext.tab > 0 ? internalContext.tab - 1 : actualTabCount.value - 1);
@@ -212,6 +209,8 @@
 	const activeTab = computed(() => internalContext.tabs[internalContext.tab]);
 
 	const drag = useDrag(toRef(() => props.noDrag ? undefined : activeTab.value), {
+		onlyTouch: true,
+
 		onDrag: ({ deltaX }) => {
 			Object.assign(activeTab.value!.style, {
 				transform: `translateX(${deltaX}px)`,
@@ -236,20 +235,21 @@
 		},
 
 		onDragEnd: ({ deltaX, velocityX }) => {
-			activeTab.value!.style.transition = "";
-			// internalContext.tabs[prevTabIdx.value].classList.remove("carousel-item-prev");
-			// internalContext.tabs[nextTabIdx.value].classList.remove("carousel-item-next");
-			internalContext.tabs[prevTabIdx.value].style.transition = "";
-			internalContext.tabs[nextTabIdx.value].style.transition = "";
+			const cur = activeTab.value!;
+			const prev = internalContext.tabs[prevTabIdx.value];
+			const next = internalContext.tabs[nextTabIdx.value];
+			cur.style.transition = "";
+			prev.style.transition = "";
+			next.style.transition = "";
 
-			const swipedRight = isSwipe({ size: activeTab.value!.offsetWidth, delta: deltaX, velocity: velocityX });
-			const swipedLeft = isSwipe({ size: activeTab.value!.offsetWidth, delta: -deltaX, velocity: -velocityX });
-			const distance = swipedRight || swipedLeft ? activeTab.value!.offsetWidth - Math.abs(deltaX) : Math.abs(deltaX);
-			void applySwipeTransition([activeTab.value!, internalContext.tabs[prevTabIdx.value], internalContext.tabs[nextTabIdx.value]], { distance, duration: 600, velocity: velocityX });
+			const swipedRight = isSwipe({ size: cur.offsetWidth, delta: deltaX, velocity: velocityX });
+			const swipedLeft = isSwipe({ size: cur.offsetWidth, delta: -deltaX, velocity: -velocityX });
+			const distance = swipedRight || swipedLeft ? cur.offsetWidth - Math.abs(deltaX) : Math.abs(deltaX);
+			void applySwipeTransition([cur, swipedLeft ? next : prev], { distance, duration: 600, velocity: velocityX });
 
-			activeTab.value!.style.transform = "";
-			internalContext.tabs[prevTabIdx.value].style.transform = "";
-			internalContext.tabs[nextTabIdx.value].style.transform = "";
+			cur.style.transform = "";
+			prev.style.transform = "";
+			next.style.transform = "";
 
 			if (swipedLeft) {
 				internalContext.next();
@@ -261,7 +261,7 @@
 </script>
 
 <template>
-	<div class="carousel slide fm-carousel" ref="carouselRef" :class="{ isDragging: drag.isDragging }">
+	<div class="carousel slide fm-carousel" ref="carouselRef" :class="{ isDragging: drag.isDragging, showIndicators: props.showIndicators }">
 		<template v-if="props.showIndicators">
 			{{'' /*
 			Carousel has its own way of modifying the indicators, which interferes with our reactive approach of setting for example the active class.
@@ -275,6 +275,7 @@
 					data-bs-target
 					:class="{ active: internalContext.tab === n - 1 }"
 					:aria-current="internalContext.tab === n - 1"
+					@click="internalContext.setTab(n - 1)"
 				></button>
 			</div>
 		</template>
@@ -318,6 +319,25 @@
 			> * {
 				pointer-events: none;
 			}
+		}
+
+		.carousel-caption.carousel-caption.carousel-caption {
+			background: rgba(var(--bs-body-bg-rgb), 0.75);
+			color: var(--bs-body-color);
+		}
+
+		.carousel-indicators.carousel-indicators.carousel-indicators [data-bs-target] {
+			background-color: var(--bs-body-color);
+		}
+
+		&.showIndicators .carousel-caption {
+			bottom: 0.5rem;
+			padding-bottom: 2.25rem;
+		}
+
+		.carousel-control-prev-icon, .carousel-control-next-icon {
+			// Copied from dark mode styles, causes arrows to be black instead of white
+			filter: invert(1) grayscale(100);
 		}
 	}
 </style>

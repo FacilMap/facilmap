@@ -1,11 +1,7 @@
-$btn-transition: color .15s ease-in-out, border-color .15s ease-in-out, box-shadow .15s ease-in-out; // Delete background-color from transition
 $enable-shadows: true;
 $enable-gradients: true;
 
 $secondary: #fff;
-
-$color-mode-type: media-query;
-
 
 // Bootstrap import, see https://getbootstrap.com/docs/5.3/customize/optimize/
 
@@ -77,6 +73,10 @@ html,body {
 		@include gradient-y($start-color: $value, $end-color: darken($value, 12%));
 		background-repeat: repeat-x;
 
+		// Delete background-color from transition, as it causes flickering with the gradient. Delete it here for the
+		// regular button themes, but do not change $btn-transition, as that would also affect outline buttons.
+		@include transition(color .15s ease-in-out, border-color .15s ease-in-out, box-shadow .15s ease-in-out);
+
 		&:hover,
 		&:focus-visible {
 			background-position: 0 -15px;
@@ -127,6 +127,12 @@ html,body {
 		--#{$prefix}btn-disabled-bg: #{darken($value, 12%)};
 
 		@include gradient-y($start-color: $value, $end-color: darken($value, 12%));
+	}
+
+	.btn-outline-dark {
+		// In dark mode, dark outline buttons have black text, making the text invisible. See also https://github.com/twbs/bootstrap/issues/39231
+		//--bs-btn-color: #fff;
+		@include button-outline-variant(#fff);
 	}
 }
 

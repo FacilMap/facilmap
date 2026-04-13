@@ -53,6 +53,14 @@ function useMap(element: Ref<HTMLElement>, mapContext: MapContextWithoutComponen
 			mapContext.bounds = map.getBounds();
 		});
 
+		const updateZoomLevels = () => {
+			mapContext.minZoom = map.getMinZoom();
+			mapContext.maxZoom = map.getMaxZoom();
+		};
+
+		map.on("zoomlevelschange", updateZoomLevels);
+		updateZoomLevels();
+
 		map.on("fmFilter", () => {
 			mapContext.filter = map.fmFilter;
 			mapContext.filterFunc = map.fmFilterFunc;
@@ -543,6 +551,8 @@ export async function useMapContext(context: FacilMapContext, mapRef: Ref<HTMLEl
 	const mapContextWithoutComponents: MapContextWithoutComponents = reactive(Object.assign(mitt<MapContextEvents>(), {
 		center: latLng(0, 0),
 		zoom: 1,
+		minZoom: 1,
+		maxZoom: 1,
 		bounds: latLngBounds([0, 0], [0, 0]),
 		layers: { baseLayer: "", overlays: [] },
 		filter: undefined,
