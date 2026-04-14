@@ -1,8 +1,8 @@
 import { type Ref, ref, watch, markRaw, reactive, watchEffect, shallowRef, shallowReadonly, type Raw, nextTick, effectScope, onScopeDispose } from "vue";
 import { Control, latLng, latLngBounds, type Map, map as leafletMap, DomUtil, control } from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { BboxHandler, ChangesetLayer, getIconHtml, getVisibleLayers, HashHandler, LinesLayer, MarkersLayer, SearchResultsLayer, OverpassLayer, OverpassLoadStatus, displayView, getInitialView, coreIconList, defaultVisibleLayers, FeatureBlameLayer } from "facilmap-leaflet";
-import { LocateControl, type LocateOptions } from "leaflet.locatecontrol";
+import { BboxHandler, ChangesetLayer, getVisibleLayers, HashHandler, LinesLayer, MarkersLayer, SearchResultsLayer, OverpassLayer, OverpassLoadStatus, displayView, getInitialView, defaultVisibleLayers, FeatureBlameLayer } from "facilmap-leaflet";
+import { LocateControl } from "leaflet.locatecontrol";
 import "leaflet.locatecontrol/dist/L.Control.Locate.css";
 import "@kalisio/leaflet-graphicscale";
 import "@kalisio/leaflet-graphicscale/dist/Leaflet.GraphicScale.min.css";
@@ -124,23 +124,6 @@ function useMapComponent<T>(
 	return componentRef;
 }
 
-function useZoomControl(map: Ref<Map>): Ref<Raw<Control.Zoom>> {
-	return useMapComponent(
-		map,
-		() => markRaw(control.zoom()),
-		(zoomControl, map) => {
-			watch(() => isNarrowBreakpoint(), (isNarrow) => {
-				zoomControl.setPosition(isNarrow ? "bottomright" : "topleft");
-			}, { immediate: true });
-			map.addControl(zoomControl);
-
-			onScopeDispose(() => {
-				zoomControl.remove();
-			});
-		}
-	);
-}
-
 function useAttribution(map: Ref<Map>): Ref<Raw<AttributionControl>> {
 	return useMapComponent(
 		map,
@@ -211,17 +194,11 @@ function useLinesLayer(map: Ref<Map>, client: Ref<ClientContext>): Ref<Raw<Lines
 	);
 }
 
-function useLocateControl(map: Ref<Map>, context: FacilMapContext): Ref<Raw<LocateControl> | undefined> {
+function useLocateControl(map: Ref<Map>, context: FacilMapContext, innerContainerRef: Ref<HTMLElement>): Ref<Raw<LocateControl> | undefined> {
 	return useMapComponent(
 		map,
 		() => {
 			if (context.settings.locate) {
-				if (!coreIconList.includes("screenshot")) {
-					console.warn(`Icon "screenshot" is not in core icons.`);
-				}
-
-				let screenshotIconHtmlP = getIconHtml("currentColor", "1.5em", "screenshot");
-
 				const locateControl = new LocateControl({
 					flyTo: true,
 					markerStyle: { pane: "fm-raised-marker", zIndexOffset: 10000 },
@@ -240,14 +217,31 @@ function useLocateControl(map: Ref<Map>, context: FacilMapContext): Ref<Raw<Loca
 					icon: "fm-locate-control-icon",
 					iconLoading: "fm-locate-control-icon-loading",
 					createButtonCallback: (container, options) => {
-						const { link, icon } = (LocateControl.prototype.options as LocateOptions).createButtonCallback!(container, options) as any as { link: HTMLAnchorElement; icon: HTMLElement };
-						screenshotIconHtmlP.then((iconHtml) => {
-							icon.innerHTML = iconHtml;
-						}).catch(console.error);
+						// We want to use an existing button rather than creating a new one.
+						// The only thing that locate control does with the link is add a click handler. We add that manually in the Vue template
+						// and pass a bogus element here so that the control doesn't mess it up (it doesn't clean up its event handlers on removal).
+						const link = document.createElement("a");
+						const icon = innerContainerRef.value.querySelector<HTMLElement>(".fm-leaflet-map-controls-locate > a > .fm-icon")!;
+
 						return { link, icon };
 					}
 				});
 				return markRaw(Object.assign(Object.create(locateControl), {
+					addTo(this: typeof locateControl, map: Map) {
+						locateControl.addTo.call(this, map);
+
+						// We want to use an element in the Vue app as the container, but we don't was Leaflet to create/remove it.
+						(this as any)._fmContainerBkp = this._container;
+						this._container = innerContainerRef.value.querySelector(".fm-leaflet-map-controls-locate")!;
+
+						return this;
+					},
+
+					remove(this: typeof locateControl) {
+						this._container = (this as any)._fmContainerBkp;
+						return locateControl.remove.call(this);
+					},
+
 					setView(this: typeof locateControl) {
 						locateControl.setView.apply(this);
 
@@ -260,10 +254,6 @@ function useLocateControl(map: Ref<Map>, context: FacilMapContext): Ref<Raw<Loca
 		},
 		(locateControl, map) => {
 			if (locateControl) {
-				watch(() => isNarrowBreakpoint(), (isNarrow) => {
-					locateControl.setPosition(isNarrow ? "bottomright" : "topleft");
-				}, { immediate: true });
-
 				locateControl.addTo(map);
 
 				const active = ref(false);
@@ -488,11 +478,10 @@ function useMapComponents(context: FacilMapContext, mapContext: MapContextWithou
 	const client = requireClientContext(context);
 	const map = useMap(mapRef, mapContext);
 	const attribution = useAttribution(map);
-	const zoomControl = useZoomControl(map);
 	const bboxHandler = useBboxHandler(map, client);
 	const graphicScale = useGraphicScale(map);
 	const linesLayer = useLinesLayer(map, client);
-	const locateControl = useLocateControl(map, context);
+	const locateControl = useLocateControl(map, context, innerContainerRef);
 	const markersLayer = useMarkersLayer(map, client);
 	const mousePosition = useMousePosition(map);
 	const overpassLayer = useOverpassLayer(map, mapContext);
@@ -506,7 +495,6 @@ function useMapComponents(context: FacilMapContext, mapContext: MapContextWithou
 
 	const components: MapComponents = reactive({
 		map,
-		zoomControl,
 		attribution,
 		bboxHandler,
 		graphicScale,

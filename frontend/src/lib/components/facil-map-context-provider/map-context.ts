@@ -13,7 +13,6 @@ export type MapContextEvents = {
 };
 
 export interface MapComponents {
-	zoomControl: L.Control.Zoom;
 	attribution: AttributionControl;
 	bboxHandler: BboxHandler;
 	container: HTMLElement;

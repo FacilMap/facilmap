@@ -1,12 +1,13 @@
 <script setup lang="ts">
-	import { type Ref, computed, onMounted, ref } from "vue";
+	import { type Ref, onMounted, ref } from "vue";
 	import { useMapContext } from "./leaflet-map-components";
-	import vTooltip from "../../utils/tooltip";
 	import type { WritableMapContext } from "../facil-map-context-provider/map-context";
 	import { injectContextRequired, requireClientContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
 	import { useI18n, vReplaceLinks } from "../../utils/i18n";
 	import AboutDialog from "../about-dialog/about-dialog.vue";
 	import { markdownInline, quoteMarkdown } from "facilmap-utils";
+	import MapControls from "./map-controls.vue";
+	import Logo from "./logo.vue";
 
 	const context = injectContextRequired();
 	const client = requireClientContext(context);
@@ -19,10 +20,6 @@
 	const fatalError = ref<string>();
 	const showNarrowAttribution = ref(true);
 	const aboutDialogOpen = ref(false);
-
-	const selfUrl = computed(() => {
-		return `${location.origin}${location.pathname}${mapContext.value?.hash ? `#${mapContext.value.hash}` : ''}`;
-	});
 
 	const mapContext = ref<WritableMapContext>();
 
@@ -40,14 +37,6 @@
 	});
 
 	context.provideComponent("map", mapContext);
-
-	function zoomIn(ev: MouseEvent) {
-		mapContext.value!.components.map.zoomIn(mapContext.value!.components.map.options.zoomDelta! * (ev.shiftKey ? 3 : 1));
-	}
-
-	function zoomOut(ev: MouseEvent) {
-		mapContext.value!.components.map.zoomOut(mapContext.value!.components.map.options.zoomDelta! * (ev.shiftKey ? 3 : 1));
-	}
 </script>
 
 <template>
@@ -75,41 +64,11 @@
 					{{mapContext.overpassMessage}}
 				</div>
 
-				<a
-					v-if="context.settings.linkLogo"
-					:href="selfUrl"
-					target="_blank"
-					class="fm-open-external"
-					v-tooltip.right="i18n.t('leaflet-map.open-full-size', { appName: context.appName })"
-				></a>
-				<div class="fm-logo">
-					<img src="./logo.png"/>
-				</div>
+				<Logo v-if="mapContext"></Logo>
 
 				<div class="spinner-border fm-leaflet-map-spinner" v-show="client.loading > 0 || (mapContext && mapContext.loading > 0)"></div>
 
-				<div class="fm-leaflet-map-controls" v-if="mapContext">
-					<div class="btn-group-vertical fm-leaflet-map-controls-zoom bg-body rounded" role="group">
-						<button
-							type="button"
-							class="btn btn-outline-dark"
-							aria-label="Zoom in"
-							:disabled="mapContext.zoom >= mapContext.maxZoom"
-							@click="zoomIn($event)"
-						>
-							<span aria-hidden="true">+</span>
-						</button>
-						<button
-							type="button"
-							class="btn btn-outline-dark"
-							aria-label="Zoom out"
-							:disabled="mapContext.zoom <= mapContext.minZoom"
-							@click="zoomOut($event)"
-						>
-							<span aria-hidden="true">&minus;</span>
-						</button>
-					</div>
-				</div>
+				<MapControls :tooltipPlacement="context.isNarrow ? 'left' : 'right'"></MapControls>
 
 				<slot v-if="mapContext"></slot>
 			</div>
@@ -150,13 +109,9 @@
 
 		.fm-leaflet-map {
 			position: absolute;
-			top: 0;
-			right: 0;
-			left: 0;
-			bottom: 0;
+			inset: 0;
 			z-index: 0;
 			user-select: none;
-			-webkit-user-select: none;
 
 			.leaflet-control-container {
 				> .leaflet-top {
@@ -220,23 +175,6 @@
 				}
 			}
 
-			.leaflet-control-locate.leaflet-control-locate {
-				a, a > span {
-					font-size: inherit;
-					display: inline-flex;
-					align-items: center;
-					justify-content: center;
-				}
-
-				&.active a {
-					color: rgb(32, 116, 182);
-				}
-
-				&.following a {
-					color: rgb(252, 132, 40);
-				}
-			}
-
 			path.leaflet-interactive {
 				// Do not show focus ring
 				outline: none;
@@ -246,32 +184,18 @@
 				color-scheme: only light;
 			}
 
+			.leaflet-control-attribution, .leaflet-control-mouseposition {
+				background: rgba(var(--bs-body-bg-rgb), 0.8);
+				color: var(--bs-body-color);
+
+				a:not(.fm-donate) {
+					color: rgba(var(--bs-link-color-rgb), var(--bs-link-opacity, 1));
+				}
+			}
+
 		}
 
 		&.isNarrow {
-			.leaflet-control-locate {
-				float: none;
-				position: absolute;
-				bottom: 0px;
-				right: 44px;
-			}
-
-			.leaflet-control-zoom {
-				border: none;
-
-				.leaflet-control-zoom-in {
-					margin-bottom: 10px;
-				}
-
-				.leaflet-control-zoom-in,.leaflet-control-zoom-out {
-					border: 2px solid rgba(0,0,0,0.2);
-					width: 34px;
-					height: 34px;
-					border-radius: 4px;
-					background-clip: padding-box;
-				}
-			}
-
 			.leaflet-control.leaflet-control-graphicscale {
 				opacity: 0.6;
 			}
@@ -348,6 +272,16 @@
 			}
 		}
 
+		.fm-leaflet-map-controls {
+			position: absolute;
+			inset: calc(var(--fm-leaflet-map-inset-top, 0px) + 10px) auto auto calc(var(--facilmap-inset-left, 0px) + 10px);
+		}
+
+		&.isNarrow .fm-leaflet-map-controls {
+			inset: auto calc(var(--facilmap-inset-right, 0px) + 10px) calc(var(--fm-leaflet-map-inset-bottom, 0px) + 10px) auto;
+		}
+
+
 		.fm-leaflet-map-spinner {
 			position:absolute;
 			bottom: 20px;
@@ -357,39 +291,8 @@
 
 		.fm-logo {
 			position: absolute;
-			bottom: var(--fm-leaflet-map-inset-bottom, 0px);
-			left: calc(var(--facilmap-inset-left, 0px) - 25px);
-			pointer-events: none;
-			overflow: hidden;
-			user-select: none;
-			-webkit-user-select: none;
-			color-scheme: only light;
-
-			img {
-				margin-bottom: -24px;
-			}
-		}
-
-		.fm-leaflet-map-controls {
-			position: absolute;
-			top: calc(var(--fm-leaflet-map-inset-top, 0px) + 10px);
-			left: calc(var(--facilmap-inset-left, 0px) + 10px);
-
-			.fm-leaflet-map-controls-zoom button {
-				font-size: 22px;
-				line-height: 30px;
-				width: 34px;
-				height: 34px;
-				padding: 0;
-			}
-		}
-
-		.fm-open-external {
-			position: absolute;
-			bottom: 15px;
-			left: 15px;
-			width: 90px;
-			height: 50px;
+			bottom: calc(var(--fm-leaflet-map-inset-bottom, 0px) + 15px);
+			left: calc(var(--facilmap-inset-left, 0px) + 15px);
 		}
 
 	}
