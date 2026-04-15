@@ -1,7 +1,8 @@
 import Modal from "bootstrap/js/dist/modal";
-import { type Ref, shallowRef, watchEffect, reactive, readonly, effectScope, onActivated, ref, onDeactivated } from "vue";
+import { type Ref, shallowRef, watchEffect, reactive, readonly, effectScope, onActivated, ref, onDeactivated, useId, onScopeDispose } from "vue";
 import { useMaxBreakpoint } from "./bootstrap";
 import { fixOnCleanup } from "./vue";
+import { getTransformOntoElement } from "./utils";
 
 export interface ModalConfig {
 	/** Will be called when the fade-in animation has finished. */
@@ -14,6 +15,8 @@ export interface ModalConfig {
 	static?: Ref<boolean>;
 	/** If true, the modal can not be closed by pressing Escape. */
 	noEscape?: Ref<boolean>;
+	/** If specified, the modal will be animated to appear/disappear out of this element. */
+	animationReference?: Ref<HTMLElement | undefined>;
 }
 
 export interface ModalActions {
@@ -23,9 +26,29 @@ export interface ModalActions {
 /**
  * Enables a Bootstrap modal dialog on the element that is saved in the returned {@link ModalActions#ref}.
  */
-export function useModal(modalRef: Ref<HTMLElement | undefined>, { onShown, onHide, onHidden, static: isStatic, noEscape }: ModalConfig): Readonly<ModalActions> {
+export function useModal(modalRef: Ref<HTMLElement | undefined>, { onShown, onHide, onHidden, static: isStatic, noEscape, animationReference }: ModalConfig): Readonly<ModalActions> {
 	const modal = shallowRef<Modal>();
 	let lastFocusedEl: Element | undefined;
+
+	const id = useId();
+	const style = document.createElement("style");
+	document.head.appendChild(style);
+	onScopeDispose(() => {
+		style.remove();
+	});
+
+	const updateTransform = (isFadeIn: boolean) => {
+		if (modalRef.value && animationReference?.value) {
+			const modalEl = modalRef.value.querySelector<HTMLElement>(".modal-dialog")!;
+			style.innerHTML = (
+				`.modal[data-fm-modal-id=${id}] { transition: opacity ${isFadeIn ? '0.3s ease-out' : '0.3s ease-in 0.1s'}; }\n` +
+				`.modal[data-fm-modal-id=${id}]:not(.show) > .modal-dialog { transform: ${getTransformOntoElement(modalEl, animationReference.value)} }\n` +
+				`.modal[data-fm-modal-id=${id}] > .modal-dialog { transition: transform ${isFadeIn ? '0.4s ease-in' : '0.4s ease-out'}; }`
+			);
+		} else {
+			style.innerHTML = "";
+		}
+	};
 
 	const handleShown = (e: Event) => {
 		const focusEl = (
@@ -40,6 +63,7 @@ export function useModal(modalRef: Ref<HTMLElement | undefined>, { onShown, onHi
 
 	const handleHide = (e: Event) => {
 		onHide?.(e as Modal.Event);
+		updateTransform(false);
 	};
 
 	const handleHidden = (e: Event) => {
@@ -76,7 +100,17 @@ export function useModal(modalRef: Ref<HTMLElement | undefined>, { onShown, onHi
 				lastFocusedEl = document.activeElement ?? undefined;
 			}
 
+			newRef.setAttribute("data-fm-modal-id", id);
+
 			modal.value = new Modal(newRef);
+
+			const modalEl = modalRef.value.querySelector<HTMLElement>(".modal-dialog")!;
+			Object.assign(modalEl.style, { transform: "none", transition: "none" });
+			Object.assign(modalRef.value.style, { display: "block" });
+			updateTransform(true);
+			Object.assign(modalEl.style, { transform: "", transition: "" });
+			Object.assign(modalRef.value.style, { display: "" });
+
 			modal.value.show();
 
 			const existingModals = [...document.querySelectorAll(".modal")].filter((el) => el !== newRef);
@@ -108,6 +142,7 @@ export function useModal(modalRef: Ref<HTMLElement | undefined>, { onShown, onHi
 			newRef.addEventListener('hidden.bs.modal', handleHidden);
 
 			onCleanup(() => {
+				newRef.removeAttribute("data-fm-modal-id");
 				modal.value!.dispose();
 				modal.value = undefined;
 				newRef.removeEventListener('shown.bs.modal', handleShown);

@@ -8,12 +8,16 @@
 	import Accordion from "../ui/accordion/accordion.vue";
 	import AccordionItem from "../ui/accordion/accordion-item.vue";
 	import Carousel, { CarouselTab } from "../ui/carousel.vue";
-import { markdownInline } from "facilmap-utils";
+	import { markdownInline } from "facilmap-utils";
 
 	const i18n = useI18n();
 
 	const context = injectContextRequired();
 	const mapContext = requireMapContext(context);
+
+	const props = defineProps<{
+		animationReference?: HTMLElement;
+	}>();
 
 	const emit = defineEmits<{
 		hidden: [];
@@ -43,6 +47,7 @@ import { markdownInline } from "facilmap-utils";
 		:title="i18n.t('about-dialog.header', { appName: context.appName })"
 		class="fm-about"
 		size="lg"
+		:animationReference="props.animationReference"
 		@hidden="emit('hidden')"
 	>
 		<Accordion v-model:show="activeItems">

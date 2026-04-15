@@ -25,6 +25,7 @@
 		formValidationError?: string | undefined;
 		action?: string;
 		target?: string;
+		animationReference?: HTMLElement;
 	}>(), {
 		isModified: false,
 		size: "lg"
@@ -53,7 +54,8 @@
 			emit("hidden");
 		},
 		static: computed(() => isSubmitting.value || props.isBusy || props.noCancel || props.isModified),
-		noEscape: computed(() => isSubmitting.value || props.isBusy || props.noCancel)
+		noEscape: computed(() => isSubmitting.value || props.isBusy || props.noCancel),
+		animationReference: toRef(() => props.animationReference)
 	});
 
 	useUnloadHandler(() => props.isModified);

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import Carousel from "bootstrap/js/dist/carousel";
 	import { pull } from "lodash-es";
-	import { type ComponentInstance, type DeepReadonly, type InjectionKey, type Ref, computed, defineComponent, h, inject, onBeforeUnmount, onMounted, provide, reactive, readonly, ref, toRef, useTemplateRef, watch, watchEffect } from "vue";
+	import { type ComponentInstance, type DeepReadonly, type InjectionKey, type Ref, computed, defineComponent, h, inject, onBeforeUnmount, onMounted, provide, reactive, readonly, ref, toRef, useTemplateRef, watch } from "vue";
 	import { useI18n } from "../../utils/i18n";
 	import { applySwipeTransition, isSwipe, useDrag } from "../../utils/drag";
 
@@ -200,7 +200,6 @@
 	// of the maximium number of tabs here and temporarily keep it by filling the gap with "virtual" (empty) tabs. Only once the virtual
 	// tabs have slid out of sight, we remove them.
 	const neededTabs = computed(() => Math.max(actualTabCount.value, internalContext.tab + 1, internalContext.slidTab + 1));
-	watchEffect(() => { console.log(neededTabs.value) });
 	const virtualTabCount = computed(() => neededTabs.value - actualTabCount.value);
 
 	const nextTabIdx = computed(() => internalContext.tab < actualTabCount.value - 1 ? internalContext.tab + 1 : 0);
