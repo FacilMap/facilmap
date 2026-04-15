@@ -1,10 +1,11 @@
 <script setup lang="ts">
-	import { computed, toRef } from "vue";
+	import { computed, ref, toRef } from "vue";
 	import { injectContextRequired } from "../facil-map-context-provider/facil-map-context-provider.vue";
 	import { useI18n } from "../../utils/i18n";
 	import Icon from "../ui/icon.vue";
 	import vTooltip, { type TooltipPlacement } from "../../utils/tooltip";
 	import { dynamicModifiers } from "../../utils/vue";
+	import AboutDialog from "../about-dialog/about-dialog.vue";
 
 	const context = injectContextRequired();
 	const i18n = useI18n();
@@ -13,6 +14,9 @@
 	const props = defineProps<{
 		tooltipPlacement?: TooltipPlacement;
 	}>();
+
+	const aboutDialogOpen = ref(false);
+	const aboutButtonRef = ref<HTMLElement>();
 
 	function zoomIn(ev: MouseEvent) {
 		mapContext.value!.components.map.zoomIn(mapContext.value!.components.map.options.zoomDelta! * (ev.shiftKey ? 3 : 1));
@@ -72,7 +76,15 @@
 			:aria-label="i18n.t('leaflet-map.about', { appName: context.appName })"
 			v-positioned-tooltip="i18n.t('leaflet-map.about', { appName: context.appName })"
 			style="grid-area: about"
+			ref="aboutButtonRef"
+			@click="aboutDialogOpen = true"
 		>?</button>
+
+		<AboutDialog
+			v-if="aboutDialogOpen"
+			:animationReference="aboutButtonRef"
+			@hidden="aboutDialogOpen = false"
+		></AboutDialog>
 	</div>
 </template>
 
@@ -102,6 +114,7 @@
 
 		.fm-leaflet-map-controls-about {
 			font-size: 18px;
+			font-weight: bold;
 		}
 
 		.leaflet-control-locate.leaflet-control-locate {
