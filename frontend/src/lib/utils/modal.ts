@@ -104,12 +104,16 @@ export function useModal(modalRef: Ref<HTMLElement | undefined>, { onShown, onHi
 
 			modal.value = new Modal(newRef);
 
-			const modalEl = modalRef.value.querySelector<HTMLElement>(".modal-dialog")!;
-			Object.assign(modalEl.style, { transform: "none", transition: "none" });
-			Object.assign(modalRef.value.style, { display: "block" });
-			updateTransform(true);
-			Object.assign(modalEl.style, { transform: "", transition: "" });
-			Object.assign(modalRef.value.style, { display: "" });
+			// Temporarily show modal in its final position (it still has opacity: 0, so it will not be visible) to measure its
+			// final distance so that we can apply the transform to the animation reference.
+			if (animationReference?.value) {
+				const modalEl = modalRef.value.querySelector<HTMLElement>(".modal-dialog")!;
+				Object.assign(modalEl.style, { transform: "none", transition: "none" });
+				Object.assign(modalRef.value.style, { display: "block" });
+				updateTransform(true);
+				Object.assign(modalEl.style, { transform: "", transition: "" });
+				Object.assign(modalRef.value.style, { display: "" });
+			}
 
 			modal.value.show();
 

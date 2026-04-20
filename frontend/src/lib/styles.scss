@@ -1,3 +1,9 @@
+.fm-facilmap {
+	--fm-donate-color: #ff00f6;
+	--fm-control-opacity: 0.8;
+	--fm-control-opacity-fade: 0.7s;
+}
+
 /**
  * Renders a form feedback error that is shown when the form has been validated, regardless of whether
  * it is a sibling of a form element.
@@ -45,6 +51,6 @@ kbd.fm-shortcut {
 }
 
 .fm-donate.fm-donate {
-	color: #ff00f6;
+	color: var(--fm-donate-color);
 	font-weight: bold;
 }

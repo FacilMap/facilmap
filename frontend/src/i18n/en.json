@@ -999,5 +999,12 @@
         "bing-maps-satellite": "Bing Maps (Satellite)",
         "mapy-cz": "Mapy.cz",
         "park4night": "park4night"
+    },
+    "news": {
+        "news-1": "When you calculate a route/line and have the “Load route details” option activated, you can now see statistics about the route (how much of it is what road type, what surface etc.) by clicking on the info button next to the climb/drop info.",
+        "news-2": "The “toilets” and “car parking” POI types now have a small dropdown where you can choose to show only those without a fee. This POI variants functionality can be expanded further in the future, feel free to submit suggestions.",
+        "news-3": "There are now keyboard shortcuts for editing (press <kbd>e</kbd>) and for deleting (press <kbd>Delete</kbd> or <kbd>Backspace</kbd>) markers/lines.",
+        "news-4": "The server that we used to load the POIs had been frequently overloaded recently. FacilMap thus self-hosts the POIs now, so the POIs should load much faster and more reliable now. If you want to contribute to the costs, you can set up a small recurring [donation](https://docs.facilmap.org/users/contribute/).",
+        "news-5": "In the user preferences where you can change the language of the application, you can now see percentages how complete the translation in each language is. If you want to help translate FacilMap into your language, you can do so on our [translation platform](https://hosted.weblate.org/projects/facilmap/)."
     }
 }

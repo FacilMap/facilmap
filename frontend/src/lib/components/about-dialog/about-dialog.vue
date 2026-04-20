@@ -9,6 +9,9 @@
 	import AccordionItem from "../ui/accordion/accordion-item.vue";
 	import Carousel, { CarouselTab } from "../ui/carousel.vue";
 	import { markdownInline } from "facilmap-utils";
+	import { getNews } from "../../utils/news";
+	import storage from "../../utils/storage";
+	import Badge from "../ui/badge.vue";
 
 	const i18n = useI18n();
 
@@ -24,6 +27,21 @@
 	}>();
 
 	const activeItems = ref(["start"]);
+
+	// Store non-reactively, as it will be updated by reading the news
+	const lastNewsId = storage.lastNews;
+
+	const news = computed(() => Object.entries(getNews()).map(([id, [date, text]]) => ({
+		id: Number(id),
+		date,
+		html: markdownInline(text, true),
+		isNew: Number(id) > 2// lastNewsId != null && Number(id) > lastNewsId
+	})).reverse());
+
+	console.log(news);
+
+	const newsNew = computed(() => news.value.filter((n) => n.isNew));
+	const newsOld = computed(() => news.value.filter((n) => !n.isNew));
 
 	const layers = computed(() => {
 		const { baseLayers, overlays } = getLayers(mapContext.value.components.map);
@@ -104,6 +122,26 @@
 			</AccordionItem>
 
 			<AccordionItem id="news" :header="i18n.t('about-dialog.news-header')">
+				<dl v-if="newsNew.length > 0">
+					<template v-for="item in newsNew" :key="item.id">
+						<dt>
+							<span class="position-relative">
+								<Badge colour="secondary"></Badge>
+								{{item.date}}
+							</span>
+						</dt>
+						<dd v-html="item.html"></dd>
+					</template>
+				</dl>
+
+				<hr v-if="newsOld.length > 0 && newsNew.length > 0">
+
+				<dl v-if="newsOld.length > 0" class="text-body-secondary">
+					<template v-for="item in newsOld" :key="item.id">
+						<dt>{{item.date}}</dt>
+						<dd v-html="item.html"></dd>
+					</template>
+				</dl>
 			</AccordionItem>
 
 			<AccordionItem id="about" :header="i18n.t('about-dialog.about-header', { appName: context.appName })">

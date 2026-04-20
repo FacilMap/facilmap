@@ -185,12 +185,16 @@
 			}
 
 			.leaflet-control-attribution, .leaflet-control-mouseposition {
-				background: rgba(var(--bs-body-bg-rgb), 0.8);
+				background: rgba(var(--bs-body-bg-rgb), var(--fm-control-opacity));
 				color: var(--bs-body-color);
 
 				a:not(.fm-donate) {
 					color: rgba(var(--bs-link-color-rgb), var(--bs-link-opacity, 1));
 				}
+			}
+
+			.leaflet-control-mouseposition {
+				border-top-left-radius: var(--bs-border-radius);
 			}
 
 		}
@@ -211,7 +215,7 @@
 			pointer-events: none;
 
 			// Style like attribution control
-			background: rgba(255, 255, 255, 0.8);
+			background: rgba(255, 255, 255, var(--fm-control-opacity));
 			padding: 0 5px;
 			color: #333;
 			line-height: 1.4;

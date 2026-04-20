@@ -87,8 +87,8 @@
 		max-width: 20rem;
 		z-index: 800;
 		transform-origin: bottom right;
-		opacity: .7;
-		transition: opacity .7s;
+		opacity: var(--fm-control-opacity);
+		transition: opacity var(--fm-control-opacity-fade);
 		transform: scale(var(--fm-scale-factor));
 
 		&:hover {

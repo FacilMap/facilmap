@@ -103,8 +103,15 @@
 			justify-content: center;
 			--bs-btn-bg: var(--bs-body-bg);
 
+			// Add opacity to transition
+			transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out, opacity 0.15s ease-in-out;
+
 			&.btn-outline-secondary {
 				--bs-btn-color: var(--bs-body-color);
+			}
+
+			&:not(:hover,:focus) {
+				opacity: var(--fm-control-opacity);
 			}
 		}
 
