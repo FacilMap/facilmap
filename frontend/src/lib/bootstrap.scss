@@ -1,7 +1,7 @@
 $enable-shadows: true;
 $enable-gradients: true;
 
-$secondary: #fff;
+//$secondary: #fff;
 
 // Bootstrap import, see https://getbootstrap.com/docs/5.3/customize/optimize/
 
@@ -55,8 +55,20 @@ html,body {
 	font-size: 14px;
 }
 
+$fm-button-colors: (
+	secondary: #fff
+);
+
+@include color-mode(light) {
+	@each $color, $value in $fm-button-colors {
+		.btn-#{$color} {
+			@include button-variant($value, $value);
+		}
+	}
+}
+
 // Set button style to bootstrap v3 theme
-@each $color, $value in $theme-colors {
+@each $color, $value in map-merge($theme-colors, $fm-button-colors) {
 	.btn-#{$color} {
 		$border: darken($value, 14%);
 		--#{$prefix}btn-border-color: #{$border};
@@ -105,11 +117,11 @@ html,body {
 }
 
 // Reset btn-outline-secondary colour scheme to original, as #fff makes the text invisible
-.btn-outline-secondary {
-	@include button-outline-variant(#6c757d);
-}
+// .btn-outline-secondary {
+// 	@include button-outline-variant(#6c757d);
+// }
 
-// Above, we override $secondary with white like in Bootstrap 3 instead of gray like in Bootstrap 4/5. In dark mode, use gray again.
+// Above, we override the secondary button style with white like in Bootstrap 3 instead of gray like in Bootstrap 4/5. In dark mode, use gray again.
 @include color-mode(dark) {
 	$color: secondary;
 	$value: $gray-600;

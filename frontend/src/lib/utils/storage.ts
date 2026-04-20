@@ -52,7 +52,8 @@ const storageValidator2 = z.object({
 	presetLinks: z.record(z.object({
 		enabled: z.boolean().optional(),
 		idx: z.number().optional()
-	})).optional()
+	})).optional(),
+	lastNews: z.number().optional()
 });
 export const storageValidator = z.record(z.any()).catch(() => ({})).pipe(storageValidator2);
 
