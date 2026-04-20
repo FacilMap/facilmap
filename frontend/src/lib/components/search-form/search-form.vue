@@ -256,7 +256,7 @@
 					mapContext.value.components.selectionHandler.setSelectedItems([{ type: "searchResult", result: result.value.search[0], layerId }]);
 					if (zoom)
 						zoomToResult(result.value.search[0], smooth);
-				} else if (result.value && ["file", "relation", "changeset", "blame"].includes(result.value.type)) {
+				} else if (result.value && ["file", "osm", "changeset", "blame"].includes(result.value.type)) {
 					if (zoom)
 						zoomToAllResults(smooth);
 				}
