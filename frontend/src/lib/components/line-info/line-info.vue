@@ -196,7 +196,7 @@
 			<ElevationPlot :route="line" v-if="line.ascent != null && showElevationPlot"></ElevationPlot>
 		</div>
 
-		<div v-if="!isMoving" class="btn-toolbar">
+		<div v-if="!isMoving" class="btn-toolbar fm-search-box-toolbar">
 			<ZoomToObjectButton
 				v-if="zoomDestination"
 				:label="i18n.t('line-info.zoom-to-object-label')"

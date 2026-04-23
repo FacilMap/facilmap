@@ -102,7 +102,7 @@
 			</template>
 		</dl>
 
-		<div class="btn-toolbar">
+		<div class="btn-toolbar fm-search-box-toolbar">
 			<ZoomToObjectButton
 				v-if="zoomDestination"
 				:label="i18n.t('marker-info.zoom-to-object-label')"

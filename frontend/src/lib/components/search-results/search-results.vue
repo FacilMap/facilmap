@@ -15,6 +15,8 @@
 	import type { ResultsItem } from "../ui/results.vue";
 	import Results from "../ui/results.vue";
 	import SelectionCarousel from "../ui/selection-carousel.vue";
+	import ZoomToObjectButton from "../ui/zoom-to-object-button.vue";
+	import vTooltip from "../../utils/tooltip";
 
 	const context = injectContextRequired();
 	const client = requireClientContext(context);
@@ -98,6 +100,8 @@
 		canOpen: true,
 		openTooltip: i18n.t('search-results.show-details-tooltip')
 	})));
+
+	const zoomDestination = computed(() => getZoomDestinationForResults([...props.searchResults ?? [], ...props.mapResults ?? []]));
 
 	function zoomToSelectedResults(unionZoom: boolean): void {
 		let dest = getZoomDestinationForResults(activeResults.value);
@@ -188,31 +192,41 @@
 					<slot name="after"></slot>
 				</div>
 
-				<div v-if="client.mapData && !client.readonly && searchResults && searchResults.length > 0" class="btn-toolbar mt-2">
-					<button
-						type="button"
-						class="btn btn-secondary btn-sm"
-						:class="{ active: isAllSelected }"
-						@click="toggleSelectAll"
-					>{{i18n.t("search-results.select-all")}}</button>
-
-					<AddToMapDropdown
-						:label="i18n.t('search-results.add-to-map-label', { count: activeSearchResults.length })"
-						:markers="activeMarkersWithTags"
-						:lines="activeLinesWithTags"
+				<div class="btn-toolbar fm-search-box-toolbar">
+					<ZoomToObjectButton
+						v-if="zoomDestination"
+						:label="i18n.t('search-results.zoom-to-all-label')"
+						v-tooltip="i18n.t('search-results.zoom-to-all-tooltip')"
 						size="sm"
-					>
-						<template v-if="hasCustomTypes" #after>
-							<li><hr class="dropdown-divider"></li>
-							<li>
-								<a
-									href="javascript:"
-									class="dropdown-item"
-									@click="customImport = true"
-								>{{i18n.t("search-results.custom-type-mapping")}}</a>
-							</li>
-						</template>
-					</AddToMapDropdown>
+						:destination="zoomDestination"
+					></ZoomToObjectButton>
+
+					<template v-if="client.mapData && !client.readonly && searchResults && searchResults.length > 0">
+						<button
+							type="button"
+							class="btn btn-secondary btn-sm"
+							:class="{ active: isAllSelected }"
+							@click="toggleSelectAll"
+						>{{i18n.t("search-results.select-all")}}</button>
+
+						<AddToMapDropdown
+							:label="i18n.t('search-results.add-to-map-label', { count: activeSearchResults.length })"
+							:markers="activeMarkersWithTags"
+							:lines="activeLinesWithTags"
+							size="sm"
+						>
+							<template v-if="hasCustomTypes" #after>
+								<li><hr class="dropdown-divider"></li>
+								<li>
+									<a
+										href="javascript:"
+										class="dropdown-item"
+										@click="customImport = true"
+									>{{i18n.t("search-results.custom-type-mapping")}}</a>
+								</li>
+							</template>
+						</AddToMapDropdown>
+					</template>
 				</div>
 			</template>
 

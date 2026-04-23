@@ -73,7 +73,7 @@ import type { SelectedItem } from "../../../utils/selection";
 						@open="(section) => openSection.open({ type: 'featureBlame', section })"
 					></Results>
 				</div>
-				<div class="btn-toolbar mt-2">
+				<div class="btn-toolbar fm-search-box-toolbar">
 					<ZoomToObjectButton
 						:label="i18n.t('blame-results.zoom-to-feature-label')"
 						size="sm"

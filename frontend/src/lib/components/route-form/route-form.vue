@@ -716,7 +716,7 @@
 
 				<ElevationPlot :route="routeObj" v-if="routeObj.ascent != null"></ElevationPlot>
 
-				<div v-if="showToolbar && !client.readonly" class="btn-toolbar" role="group">
+				<div v-if="showToolbar && !client.readonly" class="btn-toolbar fm-search-box-toolbar" role="group">
 					<ZoomToObjectButton
 						v-if="zoomDestination"
 						:label="i18n.t('route-form.zoom-to-object-label')"

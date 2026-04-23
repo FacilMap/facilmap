@@ -923,6 +923,8 @@
     },
     "search-results": {
         "no-results": "No results have been found.",
+        "zoom-to-all-label": "Zoom to all",
+        "zoom-to-all-tooltip": "Zoom to all results",
         "zoom-to-result-tooltip": "Zoom to result",
         "show-details-tooltip": "Show details",
         "select-all": "Select all",

@@ -117,7 +117,7 @@
 					@open="(object) => openObject(object)"
 				></Results>
 
-				<div class="btn-toolbar mt-2">
+				<div class="btn-toolbar fm-search-box-toolbar">
 					<ZoomToObjectButton
 						v-if="zoomDestination"
 						:label="i18n.t('multiple-info.zoom-to-object-label')"
