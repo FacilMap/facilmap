@@ -921,7 +921,9 @@
         "show-details-tooltip": "Details anzeigen",
         "select-all": "Alle auswählen",
         "add-to-map-label": "Zur Karte hinzufügen",
-        "custom-type-mapping": "Benutzerdefiniert…"
+        "custom-type-mapping": "Benutzerdefiniert…",
+        "zoom-to-all-label": "Alles vergrößern",
+        "zoom-to-all-tooltip": "Alle Ergebnisse anzeigen"
     },
     "toasts": {
         "unexpected-error": "Unerwarteter Fehler",
