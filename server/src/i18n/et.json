@@ -4,11 +4,11 @@
     "database": {
         "type-not-found-error": "„{{typeId}}“ tüüpi pole olemas.",
         "unknown-type-error": "Tundmatu tüüp „{{type}}“.",
-        "old-map-data-not-available-error": "Vanad kaardiandmed pole saadaval.",
+        "old-map-data-not-available-error": "Old map data not available.",
         "route-points-less-than-two-points-error": "Joonel ei saa olla alla kahe punkti.",
         "cannot-use-type-for-line-error": "Cannot use {{type}} type for line.",
         "cannot-use-type-for-marker-error": "Cannot use {{type}} type for marker.",
-        "object-not-found-in-map-error": "„{{type}}/{{id}}“ tüüpi „{{mapId}}“ tunnusega kaarti ei õnnestu leida.",
+        "object-not-found-in-map-error": "{{type}} {{id}} of map {{mapId}} could not be found.",
         "route-points-not-an-array-error": "„routePoints“ pole massiiv",
         "unique-map-ids-error": "Read-only, read-write and admin ID have to be different from each other.",
         "unique-map-ids-read-write-error": "Read-only and read-write ID cannot be the same.",
@@ -43,7 +43,7 @@
         "field-time": "Aeg"
     },
     "webserver": {
-        "map-not-found-error": "„{{mapId}}“ tunnusega kaarti ei õnnestu leida."
+        "map-not-found-error": "Map with ID {{mapId}} could not be found."
     },
     "frontend": {
         "requires-javascript": "{{appName}} eeldab, et JavaScript on kasutatav.",
