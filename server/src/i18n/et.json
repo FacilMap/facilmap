@@ -1,14 +1,14 @@
 {
-    "map-not-found-error": "Map {{mapId}} could not be found.",
-    "map-read-not-found-error": "Map with read-only ID {{mapId}} could not be found.",
+    "map-not-found-error": "Kaarti tunnusega {{mapId}} ei õnnestu leida.",
+    "map-read-not-found-error": "Kaarti ainult lugemisõigustes tunnusega {{mapId}} ei õnnestu leida.",
     "database": {
-        "type-not-found-error": "Type {{typeId}} does not exist.",
+        "type-not-found-error": "„{{typeId}}“ tüüpi pole olemas.",
         "unknown-type-error": "Tundmatu tüüp „{{type}}“.",
-        "old-map-data-not-available-error": "Old map data not available.",
+        "old-map-data-not-available-error": "Vanad kaardiandmed pole saadaval.",
         "route-points-less-than-two-points-error": "Joonel ei saa olla alla kahe punkti.",
         "cannot-use-type-for-line-error": "Cannot use {{type}} type for line.",
         "cannot-use-type-for-marker-error": "Cannot use {{type}} type for marker.",
-        "object-not-found-in-map-error": "{{type}} {{id}} of map {{mapId}} could not be found.",
+        "object-not-found-in-map-error": "„{{type}}/{{id}}“ tüüpi „{{mapId}}“ tunnusega kaarti ei õnnestu leida.",
         "route-points-not-an-array-error": "„routePoints“ pole massiiv",
         "unique-map-ids-error": "Read-only, read-write and admin ID have to be different from each other.",
         "unique-map-ids-read-write-error": "Read-only and read-write ID cannot be the same.",
@@ -28,11 +28,11 @@
         "admin-revert-error": "Sellist sorti muudatust saab tagasi pöörata vaid peakasutaja režiimis.",
         "only-in-admin-error": "Saadaval vaid peakasutaja režiimis.",
         "only-in-write-error": "Saadaval vaid kirjutusrežiimis.",
-        "map-id-set-error": "Kaarti tunnus on juba väärtustatud.",
+        "map-id-set-error": "Kaardi tunnus on juba väärtustatud.",
         "map-not-exist-error": "Seda kaarti pole olemas."
     },
     "search": {
-        "url-request-error": "„{{url}}“ võrguaadressi pärin ei õnnestunud olekukoodiga {{status}}.",
+        "url-request-error": "„{{url}}“ võrguaadressi päring ei õnnestunud, vastuse olekukood on {{status}}.",
         "url-response-error": "Vigane vastus serverist.",
         "url-unknown-format-error": "Tundmatu failivorming."
     },
