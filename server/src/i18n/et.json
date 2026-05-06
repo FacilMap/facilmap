@@ -1,6 +1,6 @@
 {
-    "map-not-found-error": "Kaarti tunnusega {{mapId}} ei õnnestu leida.",
-    "map-read-not-found-error": "Kaarti ainult lugemisõigustes tunnusega {{mapId}} ei õnnestu leida.",
+    "map-not-found-error": "Map {{mapId}} could not be found.",
+    "map-read-not-found-error": "Map with read-only ID {{mapId}} could not be found.",
     "database": {
         "type-not-found-error": "„{{typeId}}“ tüüpi pole olemas.",
         "unknown-type-error": "Tundmatu tüüp „{{type}}“.",
@@ -11,7 +11,7 @@
         "object-not-found-in-map-error": "„{{type}}/{{id}}“ tüüpi „{{mapId}}“ tunnusega kaarti ei õnnestu leida.",
         "route-points-not-an-array-error": "„routePoints“ pole massiiv",
         "unique-map-ids-error": "Lugemisõigusega, lugemis-kirjutamisõigusega ja peakasutaja tunnus peavad olema üksteisest erinevad.",
-        "unique-map-ids-read-write-error": "Lugemisõigustega ja lugemis-kirjutamisõigustega tunnused ei tohi olla ühesugused.",
+        "unique-map-ids-read-write-error": "Read-only and read-write ID cannot be the same.",
         "unique-map-ids-read-admin-error": "Lugemisõigustega ja peakasutaja tunnused ei tohi olla ühesugused.",
         "unique-map-ids-write-admin-error": "Lugemis-kirjutamisõigustega ja peakasutaja tunnused ei tohi olla ühesugused.",
         "map-id-taken-error": "„{{id}}“ tunnus on juba kasutusel.",
@@ -43,7 +43,7 @@
         "field-time": "Aeg"
     },
     "webserver": {
-        "map-not-found-error": "„{{mapId}}“ tunnusega kaarti ei õnnestu leida."
+        "map-not-found-error": "Map with ID {{mapId}} could not be found."
     },
     "frontend": {
         "requires-javascript": "{{appName}} eeldab, et JavaScript on kasutatav.",
