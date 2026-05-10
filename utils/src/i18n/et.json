@@ -33,5 +33,27 @@
     },
     "search": {
         "http-error": "Otsing ei õnnestunud, päringu vastuse veakood oli {{status}}."
+    },
+    "routing": {
+        "format-by-hgv": "raskeveokiga",
+        "format-by-car": "autoga",
+        "format-by-road-bike": "linnarattaga",
+        "format-by-mountain-bike": "maastikurattaga",
+        "format-by-electric-bike": "elektrirattaga",
+        "format-by-bicycle": "jalgrattaga",
+        "format-by-wheelchair": "ratastooliga",
+        "format-by-foot": "jalgsi",
+        "query-from": "alates",
+        "query-to": "kuni",
+        "query-via": "vahepunktina",
+        "query-by-hgv": "raskeveokiga",
+        "query-by-car": "autoga",
+        "query-by-road-bike": "linnarattaga",
+        "query-by-mountain-bike": "maastikurattaga",
+        "query-by-electric-bike": "elektrirattaga",
+        "query-by-bicycle": "jalgrattaga",
+        "query-by-wheelchair": "ratastooliga",
+        "query-by-foot": "jalgsi|kõndides",
+        "query-by-straight": "linnulennult|otse|helikopteriga"
     }
 }

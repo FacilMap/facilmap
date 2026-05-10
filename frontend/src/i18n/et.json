@@ -8,12 +8,22 @@
         "license-text": "{{facilmap}} on avaldatud {{license}} litsentsi alusel.",
         "license-text-facilmap": "FacilMap",
         "icons": "Ikoonid",
-        "help-text-documentation": "dokumentatsioon",
+        "help-text-documentation": "dokumentatsiooni",
         "map-data-search": "Otsing",
         "map-data-pois": "Huvipunktid",
         "map-data-directions": "Tee juhatamine",
         "map-data-geoip": "GeoIP",
-        "programs-libraries": "Programmid ja teegid"
+        "programs-libraries": "Programmid ja teegid",
+        "help-text-chat": "Matrixi jututoas",
+        "help-text-discussions": "kogukonna vestluses",
+        "help-text": "Kui sul on küsimusi, siis palun vaata {{documentation}}, küsi lisaks {{discussions}} või suhtle {{chat}}.",
+        "map-data": "Kaardiandmed",
+        "issues-text": "Kui mõni asu ei toim või sul on ettepanekuid täiendusteks, siis teata sellest meie {{tracker}}.",
+        "issues-text-tracker": "veahalduses",
+        "privacy-information": "Privaatsusteave",
+        "attribution-osm-contributors": "Openstreetmapi kaasautorid",
+        "map-data-geoip-description": "Selles tootes kasutatakse GeoLite2 andmekogu, mille on koostanud MaxMind ja mis on saadaval siin: {{maxmind}}.",
+        "license-text-license": "GNU Affero Üldise Avaliku Litsentsi 3. versiooni"
     },
     "user-preferences-dialog": {
         "external-links-delete-tooltip": "Kustuta",
@@ -79,37 +89,102 @@
     "osm-feature-info": {
         "sections": "Alajaotused",
         "nodes": "Sõlmed",
-        "role": "Roll"
+        "role": "Roll",
+        "zoom-to-node": "Suumi sõlmeni",
+        "zoom-to-way": "Suumi teeni",
+        "zoom-to-relation": "Suumi relatsioonini",
+        "show-details-tooltip": "Näita objekti üksikasju",
+        "total-length": "Pikkus kokku",
+        "members": "Relatsiooni liikmed",
+        "zoom-to-section-tooltip": "Suumi lõiguni",
+        "section-label": "Lõik {{distance}}"
     },
     "client-provider": {
         "loading-map-header": "Laadin andmeid",
         "connecting-header": "Ühendan",
         "disconnected-header": "Ühendus on katkestatud",
-        "loading-map": "Laadin kaarti…"
+        "loading-map": "Laadin kaarti…",
+        "connecting": "Ühendan serveriga…",
+        "map-deleted-header": "Kaart on kustutatud",
+        "map-deleted": "See kaart on kustutatud.",
+        "close-map": "Sulge kaart",
+        "open-map-error": "Viga kaardi avamisel",
+        "connection-error": "Viga ühendamisel serveriga",
+        "disconnected": "Ühendus serveriga on katkenud. Proovin uuesti ühendada…"
     },
     "coordinates": {
-        "elevation": "Kõrgus"
+        "elevation": "Kõrgus",
+        "copy-to-clipboard": "Kopeeri lõikelauale",
+        "copied-message": "Koordinaadid on kopeeritud lõikelauale.",
+        "copied-title": "Koordinaadid on kopeeritud"
     },
     "copy-to-clipboard-input": {
         "copy-alt": "Kopeeri",
         "qr-code-alt": "QR-kood",
-        "qr-code-fallback-tooltip": "Näita QR-koodi"
+        "qr-code-fallback-tooltip": "Näita QR-koodi",
+        "copied-fallback-title": "Link on kopeeritud",
+        "copied-fallback-message": "Link on kopeeritud lõikelauale.",
+        "copy-fallback-tooltip": "Kopeeri lõikelauale"
     },
     "custom-import-dialog": {
         "ok-label": "Impordi",
-        "type": "Tüüp"
+        "type": "Tüüp",
+        "existing-type": "Olemasolev tüüp „{{name}}“",
+        "import-type": "Impordi tüüp „{{name}}“",
+        "no-import": "Ära impordi",
+        "import-error": "Viga kaardile importimisel",
+        "markers_one": "„{{typeName}}“ tüüpi marker ({{count}})",
+        "markers_other": "„{{typeName}}“ tüüpi markerid ({{count}})",
+        "lines_one": "„{{typeName}}“ tüüpi joon ({{count}})",
+        "lines_other": "„{{typeName}}“ tüüpi jooned ({{count}})",
+        "untyped-markers_one": "Ilma tüübita marker ({{count}})",
+        "untyped-markers_other": "Ilma tüübita markerid ({{count}})",
+        "untyped-lines_one": "Ilma tüübita joon/kujund ({{count}})",
+        "untyped-lines_other": "Ilma tüübita jooned/kujundid ({{count}})"
     },
     "draw": {
         "add-marker-cancel": "Katkesta",
         "move-marker-save": "Salvesta",
         "move-marker-cancel": "Katkesta",
         "add-line-finish": "Lõpeta",
-        "add-line-cancel": "Katkesta"
+        "add-line-cancel": "Katkesta",
+        "add-marker-error": "Viga markeri lisamisel",
+        "add-marker-title": "Lisa {{typeName}}",
+        "add-marker-message": "Markeri lisamiseks palun klõpsa kaardil.",
+        "add-marker-current": "Lisa praegusesse asukohta",
+        "move-marker-error": "Viga markeri liigutamisel",
+        "move-marker-title": "Lohista markerit",
+        "move-marker-message": "Markeri asukoha muutmiseks lohista ta uude kohta.",
+        "move-marker-current": "Tõsta praegusesse asukohta",
+        "add-line-title": "Lisa „{{typeName}}“",
+        "add-line-error": "Viga joone lisamisel"
     },
     "edit-filter-dialog": {
         "title": "Filtreeri",
         "apply": "Rakenda",
-        "syntax-header": "Süntaks"
+        "syntax-header": "Süntaks",
+        "description": "Kirjeldus",
+        "example": "Näide",
+        "name-description": "Markeri/joone nimi",
+        "type-description": "{{marker}} / {{line}}",
+        "typeId-description": "{{items}})",
+        "typeId-description-separator": " / ",
+        "data-description-1": "Välja väärtuse (näiteks: {{example1}} või {{example2}}).",
+        "data-description-2": "Märkeruudu väljade puhul on väärtus „{{uncheckedValue}}“ (märkimata) või „{{checkedValue}}“ (märgitud).",
+        "lon-lat-description": "Markeri koordinaadid",
+        "colour-description": "Markeri/joone värv",
+        "size-description": "Markeri suurus",
+        "icon-description": "Markeri ikoon",
+        "shape-description": "Markeri kuju",
+        "ele-description": "Markeri kõrgus",
+        "width-description": "Joone laius",
+        "distance-description": "Joone pikkus kilomeetrites",
+        "time-description": "Joone teekond sekundites",
+        "number-description": "Numbriline väärtus",
+        "text-description": "Tekstiline väärtus",
+        "lower-description": "Teisenda väiketähtedeks",
+        "regexp-description": "Vaste regulaaravaldisele (tõstutundlik)",
+        "variable": "Muutuja"
     },
     "add-to-map-dropdown": {
         "fallback-label": "Lisa kaardile",
@@ -117,6 +192,141 @@
     },
     "blame-results": {
         "zoom-to-section-tooltip": "Suumi lõiguni",
-        "zoom-to-feature-label": "Suumi objektini"
+        "zoom-to-feature-label": "Suumi objektini",
+        "section-label": "{{timestamp}}, {{username}}",
+        "section-label-with-comment": "{{timestamp}}, {{username}}: {{comment}}",
+        "show-details-tooltip": "Näita üksikasju"
+    },
+    "osm-feature-link": {
+        "changeset": "Muudatuskogum {{id}}",
+        "node-tooltip": "Ava sõlm OpenStreetMapis",
+        "way-tooltip": "Ava tee OpenStreetMapis",
+        "relation-tooltip": "Ava relatsioon OpenStreetMapis",
+        "changeset-tooltip": "Ava muudatuskogum OpenStreetMapis",
+        "user-tooltip": "Ava kasutaja andmed OpenStreetMapis"
+    },
+    "click-marker-tab": {
+        "look-up-error": "Viga sõlme/punkti tuvastamisel andmekogust"
+    },
+    "toolbox-tools-dropdown": {
+        "label": "Tarvikud",
+        "share": "Jaga",
+        "open-file": "Ava fail",
+        "export": "Ekspordi",
+        "filter": "Filtreeri",
+        "settings": "Kaardi seadistused",
+        "history": "Ajalugu",
+        "user-preferences": "Kasutaja eelistused"
+    },
+    "help-popover": {
+        "show-alt": "Näita selgitust"
+    },
+    "toolbox-help-dropdown": {
+        "label": "Abiteave",
+        "documentation": "Dokumentatsioon",
+        "matrix-chat": "Matrixi jututuba",
+        "bugtracker": "Teata veast",
+        "forum": "Küsi teavet",
+        "about": "Rakenduse teave: {{appName}}"
+    },
+    "leaflet-map": {
+        "attribution-notice": "See rakendus põhineb [OpenStreetMapi](https://www.openstreetmap.org/copyright) kaardiandmetel. Lisateavet leiad abiteabe vaatest siit: „[Rakenduse teave: {{appName}}](#about-dialog)“."
+    },
+    "add": {
+        "hidden-markers-added-title_one": "Marker on lisatud",
+        "hidden-markers-added-title_other": "{{count}} markerit on lisatud",
+        "hidden-lines-added-title_one": "Joon on lisatud",
+        "hidden-lines-added-title_other": "{{count}} joont on lisatud",
+        "hidden-objects-added-title": "{{count}} objekti on lisatud",
+        "hidden-objects-added-message": "{{count}} objekti lisamine õnnestus, aga aktiivne filter takistab nende näitamist.",
+        "hidden-objects-added-message-some": "{{count}} objekti lisamine õnnestus, aga aktiivne filter takistab neist mõne näitamist.",
+        "hidden-markers-added-message_one": "Markeri lisamine õnnestus, aga aktiivne filter takistab tema näitamist.",
+        "hidden-markers-added-message_other": "{{count}} markeri lisamine õnnestus, aga aktiivne filter takistab nende näitamist.",
+        "hidden-lines-added-message_one": "Joone lisamine õnnestus, aga aktiivne filter takistab tema näitamist.",
+        "hidden-lines-added-message_other": "{{count}} joone lisamine õnnestus, aga aktiivne filter takistab nende näitamist."
+    },
+    "colour-picker": {
+        "format-error": "Väärtus peab olema kuuekohaline kuueteistkümnendarv, näiteks 0000ff."
+    },
+    "elevation-stats": {
+        "show-tooltip": "Näita statistikat",
+        "show-alt": "Näita statistikat",
+        "ascent-alt": "Tõus",
+        "descent-alt": "Laskumine"
+    },
+    "export-dialog": {
+        "format-option-gpx": "GPX",
+        "format-option-geojson": "GeoJSON",
+        "format-option-html": "HTML",
+        "format-option-csv": "CSV",
+        "column-name": "Nimi",
+        "column-position": "Asukoht",
+        "column-distance": "Vahemaa",
+        "export-ok": "Ekspordi",
+        "copy-ok": "Kopeeri",
+        "format": "Vorming",
+        "gpx-explanation-interpolation-gpx": "GPX",
+        "geojson-explanation-interpolation-geojson": "GeoJSON"
+    },
+    "edit-line-dialog": {
+        "save-error": "Viga joone salvestamisel",
+        "title": "Muuda joont",
+        "name": "Nimi",
+        "routing-mode": "Teekonna koostamise režiim",
+        "colour": "Värv",
+        "width": "Laius",
+        "stroke": "Pintslitõmme",
+        "change-type": "Muuda tüüpi",
+        "edit-type": "Muuda „{{type}}“ tüüpi"
+    },
+    "edit-marker-dialog": {
+        "save-error": "Viga markeri salvestamisel",
+        "title": "Muuda markerit",
+        "name": "Nimi",
+        "colour": "Värv",
+        "size": "Suurus",
+        "icon": "Ikoon",
+        "shape": "Kuju",
+        "change-type": "Muuda tüüpi",
+        "edit-type": "Muuda „{{type}}“ tüüpi"
+    },
+    "edit-type-dialog": {
+        "delete-field-title": "Kustuta väli",
+        "delete-field-message": "Kas oled kindel, et soovid „{{fieldName}}“ välja kustutada?",
+        "delete-field-button": "Kustuta",
+        "create-type-error": "Viga tüübi loomisel",
+        "save-type-error": "Viga tüübi salvestamisel",
+        "field-update-error": "Viga välja uuendamisel",
+        "field-disappeared-error": "Seda välja enam ei leidu antud tüübis.",
+        "unique-field-name-error": "Mitmel väljal ei saa olla sama nime.",
+        "title": "Muuda tüüpi",
+        "name": "Nimi",
+        "type": "Tüüp",
+        "type-marker": "Marker",
+        "type-line": "Joon",
+        "fields": "Väljad",
+        "field-name": "Nimi",
+        "field-type": "Tüüp",
+        "field-delete": "Kustuta",
+        "field-type-dropdown": "Rippmenüü",
+        "field-type-checkbox": "Märkeruut",
+        "field-edit": "Muuda",
+        "field-reorder": "Muuda järjekorda",
+        "field-add": "Lisa"
+    },
+    "edit-type-dropdown-dialog": {
+        "delete-option-button": "Kustuta",
+        "ok-button": "Sobib",
+        "control-interpolation-line": "joon",
+        "option": "Valik",
+        "colour": "Värv",
+        "size": "Suurus",
+        "icon": "Ikoon",
+        "shape": "Kuju",
+        "width": "Laius",
+        "stroke": "Pintslitõmme",
+        "option-remove": "Eemalda",
+        "option-reorder": "Muuda järjekorda",
+        "option-add": "Lisa"
     }
 }
