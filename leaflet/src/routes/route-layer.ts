@@ -5,8 +5,10 @@ import { type HighlightableLayerOptions, HighlightablePolyline } from "leaflet-h
 import { trackPointsToLatLngArray } from "../utils/leaflet";
 import "leaflet-draggable-lines";
 import type { RouteClear, RoutePointsEvent } from "facilmap-types";
+import { getPolylineStyles } from "../utils/styles";
 
 interface RouteLayerOptions extends HighlightableLayerOptions<PolylineOptions> {
+	highlight?: boolean;
 }
 
 export default class RouteLayer extends HighlightablePolyline {
@@ -16,7 +18,10 @@ export default class RouteLayer extends HighlightablePolyline {
 	routeId: string | undefined;
 
 	constructor(client: Client, routeId?: string, options?: RouteLayerOptions) {
-		super([], options);
+		super([], {
+			...getPolylineStyles({ highlight: options?.highlight, width: options?.weight ?? 7 }),
+			...options
+		});
 		this.client = client;
 		this.routeId = routeId;
 	}

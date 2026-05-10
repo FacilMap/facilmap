@@ -3,11 +3,14 @@ import type { PolylineOptions } from "leaflet";
 import { generatePolygonStyles, generatePolylineStyles, type HighlightableLayerOptions } from "leaflet-highlightable-layers";
 import { getDashArrayForStroke } from "../lines/lines-layer";
 
+// Store generateStyles implementations as external functions so that their identities never change, as LinesLayer caches layers
+// based on whether their options change.
+
 const generateRegularPolylineStyles: HighlightableLayerOptions<PolylineOptions>["generateStyles"] = (options) => {
 	const base = generatePolylineStyles(options);
 	return {
 		...base,
-		outline: { ...base.outline, weight: options.weight! + 2 }
+		outline: { ...base.outline, weight: options.outlineWeight ?? (options.weight! + 2) }
 	};
 };
 
@@ -45,7 +48,7 @@ const generateRegularPolygonStyles: HighlightableLayerOptions<PolylineOptions>["
 		...base,
 		main: { ...base.main, fillOpacity: 0 },
 		fill: { ...base.fill, lhlZIndex: 5 },
-		outline: { ...base.outline, weight: options.weight! + 2, lhlZIndex: 10 },
+		outline: { ...base.outline, weight: options.outlineWeight ?? (options.weight! + 2), lhlZIndex: 10 },
 		border: { ...base.border, lhlZIndex: 20 }
 	};
 };

@@ -119,7 +119,7 @@
 	const suggestionMarker = ref<MarkerLayer>();
 
 	const routeLayer = computed(() => {
-		const layer = markRaw(new RouteLayer(client.value, props.routeId, { weight: 7, opacity: 1, raised: true }));
+		const layer = markRaw(new RouteLayer(client.value, props.routeId, { highlight: true }));
 		layer.on("click", (e) => {
 			if (!props.active && !(e.originalEvent as any).ctrlKey) {
 				emit("activate");
