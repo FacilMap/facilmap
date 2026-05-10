@@ -1,10 +1,11 @@
 import type { ID, Line, LinePointsEvent, LineTemplate, ObjectWithId, Point, Stroke, Type, Width } from "facilmap-types";
-import { FeatureGroup, latLng, type LayerOptions, type Map as LeafletMap, type PolylineOptions, type LatLngBounds } from "leaflet";
-import { type HighlightableLayerOptions, HighlightablePolyline } from "leaflet-highlightable-layers";
+import { FeatureGroup, latLng, type LayerOptions, type Map as LeafletMap, type LatLngBounds } from "leaflet";
+import { HighlightablePolyline } from "leaflet-highlightable-layers";
 import { type BasicTrackPoints, disconnectSegmentsOutsideViewport, tooltipOptions, trackPointsToLatLngArray, fmToLeafletBbox } from "../utils/leaflet";
 import { numberKeys, quoteHtml } from "facilmap-utils";
 import { addClickListener, type ClickListenerHandle } from "../click-listener/click-listener";
 import type Client from "facilmap-client";
+import { getPolylineStyles } from "../utils/styles";
 
 export function getDashArrayForStroke(stroke: Stroke, width: Width): string | undefined {
 	if (stroke === "dashed") {
@@ -302,20 +303,9 @@ export default class LinesLayer extends FeatureGroup {
 			}
 		}
 
-		const style: HighlightableLayerOptions<PolylineOptions> = {
-			color: '#'+line.colour,
-			weight: line.width,
-			raised: false,
-			opacity: 0.35,
-			dashArray: getDashArrayForStroke(line.stroke, line.width)
-		};
+		const highlight = line.id == null || this.highlightedLinesIds.has(line.id);
 
-		if(line.id == null || this.highlightedLinesIds.has(line.id)) {
-			Object.assign(style, {
-				raised: true,
-				opacity: 1
-			});
-		}
+		const style = getPolylineStyles({ ...line, highlight });
 
 		(this.linesById[line.id] as any).line = line;
 

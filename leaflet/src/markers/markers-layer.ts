@@ -192,7 +192,7 @@ export default class MarkersLayer extends MarkerCluster {
 		if (marker.name) {
 			const quoted = quoteHtml(marker.name);
 			if (!this.markersById[marker.id]._tooltip) {
-				this.markersById[marker.id].bindTooltip(quoted, { ...tooltipOptions, offset: [ 20, -15 ] });
+				this.markersById[marker.id].bindTooltip(quoted, tooltipOptions);
 			} else if (this.markersById[marker.id]._tooltip!.getContent() !== quoted) {
 				this.markersById[marker.id].setTooltipContent(quoted);
 			}
