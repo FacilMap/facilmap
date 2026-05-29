@@ -3,10 +3,12 @@ import { FeatureGroup, GeoJSON as GeoJSONLayer, type GeoJSONOptions, Layer, type
 import { HighlightablePolygon, HighlightablePolyline } from "leaflet-highlightable-layers";
 import MarkerLayer, { type MarkerLayerOptions } from "../markers/marker-layer";
 import { getI18n } from "../utils/i18n";
+import { getPolygonStyles, getPolylineStyles } from "../utils/styles";
 
 interface SearchResultGeoJSONOptions extends GeoJSONOptions {
 	marker?: MarkerLayerOptions['marker'];
 	pathOptions?: PathOptions;
+	polygonOptions?: PathOptions;
 	highlight?: boolean;
 	raised?: boolean;
 }
@@ -76,17 +78,17 @@ export default class SearchResultGeoJSON extends GeoJSONLayer {
 			case 'LineString':
 			case 'MultiLineString':
 				return new HighlightablePolyline(GeoJSONLayer.coordsToLatLngs(geometry.coordinates, geometry.type === 'LineString' ? 0 : 1, _coordsToLatLng), {
+					...getPolylineStyles({ highlight: this.options.highlight }),
 					raised: this.options.raised,
-					opacity: this.options.highlight ? 1 : 0.35,
 					...this.options.pathOptions
 				});
 
 			case 'Polygon':
 			case 'MultiPolygon':
 				return new HighlightablePolygon(GeoJSONLayer.coordsToLatLngs(geometry.coordinates, geometry.type === 'Polygon' ? 1 : 2, _coordsToLatLng), {
+					...getPolygonStyles({ highlight: this.options.highlight }),
 					raised: this.options.raised,
-					opacity: this.options.highlight ? 1 : 0.35,
-					...this.options.pathOptions
+					...this.options.polygonOptions
 				});
 
 			case 'GeometryCollection':

@@ -15,6 +15,7 @@ interface SearchResultsLayerOptions extends LayerOptions {
 	markerSize?: number;
 	markerShape?: Shape;
 	pathOptions?: PathOptions;
+	polygonOptions?: PathOptions;
 }
 
 export default class SearchResultsLayer extends FeatureGroup {
@@ -27,8 +28,17 @@ export default class SearchResultsLayer extends FeatureGroup {
 			markerColour: "000000",
 			markerSize: 35,
 			markerShape: "",
-			...options
-		});
+			...options,
+			pathOptions: {
+				weight: 7,
+				...options?.pathOptions
+			},
+			polygonOptions: {
+				weight: 5,
+				fillOpacity: 0.3,
+				...options?.polygonOptions
+			}
+		} satisfies SearchResultsLayerOptions as LayerOptions);
 
 		if (results)
 			this.setResults(results);
@@ -94,7 +104,8 @@ export default class SearchResultsLayer extends FeatureGroup {
 					icon: result.icon || '',
 					shape: this.options.markerShape!
 				},
-				pathOptions: this.options.pathOptions
+				pathOptions: this.options.pathOptions,
+				polygonOptions: this.options.polygonOptions
 			}).bindTooltip(result.display_name, { ...tooltipOptions, sticky: true, offset: [ 20, 0 ] })
 			layer._fmSearchResult = result;
 			layer.eachLayer((l) => {

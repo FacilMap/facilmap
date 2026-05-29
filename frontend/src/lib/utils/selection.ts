@@ -54,6 +54,12 @@ function isSame(a: DeepReadonly<SelectedItem>, b: DeepReadonly<SelectedItem>): b
 		return a.element === b.element;
 	else if (a.type === "changeset" && b.type === "changeset")
 		return a.feature === b.feature;
+	else if (a.type === "osm" && b.type === "osm")
+		return a.feature.type === b.feature.type && a.feature.id === b.feature.id;
+	else if (a.type === "relationSection" && b.type === "relationSection")
+		return a.section === b.section;
+	else if (a.type === "featureBlame" && b.type === "featureBlame")
+		return a.section === b.section;
 	else
 		return false;
 }

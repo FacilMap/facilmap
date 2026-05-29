@@ -104,7 +104,7 @@
 						@open="(feature) => openFeature.open({ type: 'changeset', feature })"
 					></Results>
 				</div>
-				<div class="btn-toolbar mt-2">
+				<div class="btn-toolbar fm-search-box-toolbar">
 					<ZoomToObjectButton
 						v-if="zoomDestination"
 						:label="i18n.t('changeset-results.zoom-to-changeset-label')"

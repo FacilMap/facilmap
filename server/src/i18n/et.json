@@ -4,11 +4,57 @@
     "database": {
         "type-not-found-error": "Tüüpi „{{typeId}}“ pole olemas.",
         "unknown-type-error": "Tundmatu tüüp „{{type}}“.",
-        "old-map-data-not-available-error": "Vanad kaardiandmed pole saadaval."
+        "old-map-data-not-available-error": "Vanad kaardiandmed pole saadaval.",
+        "route-points-less-than-two-points-error": "Joonel ei saa olla alla kahe punkti.",
+        "cannot-use-type-for-line-error": "„{{type}}“ tüüpi ei saa joone jaoks kasutada.",
+        "cannot-use-type-for-marker-error": "„{{type}}“ tüüpi ei saa markeri jaoks kasutada.",
+        "object-not-found-in-map-error": "„{{type}}/{{id}}“ tüüpi „{{mapId}}“ tunnusega kaarti ei õnnestu leida.",
+        "route-points-not-an-array-error": "„routePoints“ pole massiiv",
+        "unique-map-ids-error": "Lugemisõigusega, lugemis-kirjutamisõigusega ja peakasutaja tunnus peavad olema üksteisest erinevad.",
+        "unique-map-ids-read-write-error": "Lugemisõigustega ja lugemis-kirjutamisõigustega tunnused ei tohi olla ühesugused.",
+        "unique-map-ids-read-admin-error": "Lugemisõigustega ja peakasutaja tunnused ei tohi olla ühesugused.",
+        "unique-map-ids-write-admin-error": "Lugemis-kirjutamisõigustega ja peakasutaja tunnused ei tohi olla ühesugused.",
+        "map-id-taken-error": "„{{id}}“ tunnus on juba kasutusel.",
+        "map-disappeared-error": "Peale uuendamist on kaart kadunud."
     },
     "socket": {
         "map-already-loaded-error": "Kaart on juba laaditud.",
         "no-map-open-error": "Ühtegi kaarti pole avatud.",
-        "unknown-format-error": "Tundmatu vorming"
+        "unknown-format-error": "Tundmatu vorming",
+        "route-not-available-error": "Teekond pole saadaval.",
+        "route-name": "FacilMapi teekond",
+        "already-listening-to-history-error": "Juba on ajalugu kuulamas.",
+        "not-listening-to-history-error": "Pole kuulamas ajalugu.",
+        "admin-revert-error": "Sellist sorti muudatust saab tagasi pöörata vaid peakasutaja režiimis.",
+        "only-in-admin-error": "Saadaval vaid peakasutaja režiimis.",
+        "only-in-write-error": "Saadaval vaid kirjutusrežiimis.",
+        "map-id-set-error": "Kaarti tunnus on juba väärtustatud.",
+        "map-not-exist-error": "Seda kaarti pole olemas."
+    },
+    "search": {
+        "url-request-error": "„{{url}}“ võrguaadressi pärin ei õnnestunud olekukoodiga {{status}}.",
+        "url-response-error": "Vigane vastus serverist.",
+        "url-unknown-format-error": "Tundmatu failivorming."
+    },
+    "tabular": {
+        "field-name": "Nimi",
+        "field-position": "Asukoht",
+        "field-distance": "Vahemaa",
+        "field-time": "Aeg"
+    },
+    "webserver": {
+        "map-not-found-error": "„{{mapId}}“ tunnusega kaarti ei õnnestu leida."
+    },
+    "frontend": {
+        "requires-javascript": "{{appName}} eeldab, et JavaScript on kasutatav.",
+        "loading": "Laadin andmeid…",
+        "load-error": "{{appName}} rakenduse laadimine ei õnnestunud!"
+    },
+    "routing": {
+        "mapbox-error": "Teekonna koostamine ei õnnestu ({{code}}).",
+        "mapbox-token-warning": "Ühtegi Mapboxi tunnusluba pole seadistatud. Palu peakasutajat et ta seadistaks config.env failis MAPBOX_TOKEN keskkonnamuutuja.",
+        "ors-token-warning": "Ühtegi ORS-i tunnusluba pole seadistatud. Palu peakasutajat et ta seadistaks config.env failis ORS_TOKEN keskkonnamuutuja.",
+        "too-much-distance-error": "Kahe teekonnapunkti vahemaa on liiga suur. Palun lisa veel teekonnapunkte.",
+        "invalid-response-error": "Vigane vastus ruutinguserverist."
     }
 }

@@ -3,6 +3,7 @@ import { FeatureGroup, Layer, type LayerOptions, type PathOptions } from "leafle
 import MarkerLayer from "../markers/marker-layer";
 import type { OsmFeatureBlame, OsmFeatureBlameSection } from "facilmap-utils";
 import { HighlightablePolyline } from "leaflet-highlightable-layers";
+import { getPolylineStyles } from "../utils/styles";
 
 declare module "leaflet" {
 	interface Layer {
@@ -86,15 +87,9 @@ export default class FeatureBlameLayer extends FeatureGroup {
 	}
 
 	createWayLayer(path: Point[], colour: Colour, highlight: boolean): Layer {
-		const weight = this.options.pathOptions?.weight ?? 6;
 		return new HighlightablePolyline(path.map((p) => [p.lat, p.lon]), {
-			color: `#${colour}`,
-			raised: highlight,
-			opacity: highlight ? 1 : 0.5,
-			outlineColor: "#000000",
-			outlineWeight: weight + 2,
-			...this.options.pathOptions,
-			weight: weight
+			...getPolylineStyles({ colour, highlight, width: this.options.pathOptions?.weight ?? 6 }),
+			...this.options.pathOptions
 		});
 	}
 

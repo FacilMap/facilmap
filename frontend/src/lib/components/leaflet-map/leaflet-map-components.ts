@@ -358,7 +358,7 @@ function useOverpassLayer(map: Ref<Map>, mapContext: MapContextWithoutComponents
 function useSearchResultsLayer(map: Ref<Map>): Ref<Raw<SearchResultsLayer>> {
 	return useMapComponent(
 		map,
-		() => markRaw(new SearchResultsLayer(undefined, { pathOptions: { weight: 7 } })),
+		() => markRaw(new SearchResultsLayer(undefined)),
 		(searchResultsLayer, map) => {
 			searchResultsLayer.addTo(map);
 			onScopeDispose(() => {

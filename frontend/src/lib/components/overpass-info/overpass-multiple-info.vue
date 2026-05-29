@@ -67,7 +67,7 @@
 						@open="(element) => openElement(element)"
 					></Results>
 
-					<div v-if="client.mapData && !client.readonly" class="btn-toolbar mt-2">
+					<div v-if="client.mapData && !client.readonly" class="btn-toolbar fm-search-box-toolbar">
 						<ZoomToObjectButton
 							v-if="zoomDestination"
 							:label="i18n.t('overpass-multiple-info.zoom-to-object-label')"

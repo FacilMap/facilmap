@@ -23,7 +23,8 @@ if ('serviceWorker' in navigator) {
 
 setLayerOptions({
 	limaLabsToken: config.limaLabsToken,
-	tracestrackToken: config.tracestrackToken
+	tracestrackToken: config.tracestrackToken,
+	thunderforestToken: config.thunderforestToken
 });
 
 const queryParams = decodeQueryString(location.search);

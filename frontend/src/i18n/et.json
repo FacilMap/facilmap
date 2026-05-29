@@ -18,7 +18,22 @@
     "user-preferences-dialog": {
         "external-links-delete-tooltip": "Kustuta",
         "external-links-reorder-alt": "Muuda järjekorda",
-        "external-links-create": "Loo"
+        "external-links-create": "Loo",
+        "language": "Keel",
+        "language-description": "Kõik tõlked pole veel lõpuni valmis. Tõlkimist korraldab kogukond ja sinagi saad osaleda teenuses {{weblate}}.",
+        "language-description-interpolation-weblate": "Weblate",
+        "units": "Ühikud",
+        "units-metric": "Meetermõõdustik",
+        "units-us": "USA mõõdustik (miilid, jalad)",
+        "default-map-style": "Kaardi vaikimisi stiil",
+        "external-links": "Välised lingid",
+        "title": "Kasutaja eelistused",
+        "tab-general": "Üldised",
+        "tab-map-style": "Kaardi stiil",
+        "introduction": "Neid seadistusi salvestatakse sinu arvutisse küpsisefailina ja neid rakendatakse sõltumata sellest, milline kaart on avatud.",
+        "external-links-label": "Silt",
+        "external-links-map-url": "Kaardi võrguaadress",
+        "external-links-marker-url": "Markeri võrguaadress"
     },
     "utils": {
         "required-error": "Ei tohi jääda tühjaks."

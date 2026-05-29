@@ -16,6 +16,22 @@
         "untitled-line": "Ilma nimeta joon"
     },
     "maps": {
-        "unnamed-map": "Ilma nimeta kaart"
+        "unnamed-map": "Ilma nimeta kaart",
+        "page-title": "{{mapName}} - {{appName}}",
+        "fallback-page-description": "Täisfunktsionaalne OpenStreetMapi põhine kaart, kuhu ühistöös saab lisada jooni ja markereid."
+    },
+    "elevation": {
+        "http-error": "Kõrguste tuvastamine ei õnnestunud, päringu vastuse veakood {{status}}."
+    },
+    "utils": {
+        "node": "Sõlm {{id}}",
+        "way": "Joon {{id}}",
+        "relation": "Relatsioon {{id}}",
+        "feature-with-name-role": "{{feature}} ({{name}}, roll: {{role}})",
+        "feature-with-name": "{{feature}} ({{name}})",
+        "feature-with-role": "{{feature}} (roll: {{role}})"
+    },
+    "search": {
+        "http-error": "Otsing ei õnnestunud, päringu vastuse veakood oli {{status}}."
     }
 }

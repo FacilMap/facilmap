@@ -43,6 +43,10 @@
 		.deleted {
 			background-color: #fcc;
 
+			@at-root [data-bs-theme=dark] & {
+				background-color: #844;
+			}
+
 			&, > span, > span > span {
 				text-decoration: line-through;
 			}
@@ -50,6 +54,10 @@
 
 		.created {
 			background-color: #cfc;
+
+			@at-root [data-bs-theme=dark] & {
+				background-color: #363;
+			}
 		}
 	}
 </style>

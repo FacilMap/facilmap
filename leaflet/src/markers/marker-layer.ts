@@ -74,7 +74,7 @@ export default class MarkerLayer extends LeafletMarker {
 
 		super._initIcon();
 
-		this.setOpacity(this.options.highlight || this.options.raised || this._fmMouseOver ? 1 : 0.6);
+		this.setOpacity(this.options.highlight || this.options.raised || this._fmMouseOver ? 1 : 0.7);
 
 		setLayerPane(this, this.options.highlight || this.options.raised ? "fm-raised-marker" : "markerPane");
 	}
