@@ -43,6 +43,10 @@
 		.deleted {
 			background-color: #fcc;
 
+			@media (prefers-color-scheme: dark) {
+				background-color: #844;
+			}
+
 			&, > span, > span > span {
 				text-decoration: line-through;
 			}
@@ -50,6 +54,10 @@
 
 		.created {
 			background-color: #cfc;
+
+			@media (prefers-color-scheme: dark) {
+				background-color: #363;
+			}
 		}
 	}
 </style>
