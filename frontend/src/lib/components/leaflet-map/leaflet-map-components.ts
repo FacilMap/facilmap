@@ -24,6 +24,8 @@ import storage from "../../utils/storage";
 import config from "../../../map/config";
 import "leaflet-doubletapdrag";
 import "leaflet-doubletapdragzoom";
+import { cookies } from "../../utils/cookies";
+import { Units } from "facilmap-types";
 
 type MapContextWithoutComponents = Optional<WritableMapContext, 'components'>;
 
@@ -175,7 +177,22 @@ function useBboxHandler(map: Ref<Map>, client: Ref<ClientContext>): Ref<Raw<Bbox
 function useGraphicScale(map: Ref<Map>): Ref<Raw<any>> {
 	return useMapComponent(
 		map,
-		() => markRaw(control.graphicScale({ fill: "hollow" })),
+		() => markRaw(control.graphicScale({
+			fill: "hollow",
+			...cookies.units === Units.US_CUSTOMARY ? {
+				getUnitConversionFactor: (meters: number) => {
+					const miles = meters * 0.00062137;
+					return (miles>=30) ? 0.00062137 : 3.28084;
+				},
+				getDisplayUnit: (value: number, factor: number) => {
+					const displayUnit = (factor === 3.28084) ? 'ft' : 'mi';
+					return {
+						unit: displayUnit,
+						amount: value
+					};
+				}
+			} : {}
+		})),
 		(graphicScale, map) => {
 			watch(() => isNarrowBreakpoint(), (isNarrow) => {
 				graphicScale.remove();
