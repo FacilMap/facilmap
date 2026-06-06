@@ -45,6 +45,8 @@ async function setLongTermCookie(name: keyof Cookies, value: string): Promise<vo
 			expires: 3650,
 			partitioned: !(await hasStorageAccessP)
 		});
+	} catch (err) {
+		console.error(`Error saving cookie ${name}`, err);
 	} finally {
 		cookieCounter.value++;
 	}
