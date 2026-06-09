@@ -26,6 +26,8 @@
         "hike-attribution": "© [Waymarked Trails](https://hiking.waymarkedtrails.org/) / [OSM Contributors](https://www.openstreetmap.org/copyright)",
         "bike-name": "Bicycle routes",
         "bike-attribution": "© [Waymarked Trails](https://cycling.waymarkedtrails.org/) / [OSM Contributors](https://www.openstreetmap.org/copyright)",
+        "toll-name": "Toll roads",
+        "toll-attribution": "[OSM Contributors](https://www.openstreetmap.org/copyright)",
         "rlie-name": "Relief",
         "grid-name": "Graticule",
         "frto-name": "Sea marks",

@@ -131,6 +131,16 @@ export function createDefaultLayers(): Layers & { fallbackLayer: string | undefi
 				noWrap: true
 			})),
 
+			Toll: fixAttribution(tileLayer("https://tolls.facilmap.org/tile/{z}/{x}/{y}.png", {
+				maxZoom: 20,
+				...fmName(() => getI18n().t("layers.toll-name")),
+				...attribution(() => getI18n().t("layers.toll-attribution")),
+				zIndex: 300,
+				noWrap: true,
+				opacity: 0.7,
+				className: "fm-toll-layer"
+			})),
+
 			Rlie: tileLayer("https://tiles.wmflabs.org/hillshading/{z}/{x}/{y}.png", {
 				maxZoom: 16,
 				...fmName(() => getI18n().t("layers.rlie-name")),
