@@ -266,7 +266,13 @@
         "copy-ok": "Kopeeri",
         "format": "Vorming",
         "gpx-explanation-interpolation-gpx": "GPX",
-        "geojson-explanation-interpolation-geojson": "GeoJSON"
+        "geojson-explanation-interpolation-geojson": "GeoJSON",
+        "open-file": "Ava fail",
+        "route-type-route": "Teekonnapunktid",
+        "download-file": "Laadi fail all",
+        "generate-link": "Koosta link",
+        "copy-to-clipboard": "Kopeeri lõikelauale",
+        "select-type-error": "Palun vali tüüp."
     },
     "edit-line-dialog": {
         "save-error": "Viga joone salvestamisel",
@@ -312,7 +318,15 @@
         "field-type-checkbox": "Märkeruut",
         "field-edit": "Muuda",
         "field-reorder": "Muuda järjekorda",
-        "field-add": "Lisa"
+        "field-add": "Lisa",
+        "default-shape": "Vaikimisi kuju",
+        "default-icon": "Vaikimisi ikoon",
+        "default-size": "Vaikimisi suurus",
+        "default-width": "Vaikimisi laius",
+        "default-route-mode": "Vaikimisi teekonna koostamise režiim",
+        "field-default-value": "Vaikimisi väärtus",
+        "field-type-input": "Tekstiväli",
+        "field-type-textarea": "Tekstiala"
     },
     "edit-type-dropdown-dialog": {
         "delete-option-button": "Kustuta",
@@ -327,6 +341,23 @@
         "stroke": "Pintslitõmme",
         "option-remove": "Eemalda",
         "option-reorder": "Muuda järjekorda",
-        "option-add": "Lisa"
+        "option-add": "Lisa",
+        "delete-option-title": "Kustuta valik",
+        "delete-option-message": "Kas sa kindlasti soovid „{{value}}“ valiku kustutada?",
+        "unique-value-error": "Mitmel valikul ei saa olla sama silti."
+    },
+    "heightgraph": {
+        "surface-unpaved": "Sillutamata",
+        "surface-paved": "Sillutatud",
+        "surface-other": "Muu",
+        "waytype-construction": "Ehitusjärgus tee",
+        "surface-asphalt": "Asfalt",
+        "surface-contrete": "Betoon",
+        "surface-cobblestone": "Munakivid",
+        "surface-metal": "Metall",
+        "surface-wood": "Puit",
+        "surface-compacted-gravel": "Tihendatud kruus",
+        "surface-fine-gravel": "Peenkruus",
+        "surface-gravel": "Kruus"
     }
 }
