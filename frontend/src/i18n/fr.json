@@ -10,12 +10,12 @@
         "issues-text-tracker": "Suivi des problèmes",
         "help-text-documentation": "documentation",
         "help-text-discussions": "forum de discussion",
-        "privacy-information": "Information privée",
+        "privacy-information": "Politique de confidentialité",
         "map-data": "Données cartographiques",
         "map-data-search": "Recherche",
         "help-text": "Si vous avez une question, merci de consulter la {{documentation}}, poser une question dans la {{discussions}} ou poser une question dans le{{chat}}.",
         "license-text-license": "Licence publique générale GNU Affero, version 3",
-        "help-text-chat": "Chat Matrix",
+        "help-text-chat": "Conversation sur Matrix",
         "programs-libraries": "Programmes/Bibliothèques"
     },
     "add": {
@@ -53,5 +53,8 @@
     "common": {
         "donate": "Faire un don",
         "coordinates": "Coordonnées"
+    },
+    "changeset-results": {
+        "created": "Heure de création"
     }
 }
