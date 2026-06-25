@@ -131,7 +131,7 @@ export function createDefaultLayers(): Layers & { fallbackLayer: string | undefi
 				noWrap: true
 			})),
 
-			Toll: fixAttribution(tileLayer("https://tolls.facilmap.org/tile/{z}/{x}/{y}.png", {
+			Toll: fixAttribution(tileLayer("https://tiles.facilmap.org/tolls/{z}/{x}/{y}.png", {
 				maxZoom: 20,
 				...fmName(() => getI18n().t("layers.toll-name")),
 				...attribution(() => getI18n().t("layers.toll-attribution")),
@@ -139,6 +139,26 @@ export function createDefaultLayers(): Layers & { fallbackLayer: string | undefi
 				noWrap: true,
 				opacity: 0.7,
 				className: "fm-toll-layer"
+			})),
+
+			CycR: fixAttribution(tileLayer("https://tiles.facilmap.org/cycling-restrictions/{z}/{x}/{y}.png", {
+				maxZoom: 20,
+				...fmName(() => getI18n().t("layers.cycr-name")),
+				...attribution(() => getI18n().t("layers.cycr-attribution")),
+				zIndex: 300,
+				noWrap: true,
+				opacity: 0.7,
+				className: "fm-cycr-layer"
+			})),
+
+			Cobl: fixAttribution(tileLayer("https://tiles.facilmap.org/cobblestone/{z}/{x}/{y}.png", {
+				maxZoom: 20,
+				...fmName(() => getI18n().t("layers.cobl-name")),
+				...attribution(() => getI18n().t("layers.cobl-attribution")),
+				zIndex: 300,
+				noWrap: true,
+				opacity: 0.7,
+				className: "fm-cobl-layer"
 			})),
 
 			Rlie: tileLayer("https://tiles.wmflabs.org/hillshading/{z}/{x}/{y}.png", {

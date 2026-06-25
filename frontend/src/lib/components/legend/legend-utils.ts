@@ -9,17 +9,18 @@ export interface LegendType {
 	type: Type['type'];
 	typeId: ID;
 	name: string;
-	items: LegendItem[];
+	items: LegendMapItem[];
 	filtered: boolean;
 }
 
 export interface LegendItem {
 	key: string;
-	value: string;
 	label?: string;
+	description?: string;
 	field?: string;
 	filtered?: boolean;
 	first?: boolean;
+	main?: boolean;
 	strikethrough?: boolean;
 	colour?: string;
 	icon?: Icon;
@@ -27,6 +28,10 @@ export interface LegendItem {
 	width?: number;
 	stroke?: Stroke;
 	bright?: boolean;
+}
+
+export interface LegendMapItem extends LegendItem {
+	value: string;
 }
 
 export function getLegendItems(context: FacilMapContext): LegendType[] {
@@ -38,13 +43,14 @@ export function getLegendItems(context: FacilMapContext): LegendType[] {
 		if(!type.showInLegend)
 			continue;
 
-		const items: LegendItem[] = [ ];
+		const items: LegendMapItem[] = [ ];
 		const fields: Record<string, string[]> = Object.create(null);
 
-		const mainItem: LegendItem = {
+		const mainItem: LegendMapItem = {
 			key: `legend-item-${type.id}`,
 			value: type.name,
 			label: formatTypeName(type.name),
+			main: true,
 			filtered: true
 		};
 
@@ -83,7 +89,7 @@ export function getLegendItems(context: FacilMapContext): LegendType[] {
 			fields[field.name] = [ ];
 
 			(field.options || [ ]).forEach((option, idx) => {
-				const item: LegendItem = {
+				const item: LegendMapItem = {
 					key: `legend-item-${type.id}-${field.name}-${option.value}`,
 					value: option.value,
 					label: option.value,

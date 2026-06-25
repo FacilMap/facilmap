@@ -552,7 +552,7 @@
     "legend": {
         "tab-label": "Legende"
     },
-    "legend-content": {
+    "legend-map-content": {
         "click-explanation": "Klicken Sie, um Objekte dieses Typs zu verstecken/anzuzeigen."
     },
     "line-info": {

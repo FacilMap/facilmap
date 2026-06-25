@@ -554,6 +554,23 @@
         "tab-label": "Legend"
     },
     "legend-content": {
+        "tolls": "Tolls",
+        "tolls-tolls-label": "Toll roads",
+        "cycling-restrictions": "Cycling restrictions",
+        "cycling-restrictions-restricted-label": "Forbidden",
+        "cycling-restrictions-restricted-description": "Cycling is explicitly forbidden on this road.",
+        "cycling-restrictions-sidepath-label": "Compulsory bike path",
+        "cycling-restrictions-sidepath-description": "A separate bike path along this road is compulsory to use. Depending on local regulations, using the road might be allowed if the bike path is unusable, for example due to snow.",
+        "cycling-restrictions-motorway-label": "Motorway",
+        "cycling-restrictions-motorway-description": "This road is a motorway. It depends on local regulations whether cycling is allowed here.",
+        "cycling-restrictions-motorroad-label": "Motor road",
+        "cycling-restrictions-motorroad-description": "This road is exclusively for motor vehicles. In some places cycling might be tolerated.",
+        "cycling-restrictions-pedestrian-label": "Pedestrian priority",
+        "cycling-restrictions-pedestrian-description": "Cycling is allowed here, but pedestrians have priority. Depending on local regulations, a speed limit (such as walking speed) might be implied.",
+        "cobblestone": "Cobblestone",
+        "cobblestone-cobblestone-label": "Cobblestone"
+    },
+    "legend-map-content": {
         "click-explanation": "Click to show/hide objects of this type."
     },
     "line-info": {

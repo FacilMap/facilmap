@@ -1,19 +1,19 @@
 <script setup lang="ts">
 	import { round } from "facilmap-utils";
 	import LegendContent from "./legend-content.vue";
-	import { getLegendItems } from "./legend-utils";
 	import SearchBoxTab from "../search-box/search-box-tab.vue";
-	import { computed, ref } from "vue";
+	import { computed, ref, type ComponentInstance } from "vue";
 	import { useResizeObserver } from "../../utils/vue";
-	import { injectContextRequired, requireClientContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
+	import { injectContextRequired } from "../facil-map-context-provider/facil-map-context-provider.vue";
 	import { useI18n } from "../../utils/i18n";
 
 	const context = injectContextRequired();
-	const client = requireClientContext(context);
 	const i18n = useI18n();
 
+	const containerRef = ref<HTMLElement>();
 	const placeholderRef = ref<HTMLElement>();
 	const absoluteContainerRef = ref<HTMLElement>();
+	const legendContentRef = ref<ComponentInstance<typeof LegendContent>>();
 
 	const scale = ref(1);
 
@@ -35,42 +35,40 @@
 		}
 	}
 
-	const legend1 = computed(() => {
-		return client.value.mapData?.legend1?.trim() || "";
-	});
-
-	const legend2 = computed(() => {
-		return client.value.mapData?.legend2?.trim() || "";
-	});
-
-	const legendItems = computed(() => {
-		return getLegendItems(context);
-	});
+	const isEmpty = computed(() => legendContentRef.value?.isEmpty ?? true);
 </script>
 
 <template>
-	<div class="fm-legend" v-if="legendItems.length > 0 || legend1 || legend2">
-		<template v-if="!context.isNarrow">
+	<div class="fm-legend" :class="{ isEmpty }">
+		<template v-if="!context.isNarrow || isEmpty">
 			<div class="fm-legend-placeholder" ref="placeholderRef"></div>
 			<div
 				class="fm-legend-absolute card"
 				:style="{ '--fm-scale-factor': scale }"
 				ref="absoluteContainerRef"
 			>
-				<div class="card-body">
-					<LegendContent :items="legendItems" :legend1="legend1" :legend2="legend2"></LegendContent>
-				</div>
+				<div class="card-body" ref="containerRef"></div>
 			</div>
 		</template>
 		<template v-else>
 			<SearchBoxTab :id="`fm${context.id}-legend-tab`" :title="i18n.t('legend.tab-label')">
-				<LegendContent :items="legendItems" :legend1="legend1" :legend2="legend2" no-popover></LegendContent>
+				<div ref="containerRef"></div>
 			</SearchBoxTab>
 		</template>
+
+		<Teleport :to="containerRef" :disabled="!containerRef">
+			<LegendContent :noPopover="context.isNarrow" ref="legendContentRef"></LegendContent>
+		</Teleport>
 	</div>
 </template>
 
 <style lang="scss">
+	.fm-legend {
+		&.isEmpty {
+			display: none;
+		}
+	}
+
 	.fm-legend-placeholder {
 		position: absolute;
 		pointer-events: none;
