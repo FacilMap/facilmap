@@ -272,7 +272,11 @@
         "download-file": "Laadi fail all",
         "generate-link": "Koosta link",
         "copy-to-clipboard": "Kopeeri lõikelauale",
-        "select-type-error": "Palun vali tüüp."
+        "select-type-error": "Palun vali tüüp.",
+        "export-method": "Eksportimise meetod",
+        "apply-filter": "Rakenda filtrit",
+        "include-columns": "Kaasa veerud",
+        "type": "Tüüp"
     },
     "edit-line-dialog": {
         "save-error": "Viga joone salvestamisel",
@@ -344,7 +348,8 @@
         "option-add": "Lisa",
         "delete-option-title": "Kustuta valik",
         "delete-option-message": "Kas sa kindlasti soovid „{{value}}“ valiku kustutada?",
-        "unique-value-error": "Mitmel valikul ei saa olla sama silti."
+        "unique-value-error": "Mitmel valikul ei saa olla sama silti.",
+        "show-in-legend": "Näita kaardilegendis"
     },
     "heightgraph": {
         "surface-unpaved": "Sillutamata",
@@ -359,5 +364,9 @@
         "surface-compacted-gravel": "Tihendatud kruus",
         "surface-fine-gravel": "Peenkruus",
         "surface-gravel": "Kruus"
+    },
+    "export-dropdown": {
+        "button-label": "Ekspordi",
+        "export-error": "Viga marsruudi eksportimisel"
     }
 }
