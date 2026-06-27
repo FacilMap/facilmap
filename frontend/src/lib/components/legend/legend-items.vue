@@ -6,13 +6,17 @@
 	import { computed, getCurrentInstance, reactive, ref } from "vue";
 	import Popover from "../ui/popover.vue";
 	import { mapRef, vHtmlAsync } from "../../utils/vue";
-import { markdownInline } from "facilmap-utils";
+	import { markdownInline } from "facilmap-utils";
+	import Icon from "../ui/icon.vue";
+	import type { Tooltip } from "bootstrap";
 
 	const props = defineProps<{
 		type: Type['type'];
 		items: LegendItem[];
 		noPopover?: boolean;
 		popoverText?: string;
+		heading?: string;
+		infoPlacement?: Tooltip.PopoverPlacement;
 	}>();
 
 	const emit = defineEmits<{
@@ -24,6 +28,11 @@ import { markdownInline } from "facilmap-utils";
 
 	const activePopoverKey = ref<string>();
 	const itemIconRefs = reactive(new Map<string, HTMLElement>());
+
+	const infoButtonRef = ref<HTMLElement>();
+	const showInfo = ref(false);
+
+	const offerInfo = computed(() => props.items.some((it) => it.description));
 
 	async function makeIcon(type: Type['type'], item: LegendItem, height = 15): Promise<string> {
 		if(type == "line")
@@ -43,6 +52,11 @@ import { markdownInline } from "facilmap-utils";
 </script>
 
 <template>
+	<h3 v-if="props.heading">
+		{{props.heading}}
+		<a v-if="offerInfo" href="javascript:" ref="infoButtonRef" @click="showInfo = !showInfo"><Icon icon="info-sign"></Icon></a>
+	</h3>
+
 	<dl class="fm-legend-items" :class="{ hasClickListener }">
 		<template v-for="(item, idx) in props.items" :key="item.key">
 			<dt
@@ -100,6 +114,26 @@ import { markdownInline } from "facilmap-utils";
 			</Popover>
 		</template>
 	</div>
+
+	<Popover
+		v-if="offerInfo"
+		:element="infoButtonRef"
+		:placement="props.infoPlacement"
+		class="fm-legend-info-popover"
+		v-model:show="showInfo"
+	>
+		<h3>{{props.heading}}</h3>
+
+		<template v-for="item in props.items" :key="item.key">
+			<h4>
+				<span v-html-async="makeIcon(type, item)"></span>
+				<span>{{item.label}}</span>
+			</h4>
+			<template v-if="item.description">
+				<p class="description" v-html="markdownInline(item.description, true)"></p>
+			</template>
+		</template>
+	</Popover>
 </template>
 
 <style lang="scss">
@@ -182,6 +216,28 @@ import { markdownInline } from "facilmap-utils";
 			p.popoverText {
 				font-style: italic;
 				font-size: 0.875em;
+			}
+		}
+	}
+
+	.fm-legend-info-popover.fm-legend-info-popover.fm-legend-info-popover.fm-legend-info-popover {
+		width: max-content;
+
+		p:not(:last-child) {
+			margin-bottom: 0.75rem;
+		}
+
+		h3 {
+			margin-bottom: 1rem;
+		}
+
+		h4 {
+			font-size: 1.2em;
+			gap: 0.5rem;
+
+			&, span {
+				display: flex;
+				align-items: center;
 			}
 		}
 	}

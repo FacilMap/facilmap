@@ -57,7 +57,11 @@
 		</template>
 
 		<Teleport :to="containerRef" :disabled="!containerRef">
-			<LegendContent :noPopover="context.isNarrow" ref="legendContentRef"></LegendContent>
+			<LegendContent
+				:noPopover="context.isNarrow"
+				ref="legendContentRef"
+				:infoPlacement="context.isNarrow ? 'top' : 'left'"
+			></LegendContent>
 		</Teleport>
 	</div>
 </template>

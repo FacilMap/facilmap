@@ -4,6 +4,7 @@
 	import LegendMapContent from "./legend-map-content.vue";
 	import LegendItems from "./legend-items.vue";
 	import { useI18n } from "../../utils/i18n";
+	import type { Tooltip } from "bootstrap";
 
 	const context = injectContextRequired();
 	const mapContext = requireMapContext(context);
@@ -11,6 +12,7 @@
 
 	const props = defineProps<{
 		noPopover?: boolean;
+		infoPlacement?: Tooltip.PopoverPlacement;
 	}>();
 
 	const legendMapContentRef = ref<ComponentInstance<typeof LegendMapContent>>();
@@ -29,8 +31,8 @@
 <template>
 	<div class="fm-legend-content">
 		<template v-if="hasTolls">
-			<h3>{{i18n.t("legend-content.tolls")}}</h3>
 			<LegendItems
+				:heading="i18n.t('legend-content.tolls')"
 				type="line"
 				:items="[
 					{
@@ -39,15 +41,16 @@
 						label: i18n.t('legend-content.tolls-tolls-label')
 					}
 				]"
-				:noPopover="props.noPopover"
+				noPopover
+				:infoPlacement="props.infoPlacement"
 			></LegendItems>
 
 			<hr />
 		</template>
 
 		<template v-if="hasCyclingRestrictions">
-			<h3>{{i18n.t("legend-content.cycling-restrictions")}}</h3>
 			<LegendItems
+				:heading="i18n.t('legend-content.cycling-restrictions')"
 				type="line"
 				:items="[
 					{
@@ -81,15 +84,16 @@
 						description: i18n.t('legend-content.cycling-restrictions-pedestrian-description')
 					}
 				]"
-				:noPopover="props.noPopover"
+				noPopover
+				:infoPlacement="props.infoPlacement"
 			></LegendItems>
 
 			<hr />
 		</template>
 
 		<template v-if="hasCobblestone">
-			<h3>{{i18n.t("legend-content.cobblestone")}}</h3>
 			<LegendItems
+				:heading="i18n.t('legend-content.cobblestone')"
 				type="line"
 				:items="[
 					{
@@ -98,7 +102,8 @@
 						label: i18n.t('legend-content.cobblestone-cobblestone-label')
 					}
 				]"
-				:noPopover="props.noPopover"
+				noPopover
+				:infoPlacement="props.infoPlacement"
 			></LegendItems>
 
 			<hr />
@@ -112,7 +117,9 @@
 </template>
 
 <style lang="scss">
-	.fm-legend-content {
+	// We need a high specificity, as .fm-search-box overrides some of the hr styles
+
+	.fm-legend-content.fm-legend-content.fm-legend-content {
 		font-size: 12px;
 
 		h3 {
@@ -127,6 +134,7 @@
 
 		> hr {
 			opacity: 0.75;
+			margin: 1rem -8px;
 		}
 
 		> hr:last-child {
