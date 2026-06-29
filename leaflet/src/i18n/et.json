@@ -29,7 +29,13 @@
         "cyco-attribution": "© [CyclOSM](https://www.cyclosm.org/) / [OSM Contributors](https://www.openstreetmap.org/copyright)",
         "grid-name": "Kartograafiline võrk",
         "frto-name": "Meremärgid",
-        "frto-attribution": "© [FreieTonne](https://www.freietonne.de/) / [OSM Contributors](https://www.openstreetmap.org/copyright)"
+        "frto-attribution": "© [FreieTonne](https://www.freietonne.de/) / [OSM Contributors](https://www.openstreetmap.org/copyright)",
+        "toll-name": "Tasulised teed",
+        "toll-attribution": "[OSM-i kaasautorid](https://www.openstreetmap.org/copyright)",
+        "cycr-name": "Rattasõidu piirangud",
+        "cycr-attribution": "[OSM-i kaasautorid](https://www.openstreetmap.org/copyright)",
+        "cobl-name": "Munakivid",
+        "cobl-attribution": "[OSM-i kaasautorid](https://www.openstreetmap.org/copyright)"
     },
     "overpass-presets": {
         "category-amenities": "Teenused",

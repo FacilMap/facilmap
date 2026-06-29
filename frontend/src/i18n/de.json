@@ -921,7 +921,9 @@
         "show-details-tooltip": "Details anzeigen",
         "select-all": "Alle auswählen",
         "add-to-map-label": "Zur Karte hinzufügen",
-        "custom-type-mapping": "Benutzerdefiniert…"
+        "custom-type-mapping": "Benutzerdefiniert…",
+        "zoom-to-all-label": "Zu allen zoomen",
+        "zoom-to-all-tooltip": "Zu allen Ergebnissen zoomen"
     },
     "toasts": {
         "unexpected-error": "Unerwarteter Fehler",
@@ -988,5 +990,42 @@
         "integer-error": "Bitte geben Sie eine gültige Ganzzahl ein.",
         "min-error": "Bitte geben Sie eine Zahl ein, die nicht kleiner als {{min}} ist.",
         "max-error": "Bitte geben Sie eine Zahl ein, die nicht größer als {{max}} ist."
+    },
+    "legend-content": {
+        "public-transportation": "ÖPNV",
+        "public-transportation-train-label": "Zug",
+        "public-transportation-sbahn-label": "S-Bahn",
+        "public-transportation-metro-label": "U-Bahn",
+        "public-transportation-tram-label": "Tram/Monorail/Standseilbahn",
+        "public-transportation-bus-label": "Bus",
+        "public-transportation-bus-alternate-label": "Bus (Alternativroute)",
+        "public-transportation-trolleybus-label": "Oberleitungsbus",
+        "public-transportation-ferry-label": "Fähre",
+        "public-transportation-aerialway-label": "Luftseilbahn",
+        "hiking-paths": "Wanderrouten",
+        "hiking-paths-international-label": "Internationaler Fernwanderweg",
+        "hiking-paths-national-label": "Nationaler Fernwanderweg",
+        "hiking-paths-regional-label": "Regionaler Wanderweg",
+        "hiking-paths-local-label": "Lokaler Wanderweg",
+        "bicycle-routes": "Fahrradrouten",
+        "bicycle-routes-international-label": "Internationaler Fernradweg",
+        "bicycle-routes-national-label": "Nationaler Fernradweg",
+        "bicycle-routes-regional-label": "Regionale Radroute",
+        "bicycle-routes-local-label": "Lokale Radroute",
+        "tolls": "Mautstraßen",
+        "tolls-tolls-label": "Mautstraßen",
+        "cycling-restrictions": "Radfahrverbote",
+        "cycling-restrictions-restricted-label": "Verboten",
+        "cycling-restrictions-restricted-description": "Das Radfahren ist auf dieser Straße explizit verboten.",
+        "cycling-restrictions-sidepath-label": "Benutzungspflichtiger Radweg",
+        "cycling-restrictions-sidepath-description": "Ein getrennter benutzungspflichtiger Radweg verläuft entlang dieser Straße. Die Benutzung der Straße ist abhängig von den Regelungen vor Ort möglicherweise erlaubt, wenn der Radweg nicht benutzbar ist, zum Beispiel aufgrund von Schnee.",
+        "cycling-restrictions-motorway-label": "Autobahn",
+        "cycling-restrictions-motorway-description": "Diese Straße ist eine Autobahn. Die örtliche Gesetzgebung bestimmt, ob das Radfahren hier erlaubt oder verboten ist.",
+        "cycling-restrictions-motorroad-label": "Kraftfahrstraße",
+        "cycling-restrictions-motorroad-description": "Diese Straße ist eine Kraftfahrstraße. In manchen Regionen wird das Radfahren möglicherweise geduldet.",
+        "cycling-restrictions-pedestrian-label": "Vorrang für Fußgänger",
+        "cycling-restrictions-pedestrian-description": "Das Radfahren ist hier erlaubt, aber Fußgänger haben Vorrang. Abhängig von den örtlichen gesetzlichen Vorgaben kann eine Geschwindigkeitsbegrenzung (zum Beispiel Schrittgeschwindigkeit) impliziert sein.",
+        "cobblestone": "Kopfsteinpflaster",
+        "cobblestone-cobblestone-label": "Kopfsteinpflaster"
     }
 }
