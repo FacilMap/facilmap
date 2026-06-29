@@ -29,7 +29,9 @@
         "rlie-name": "Relief",
         "grid-name": "Gradnetz",
         "frto-name": "Schifffahrtszeichen",
-        "frto-attribution": "© [FreieTonne](https://www.freietonne.de/) / [OSM-Mitwirkende](https://www.openstreetmap.org/copyright/de)"
+        "frto-attribution": "© [FreieTonne](https://www.freietonne.de/) / [OSM-Mitwirkende](https://www.openstreetmap.org/copyright/de)",
+        "toll-name": "Mautstraßen",
+        "cycr-name": "Radfahrverbote"
     },
     "overpass-presets": {
         "category-amenities": "Infrastruktur",
