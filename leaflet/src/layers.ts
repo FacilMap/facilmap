@@ -1,6 +1,5 @@
 import { Layer, Map, tileLayer, type TileLayer } from "leaflet";
 import AutoGraticule from "leaflet-auto-graticule";
-import FreieTonne from "leaflet-freie-tonne";
 import { getI18n } from "./utils/i18n";
 import { markdownInline } from "facilmap-utils";
 
@@ -100,11 +99,11 @@ export function createDefaultLayers(): Layers & { fallbackLayer: string | undefi
 				noWrap: true
 			})),
 
-			MpnW: fixAttribution(tileLayer("http://ftdl.de/tile-cache/tiles/{z}/{x}/{y}.png", {
-				...fmName(() => getI18n().t("layers.mpnw-name")),
-				...attribution(() => getI18n().t("layers.mpnw-attribution")),
-				noWrap: true
-			})),
+			// MpnW: fixAttribution(tileLayer("http://ftdl.de/tile-cache/tiles/{z}/{x}/{y}.png", {
+			// 	...fmName(() => getI18n().t("layers.mpnw-name")),
+			// 	...attribution(() => getI18n().t("layers.mpnw-attribution")),
+			// 	noWrap: true
+			// })),
 		},
 		overlays: {
 			OPTM: fixAttribution(tileLayer("https://pt.facilmap.org/tile/{z}/{x}/{y}.png", {
@@ -174,12 +173,12 @@ export function createDefaultLayers(): Layers & { fallbackLayer: string | undefi
 				noWrap: true
 			}),
 
-			FrTo: fixAttribution(new FreieTonne({
-				...fmName(() => getI18n().t("layers.frto-name")),
-				...attribution(() => getI18n().t("layers.frto-attribution")),
-				zIndex: 300,
-				noWrap: true
-			}))
+			// FrTo: fixAttribution(new FreieTonne({
+			// 	...fmName(() => getI18n().t("layers.frto-name")),
+			// 	...attribution(() => getI18n().t("layers.frto-attribution")),
+			// 	zIndex: 300,
+			// 	noWrap: true
+			// }))
 		},
 		fallbackLayer: 'Mpnk'
 	};
