@@ -42,7 +42,7 @@
 						label: i18n.t('legend-content.tolls-tolls-label')
 					}
 				]"
-				noPopover
+				:noPopover="props.noPopover"
 				:infoPlacement="props.infoPlacement"
 			></LegendItems>
 
@@ -101,7 +101,7 @@
 						label: i18n.t('legend-content.public-transportation-aerialway-label')
 					},
 				]"
-				noPopover
+				:noPopover="props.noPopover"
 				:infoPlacement="props.infoPlacement"
 			></LegendItems>
 			<hr />
@@ -143,7 +143,7 @@
 						description: i18n.t('legend-content.cycling-restrictions-pedestrian-description')
 					}
 				]"
-				noPopover
+				:noPopover="props.noPopover"
 				:infoPlacement="props.infoPlacement"
 			></LegendItems>
 
@@ -161,7 +161,7 @@
 						label: i18n.t('legend-content.cobblestone-cobblestone-label')
 					}
 				]"
-				noPopover
+				:noPopover="props.noPopover"
 				:infoPlacement="props.infoPlacement"
 			></LegendItems>
 

@@ -258,3 +258,17 @@ export const vKeyboardShortcut = vDirectiveWithScope<HTMLElement, string[] | str
 		}
 	}
 });
+
+export function getReactiveMediaQuery(query: string): Ref<boolean> {
+	const update = ref(0);
+	const match = matchMedia(query);
+	match.addEventListener("change", () => {
+		update.value++
+	});
+	return computed(() => {
+		update.value;
+		return match.matches;
+	});
+};
+
+export const canHover = getReactiveMediaQuery("(hover: hover)");

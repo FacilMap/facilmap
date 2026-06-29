@@ -5,7 +5,7 @@
 	import type { LegendItem } from "./legend-utils";
 	import { computed, getCurrentInstance, reactive, ref } from "vue";
 	import Popover from "../ui/popover.vue";
-	import { mapRef, vHtmlAsync } from "../../utils/vue";
+	import { canHover, mapRef, vHtmlAsync } from "../../utils/vue";
 	import { markdownInline } from "facilmap-utils";
 	import Icon from "../ui/icon.vue";
 	import type { Tooltip } from "bootstrap";
@@ -32,7 +32,7 @@
 	const infoButtonRef = ref<HTMLElement>();
 	const showInfo = ref(false);
 
-	const offerInfo = computed(() => props.items.some((it) => it.description));
+	const offerInfo = computed(() => (props.noPopover || !canHover.value) && props.items.some((it) => it.description));
 
 	async function makeIcon(type: Type['type'], item: LegendItem, height = 15): Promise<string> {
 		if(type == "line")
