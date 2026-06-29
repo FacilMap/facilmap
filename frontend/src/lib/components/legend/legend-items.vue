@@ -81,6 +81,7 @@
 	<div v-if="!props.noPopover" class="fm-legend-popover-wrapper">
 		<template v-for="item in props.items" :key="item.key">
 			<Popover
+				v-if="item.description || props.popoverText || props.type === 'marker'"
 				:element="itemIconRefs.get(item.key)"
 				placement="left"
 				class="fm-legend-popover"
@@ -192,7 +193,7 @@
 		}
 	}
 
-	.fm-legend-popover {
+	.fm-legend-popover.fm-legend-popover.fm-legend-popover.fm-legend-popover {
 		max-width: none;
 
 		.popover-body {
