@@ -133,7 +133,7 @@ export function createDefaultLayers(): Layers & { fallbackLayer: string | undefi
 			Toll: fixAttribution(tileLayer("https://tiles.facilmap.org/tolls/{z}/{x}/{y}.png", {
 				maxZoom: 20,
 				...fmName(() => getI18n().t("layers.toll-name")),
-				...attribution(() => getI18n().t("layers.toll-attribution")),
+				...attribution(() => getI18n().t("layers.facilmap-tiles-attribution")),
 				zIndex: 300,
 				noWrap: true,
 				opacity: 0.7,
@@ -143,7 +143,7 @@ export function createDefaultLayers(): Layers & { fallbackLayer: string | undefi
 			CycR: fixAttribution(tileLayer("https://tiles.facilmap.org/cycling-restrictions/{z}/{x}/{y}.png", {
 				maxZoom: 20,
 				...fmName(() => getI18n().t("layers.cycr-name")),
-				...attribution(() => getI18n().t("layers.cycr-attribution")),
+				...attribution(() => getI18n().t("layers.facilmap-tiles-attribution")),
 				zIndex: 300,
 				noWrap: true,
 				opacity: 0.7,
@@ -153,7 +153,7 @@ export function createDefaultLayers(): Layers & { fallbackLayer: string | undefi
 			Cobl: fixAttribution(tileLayer("https://tiles.facilmap.org/cobblestone/{z}/{x}/{y}.png", {
 				maxZoom: 20,
 				...fmName(() => getI18n().t("layers.cobl-name")),
-				...attribution(() => getI18n().t("layers.cobl-attribution")),
+				...attribution(() => getI18n().t("layers.facilmap-tiles-attribution")),
 				zIndex: 300,
 				noWrap: true,
 				opacity: 0.7,
