@@ -14,6 +14,8 @@
 	function isMapNotFoundError(serverError: Client["serverError"]): boolean {
 		return !!serverError && serverError instanceof MapNotFoundError;
 	}
+
+	export const activeClients = new Set<ClientContext>();
 </script>
 
 <script setup lang="ts">
@@ -65,6 +67,7 @@
 			}
 		});
 		connectingClient.value = newClient;
+		activeClients.add(newClient);
 
 		let lastMapId: MapId | undefined = undefined;
 		let lastMapData: MapData | undefined = undefined;
@@ -93,11 +96,15 @@
 		if (toRaw(connectingClient.value) !== newClient) {
 			// Another client has been initiated in the meantime
 			newClient.disconnect();
+			activeClients.delete(newClient);
 			return;
 		}
 
 		connectingClient.value = undefined;
-		client.value?.disconnect();
+		if (client.value) {
+			client.value.disconnect();
+			activeClients.delete(toRaw(client.value));
+		}
 		client.value = newClient;
 	}, { immediate: true });
 

@@ -61,6 +61,7 @@
     "leaflet-doubletapdrag": "^0.1.2",
     "leaflet-doubletapdragzoom": "^0.3.2",
     "leaflet-draggable-lines": "^3.2.1",
+    "leaflet-freie-tonne": "^2.1.2",
     "leaflet-mouse-position": "^1.2.0",
     "leaflet.heightgraph": "^1.4.0",
     "leaflet.locatecontrol": "^0.83.1",

@@ -4147,6 +4147,7 @@ __metadata:
     leaflet-doubletapdrag: ^0.1.2
     leaflet-doubletapdragzoom: ^0.3.2
     leaflet-draggable-lines: ^3.2.1
+    leaflet-freie-tonne: ^2.1.2
     leaflet-mouse-position: ^1.2.0
     leaflet.heightgraph: ^1.4.0
     leaflet.locatecontrol: ^0.83.1
@@ -4223,7 +4224,7 @@ __metadata:
     happy-dom: ^17.1.8
     leaflet-auto-graticule: ^2.0.0
     leaflet-draggable-lines: ^3.2.1
-    leaflet-freie-tonne: ^2.0.1
+    leaflet-freie-tonne: ^2.1.2
     leaflet-highlightable-layers: ^4.0.4
     leaflet.markercluster: ^1.5.3
     lodash-es: ^4.17.21
@@ -5785,12 +5786,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"leaflet-freie-tonne@npm:^2.0.1":
-  version: 2.0.1
-  resolution: "leaflet-freie-tonne@npm:2.0.1"
+"leaflet-freie-tonne@npm:^2.1.2":
+  version: 2.1.2
+  resolution: "leaflet-freie-tonne@npm:2.1.2"
   peerDependencies:
     leaflet: x
-  checksum: d9f7d7c6bf62d7d4421933b295d9226d01bc314e1c5bbe33421f6e9eda16cf3d5bf3a8c5a6e573f3b2e44b55b483fed5c2717dd4c73cbc4a431f7ac5ba093323
+  checksum: b18dd958a74b10dd4f90a1287ef62ef73e2ee3172ab8f378faa31f05eed496e86b2497186e335679d4d69855987fc69133a2919e6eff6f65d4ccf279db348004
   languageName: node
   linkType: hard
 

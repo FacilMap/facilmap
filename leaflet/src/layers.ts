@@ -2,6 +2,7 @@ import { Layer, Map, tileLayer, type TileLayer } from "leaflet";
 import AutoGraticule from "leaflet-auto-graticule";
 import { getI18n } from "./utils/i18n";
 import { markdownInline } from "facilmap-utils";
+import FreieTonne from "leaflet-freie-tonne";
 
 export const defaultVisibleLayers: VisibleLayers = {
 	baseLayer: "Mpnk",
@@ -99,11 +100,11 @@ export function createDefaultLayers(): Layers & { fallbackLayer: string | undefi
 				noWrap: true
 			})),
 
-			// MpnW: fixAttribution(tileLayer("http://ftdl.de/tile-cache/tiles/{z}/{x}/{y}.png", {
-			// 	...fmName(() => getI18n().t("layers.mpnw-name")),
-			// 	...attribution(() => getI18n().t("layers.mpnw-attribution")),
-			// 	noWrap: true
-			// })),
+			MpnW: fixAttribution(tileLayer("https://www.freietonne.de/seekarte-2.0/tah.openstreetmap.org/Tiles/TileCache.php?z={z}&x={x}&y={y}.png", {
+				...fmName(() => getI18n().t("layers.mpnw-name")),
+				...attribution(() => getI18n().t("layers.mpnw-attribution")),
+				noWrap: true
+			})),
 		},
 		overlays: {
 			OPTM: fixAttribution(tileLayer("https://pt.facilmap.org/tile/{z}/{x}/{y}.png", {
@@ -173,12 +174,12 @@ export function createDefaultLayers(): Layers & { fallbackLayer: string | undefi
 				noWrap: true
 			}),
 
-			// FrTo: fixAttribution(new FreieTonne({
-			// 	...fmName(() => getI18n().t("layers.frto-name")),
-			// 	...attribution(() => getI18n().t("layers.frto-attribution")),
-			// 	zIndex: 300,
-			// 	noWrap: true
-			// }))
+			FrTo: fixAttribution(new FreieTonne({
+				...fmName(() => getI18n().t("layers.frto-name")),
+				...attribution(() => getI18n().t("layers.frto-attribution")),
+				zIndex: 300,
+				noWrap: true
+			}))
 		},
 		fallbackLayer: 'Mpnk'
 	};

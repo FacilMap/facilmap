@@ -50,7 +50,7 @@ async function _loadUrl(url: string): Promise<string> {
 
 	const body = new TextDecoder().decode(stripBomBuf(bodyBuf));
 
-	if(url.match(/^https?:\/\/www\.freietonne\.de\/seekarte\/getOpenLayerPois\.php\?/))
+	if(url.match(/^https?:\/\/www\.freietonne\.de\/seekarte(-[0-9.]+)?\/getOpenLayerPois\.php\?/))
 		return body;
 	else if(body.match(/^\s*</)) {
 		const $ = load(body, { xmlMode: true });
