@@ -133,3 +133,10 @@ html,body {
 .list-group-item.active a {
 	color: inherit;
 }
+
+// Copy bootstrap .btn.btn-link.disabled styles to regular links
+a.disabled {
+	color: #6c757d;
+	opacity: 0.65;
+	pointer-events: none;
+}

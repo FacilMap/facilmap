@@ -1,12 +1,12 @@
 <script setup lang="ts">
 	import type { FindOnMapResult, SearchResult } from "facilmap-types";
 	import SearchResultInfo from "../search-result-info.vue";
-	import type { SelectedItem } from "../../utils/selection";
+	import { useMultiSelect, type SelectedItem } from "../../utils/selection";
 	import type { FileResult, FileResultObject } from "../../utils/files";
 	import { isFileResult, isLineResult, isMapResult, isMarkerResult } from "../../utils/search";
 	import { searchResultsToLinesWithTags, searchResultsToMarkersWithTags } from "../../utils/add";
 	import { combineZoomDestinations, flyTo, getZoomDestinationForMapResult, getZoomDestinationForResults, getZoomDestinationForSearchResult } from "../../utils/zoom";
-	import { computed, ref, toRef } from "vue";
+	import { computed, ref, toRef, useId } from "vue";
 	import CustomImportDialog from "./custom-import-dialog.vue";
 	import { injectContextRequired, requireClientContext, requireMapContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
 	import AddToMapDropdown from "../ui/add-to-map-dropdown.vue";
@@ -25,6 +25,7 @@
 	const i18n = useI18n();
 
 	const props = withDefaults(defineProps<{
+		active: boolean;
 		searchResults?: Array<SearchResult | FileResult>;
 		mapResults?: FindOnMapResult[];
 		layerId: number;
@@ -39,7 +40,11 @@
 		customTypes: () => ({})
 	});
 
+	const id = useId();
+
 	const customImport = ref(false);
+
+	const multiSelect = useMultiSelect(["searchResult"], toRef(() => props.active));
 
 	const activeResults = computed(() => {
 		return [
@@ -86,7 +91,7 @@
 		labelSuffix: formatTypeName(client.value.types[result.typeId].name),
 		zoomDestination: getZoomDestinationForMapResult(result),
 		zoomTooltip: i18n.t('search-results.zoom-to-result-tooltip'),
-		canOpen: true,
+		canOpen: !multiSelect.value,
 		openTooltip: i18n.t('search-results.show-details-tooltip')
 	})));
 
@@ -173,6 +178,7 @@
 						:active="activeResults"
 						:autoZoom="props.autoZoom"
 						:unionZoom="props.unionZoom"
+						:isDisabled="multiSelect"
 						@select="(result, toggle) => selectResult(result, toggle)"
 						@open="(result) => handleOpen(result, (item) => openResult.open(item))"
 					></Results>
@@ -185,11 +191,25 @@
 						:active="activeResults"
 						:autoZoom="props.autoZoom"
 						:unionZoom="props.unionZoom"
+						:multiSelect="multiSelect"
 						@select="(result, toggle) => selectResult(result, toggle)"
 						@open="(result) => handleOpen(result, (item) => openResult.open(item))"
 					></Results>
 
 					<slot name="after"></slot>
+				</div>
+
+				<div v-if="multiSelect" class="form-check mt-2">
+					<input
+						class="form-check-input"
+						type="checkbox"
+						:id="`${id}-select-all`"
+						:checked="isAllSelected"
+						@change="toggleSelectAll()"
+					>
+					<label class="form-check-label" :for="`${id}-select-all`">
+						{{i18n.t("common.select-all")}}
+					</label>
 				</div>
 
 				<div class="btn-toolbar fm-search-box-toolbar">
@@ -205,12 +225,11 @@
 						<button
 							type="button"
 							class="btn btn-secondary btn-sm"
-							:class="{ active: isAllSelected }"
-							@click="toggleSelectAll"
-						>{{i18n.t("search-results.select-all")}}</button>
+							:class="{ active: multiSelect }"
+							@click="multiSelect = !multiSelect"
+						>{{i18n.t("common.select")}}</button>
 
 						<AddToMapDropdown
-							:label="i18n.t('search-results.add-to-map-label', { count: activeSearchResults.length })"
 							:markers="activeMarkersWithTags"
 							:lines="activeLinesWithTags"
 							size="sm"

@@ -22,6 +22,7 @@
 	const props = withDefaults(defineProps<{
 		layerId: number;
 		file: FileResultObject;
+		active: boolean;
 		/** When clicking a search result, union zoom to it. Normal zoom is done when clicking the zoom button. */
 		unionZoom?: boolean;
 		/** When clicking or selecting a search result, zoom to it. */
@@ -80,6 +81,7 @@
 <template>
 	<div class="fm-file-results">
 		<SearchResults
+			:active="props.active"
 			:search-results="file.features"
 			:layer-id="layerId"
 			:auto-zoom="autoZoom"

@@ -445,6 +445,10 @@ function useSelectionHandler(
 				context.components.clickMarkerTab?.closeLastClickMarker();
 			});
 
+			selectionHandler.on("fmChangeMultiSelect", () => {
+				mapContext.multiSelect = selectionHandler.getMultiSelect();
+			});
+
 			return selectionHandler;
 		},
 		(selectionHandler) => {
@@ -546,6 +550,7 @@ export async function useMapContext(context: FacilMapContext, mapRef: Ref<HTMLEl
 		hash: location.hash.replace(/^#/, ""),
 		showToolbox: false,
 		selection: [],
+		multiSelect: undefined,
 		activeQuery: undefined,
 		fallbackQuery: undefined,
 		setFallbackQuery: (query) => {

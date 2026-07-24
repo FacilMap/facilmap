@@ -1,7 +1,9 @@
 {
     "common": {
         "coordinates": "Coordinates",
-        "donate": "Donate"
+        "donate": "Donate",
+        "select": "Select",
+        "select-all": "Select all"
     },
     "about-dialog": {
         "header": "About FacilMap {{version}}",
@@ -40,9 +42,10 @@
     },
     "add-to-map-dropdown": {
         "fallback-label": "Add to map",
+        "disabled-tooltip": "Select some items to add to the map",
         "add-error": "Error adding to map",
-        "add-marker-items": "Marker items as {{typeName}}",
-        "add-line-items": "Line/polygon items as {{typeName}}"
+        "add-marker-items": "Selected marker items as {{typeName}}",
+        "add-line-items": "Selected line/polygon items as {{typeName}}"
     },
     "alert": {
         "fallback-ok-label": "OK"
@@ -108,7 +111,10 @@
         "members": "Relation members",
         "section-label": "Section ({{distance}})",
         "zoom-to-section-tooltip": "Zoom to section",
-        "role": "Role"
+        "role": "Role",
+        "add-relation-to-map-disabled-tooltip": "Select some sections or nodes to add to the map",
+        "add-relation-to-map-node-label": "Selected nodes as {{typeName}}",
+        "add-relation-to-map-section-label": "Selected sections as {{typeName}}"
     },
     "click-marker-tab": {
         "look-up-error": "Error looking up point"
@@ -977,9 +983,6 @@
         "zoom-to-all-tooltip": "Zoom to all results",
         "zoom-to-result-tooltip": "Zoom to result",
         "show-details-tooltip": "Show details",
-        "select-all": "Select all",
-        "add-to-map-label_one": "Add selected item to map",
-        "add-to-map-label_other": "Add selected items to map",
         "custom-type-mapping": "Custom type mapping…"
     },
     "toasts": {

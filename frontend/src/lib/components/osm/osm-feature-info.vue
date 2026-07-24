@@ -1,8 +1,8 @@
 <script setup lang="ts">
 	import { useI18n } from "../../utils/i18n";
-	import { analyzeOsmRelation, calculateDistance, formatDistance, getOsmFeatureLabel, getOsmFeatureName, renderOsmTag, type AnalyzedOsmRelation, type AnalyzedOsmRelationSection, type AnalyzedOsmRelationSingleNode, type ResolvedOsmFeature } from "facilmap-utils";
-	import { computed, markRaw, ref, toRaw, useId, watchEffect, type DeepReadonly } from "vue";
-	import { injectContextRequired, requireMapContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
+	import { analyzeOsmRelation, calculateDistance, formatDistance, getOsmFeatureLabel, getOsmFeatureName, isSameOsmFeature, renderOsmTag, type AnalyzedOsmRelation, type AnalyzedOsmRelationSection, type AnalyzedOsmRelationSingleNode, type ResolvedOsmFeature } from "facilmap-utils";
+	import { computed, markRaw, ref, toRaw, toRef, useId, watchEffect, type DeepReadonly } from "vue";
+	import { injectContextRequired, requireClientContext, requireMapContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
 	import { getZoomDestinationForOsmFeature, getZoomDestinationForPoints } from "../../utils/zoom";
 	import ZoomToObjectButton from "../ui/zoom-to-object-button.vue";
 	import OsmFeatureLink from "./osm-feature-link.vue";
@@ -15,9 +15,13 @@
 	import { OsmLayer, type OsmLayerFeature } from "facilmap-leaflet";
 	import type { Layer } from "leaflet";
 	import { useMapLayer } from "../../utils/leaflet";
+	import { useMultiSelect } from "../../utils/selection";
+	import AddToMapDropdown from "../ui/add-to-map-dropdown.vue";
+	import { osmNodeToMarkerWithTags, osmWayToLineWithTags, relationSectionToLineWithTags } from "../../utils/add";
 
 	const context = injectContextRequired();
 	const mapContext = requireMapContext(context);
+	const client = requireClientContext(context);
 	const i18n = useI18n();
 
 	const props = withDefaults(defineProps<{
@@ -68,6 +72,8 @@
 		}
 	});
 	useMapLayer(layer);
+
+	const multiSelect = useMultiSelect(["relationSection", "osm"], toRef(() => props.active));
 
 	watchEffect((onCleanup) => {
 		if (props.visible) {
@@ -136,10 +142,6 @@
 		openTooltip: i18n.t('osm-feature-info.show-details-tooltip')
 	})) : []);
 
-	const activeMembers = computed(() => mapContext.value.selection.flatMap((s) => s.type === "osm" ? [s.feature] : []));
-
-	const activeSections = computed(() => mapContext.value.selection.flatMap((s) => s.type === "relationSection" ? [s.section] : []));
-
 	const length = computed(() => (
 		analyzedRelation.value ? analyzedRelation.value.distance :
 		props.feature.type === "way" ? calculateDistance(props.feature.nodes) :
@@ -173,11 +175,25 @@
 		}
 	}
 
+	const activeMembers = computed(() => props.feature.type === "relation" ? props.feature.members.flatMap((member) => mapContext.value.selection.some((item) => item.type == "osm" && isSameOsmFeature(item.feature, member.feature)) ? [member.feature] : []) : []);
+	const activeSections = computed(() => analyzedRelation.value?.sections.filter((s) => mapContext.value.selection.some((item) => item.type == "relationSection" && item.section === s)) ?? []);
+	const activeNodes = computed(() => analyzedRelation.value?.singleNodes.filter((n) => mapContext.value.selection.some((item) => item.type == "osm" && isSameOsmFeature(item.feature, n))) ?? []);
+
+	const sectionLinesWithTags = computed(() => activeSections.value.map((s) => relationSectionToLineWithTags(s, analyzedRelation.value)));
+	const nodeMarkersWithTags = computed(() =>  activeNodes.value.map((n) => osmNodeToMarkerWithTags(n)));
+
+	const markersWithTags = computed(() => props.feature.type === "node" ? [osmNodeToMarkerWithTags(props.feature)] : []);
+	const linesWithTags = computed(() => props.feature.type === "way" ? [osmWayToLineWithTags(props.feature)] : []);
+
 	const heading = computed(() => getOsmFeatureLabel(props.feature.type, props.feature.id, getOsmFeatureName(props.feature.tags ?? {}, i18n.currentLanguage)));
 
 	const renderedFeatures = ref<Array<DeepReadonly<ResolvedOsmFeature>>>([]);
-	function selectFeature(feature: DeepReadonly<ResolvedOsmFeature>): void {
-		mapContext.value.components.selectionHandler.setSelectedItems([{ type: "osm", feature, scopeId }]);
+	function selectFeature(feature: DeepReadonly<ResolvedOsmFeature>, toggle: boolean): void {
+		if (toggle) {
+			mapContext.value.components.selectionHandler.toggleItem({ type: "osm", feature, scopeId });
+		} else {
+			mapContext.value.components.selectionHandler.setSelectedItems([{ type: "osm", feature, scopeId }]);
+		}
 		renderedFeatures.value.push(feature);
 		layer.addFeature(toRaw(feature));
 	}
@@ -228,6 +244,7 @@
 					:active="activeSections"
 					:unionZoom="props.unionZoom"
 					:autoZoom="props.autoZoom"
+					:multiSelect="multiSelect"
 					@select="(section, toggle) => selectSection(section, toggle)"
 				></Results>
 			</template>
@@ -243,10 +260,12 @@
 				<Collapse :show="showNodes">
 					<Results
 						:items="nodeItems"
-						:active="activeMembers"
+						:active="activeNodes"
 						:unionZoom="props.unionZoom"
 						:autoZoom="props.autoZoom"
-						@select="(feature) => selectFeature(feature)"
+						:multiSelect="multiSelect"
+						@select="(feature, toggle) => selectFeature(feature, toggle)"
+						@open="(feature) => emit('open-member', feature)"
 					></Results>
 				</Collapse>
 			</template>
@@ -265,7 +284,8 @@
 						:active="activeMembers"
 						:unionZoom="props.unionZoom"
 						:autoZoom="props.autoZoom"
-						@select="(feature) => selectFeature(feature)"
+						:isDisabled="multiSelect"
+						@select="(feature, toggle) => selectFeature(feature, toggle)"
 						@open="(feature) => emit('open-member', feature)"
 					></Results>
 				</Collapse>
@@ -279,6 +299,33 @@
 				size="sm"
 				:destination="zoomDestination"
 			></ZoomToObjectButton>
+
+			<template v-if="client.mapData && !client.readonly">
+				<template v-if="props.feature.type === 'node' || props.feature.type === 'way'">
+					<AddToMapDropdown
+						:markers="markersWithTags"
+						:lines="linesWithTags"
+						size="sm"
+					></AddToMapDropdown>
+				</template>
+				<template v-else-if="sectionItems.length > 0 || nodeItems.length > 0">
+					<button
+						type="button"
+						class="btn btn-secondary btn-sm"
+						:class="{ active: multiSelect }"
+						@click="multiSelect = !multiSelect"
+					>{{i18n.t("common.select")}}</button>
+
+					<AddToMapDropdown
+						:markers="nodeMarkersWithTags"
+						:lines="sectionLinesWithTags"
+						size="sm"
+						:disabledTooltip="i18n.t('osm-feature-info.add-relation-to-map-disabled-tooltip')"
+						:markerLabel="({ typeName }) => i18n.t('osm-feature-info.add-relation-to-map-node-label', { typeName })"
+						:lineLabel="({ typeName }) => i18n.t('osm-feature-info.add-relation-to-map-section-label', { typeName })"
+					></AddToMapDropdown>
+				</template>
+			</template>
 
 			<OsmFeatureLink
 				class="btn btn-secondary btn-sm"

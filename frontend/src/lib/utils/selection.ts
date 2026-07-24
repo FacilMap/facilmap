@@ -2,8 +2,9 @@ import type { ID, SearchResult } from "facilmap-types";
 import { DomEvent, Evented, Handler, type LatLngBounds, Layer, type LeafletEvent, type Map, type Point, Polyline, Util } from "leaflet";
 import { type ChangesetLayer, FeatureBlameLayer, LinesLayer, MarkerLayer, MarkersLayer, type OverpassElement, OverpassLayer, SearchResultsLayer } from "facilmap-leaflet";
 import BoxSelection from "./box-selection";
-import { toRaw, type DeepReadonly } from "vue";
+import { computed, toRaw, watchEffect, type DeepReadonly, type Ref } from "vue";
 import type { AnalyzedOsmRelationSection, ChangesetFeature, OsmFeatureBlameSection, ResolvedOsmFeature } from "facilmap-utils";
+import { injectContextRequired, requireMapContext } from "../components/facil-map-context-provider/facil-map-context-provider.vue";
 
 export type SelectedItem = {
 	type: "marker" | "line";
@@ -36,8 +37,7 @@ function isAllowedSibling(a: DeepReadonly<SelectedItem>, b: DeepReadonly<Selecte
 		(["marker", "line"].includes(a.type) && ["marker", "line"].includes(b.type))
 		|| (a.type == "searchResult" && b.type == "searchResult" && a.layerId == b.layerId)
 		|| (a.type == "overpass" && b.type == "overpass")
-		|| (a.type === "osm" && b.type === "osm")
-		|| (a.type === "relationSection" && b.type === "relationSection")
+		|| (["osm", "relationSection"].includes(a.type) && ["osm", "relationSection"].includes(b.type))
 	);
 }
 
@@ -64,6 +64,30 @@ function isSame(a: DeepReadonly<SelectedItem>, b: DeepReadonly<SelectedItem>): b
 		return false;
 }
 
+export function useMultiSelect(types: Array<SelectedItem["type"]>, active?: Ref<boolean>): Ref<boolean> {
+	const context = injectContextRequired();
+	const mapContext = requireMapContext(context);
+
+	const multiSelect = computed({
+		get: () => !!mapContext.value.multiSelect && types.every((t) => mapContext.value.multiSelect!.includes(t)),
+		set: (enable) => {
+			if (enable) {
+				mapContext.value.components.selectionHandler.enableMultiSelect(types);
+			} else {
+				mapContext.value.components.selectionHandler.disableMultiSelect();
+			}
+		}
+	});
+
+	watchEffect(() => {
+		if (active && !active.value && multiSelect.value) {
+			multiSelect.value = false;
+		}
+	});
+
+	return multiSelect;
+}
+
 export default class SelectionHandler extends Handler {
 
 	_selection: Array<DeepReadonly<SelectedItem>> = [];
@@ -79,6 +103,7 @@ export default class SelectionHandler extends Handler {
 	_selectionBeforeBox: Array<DeepReadonly<SelectedItem>> = [];
 	_isBoxInteraction = false;
 
+	_multiSelectTypes: Array<SelectedItem["type"]> | undefined = undefined;
 	_mapInteraction: number = 0;
 	_isLongClick: boolean = false;
 
@@ -170,11 +195,40 @@ export default class SelectionHandler extends Handler {
 			this.setSelectedItems(without);
 	}
 
+	/**
+	 * Switches the map into a different mode where clicking an item always toggles its selection, regardless of the Ctrl key. This is only enabled
+	 * for the given selection item types, other types cannot be selected in this mode.
+	 */
+	enableMultiSelect(types: Array<SelectedItem["type"]>): void {
+		this._multiSelectTypes = types;
+
+		const oldSelection = this.getSelection();
+		const newSelection = oldSelection.filter((s) => types.includes(s.type));
+		if (newSelection.length !== oldSelection.length) {
+			this.setSelectedItems(newSelection);
+		}
+
+		this.fire("fmChangeMultiSelect");
+	}
+
+	disableMultiSelect(): void {
+		this._multiSelectTypes = undefined;
+		this.fire("fmChangeMultiSelect");
+	}
+
+	getMultiSelect(): Array<SelectedItem["type"]> | undefined {
+		return this._multiSelectTypes ? [...this._multiSelectTypes] : undefined;
+	}
+
 	getSelection(): Array<DeepReadonly<SelectedItem>> {
 		return this._selection;
 	}
 
 	setSelectedItems(items: Array<DeepReadonly<SelectedItem>>, open = false): void {
+		if (this._multiSelectTypes && items.some((i) => !this._multiSelectTypes!.includes(i.type))) {
+			this.disableMultiSelect();
+		}
+
 		this._selection = items;
 
 		this._markersLayer.setHighlightedMarkers(new Set(
@@ -225,10 +279,16 @@ export default class SelectionHandler extends Handler {
 			return;
 
 		DomEvent.stopPropagation(e);
-		if ((e.originalEvent as any).ctrlKey)
+
+		if (this._multiSelectTypes) {
+			if (this._multiSelectTypes.includes(item.type)) {
+				this.toggleItem(item, false);
+			}
+		} else if ((e.originalEvent as any).ctrlKey) {
 			this.toggleItem(item, true);
-		else
+		} else {
 			this.setSelectedItems([item], true);
+		}
 	}
 
 	handleClickMarker = (e: LeafletEvent): void => {
@@ -271,8 +331,9 @@ export default class SelectionHandler extends Handler {
 		if (this._mapInteraction || this._isLongClick || this._isBoxInteraction)
 			return;
 
-		if (!(e.originalEvent as any).ctrlKey)
+		if (!(e.originalEvent as any).ctrlKey && !this._multiSelectTypes) {
 			this.setSelectedItems([]);
+		}
 	}
 
 	handleMapClickCapture = (e: MouseEvent): void => {

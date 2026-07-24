@@ -398,8 +398,7 @@
         "select-all": "選取全部",
         "show-details-tooltip": "顯示詳細資料",
         "zoom-to-result-tooltip": "縮放至結果",
-        "no-results": "找不到結果。",
-        "add-to-map-label_other": "新增已選取的項目至地圖"
+        "no-results": "找不到結果。"
     },
     "toasts": {
         "close-label": "關閉",

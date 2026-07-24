@@ -134,11 +134,14 @@
 				:title="file.title"
 				@close="close(idx)"
 			>
-				<FileResults
-					:file="file"
-					:layer-id="layerIds[idx]"
-					auto-zoom
-				></FileResults>
+				<template #default="slotProps">
+					<FileResults
+						:active="slotProps.isActive"
+						:file="file"
+						:layer-id="layerIds[idx]"
+						auto-zoom
+					></FileResults>
+				</template>
 			</SearchBoxTab>
 		</template>
 	</div>

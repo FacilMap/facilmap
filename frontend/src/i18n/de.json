@@ -1,7 +1,8 @@
 {
     "common": {
         "coordinates": "Koordinaten",
-        "donate": "Spenden"
+        "donate": "Spenden",
+        "select-all": "Alle auswählen"
     },
     "about-dialog": {
         "header": "Über FacilMap {{version}}",
@@ -921,8 +922,6 @@
         "no-results": "Es wurden keine Ergebnisse gefunden.",
         "zoom-to-result-tooltip": "Zum Suchergebnis zoomen",
         "show-details-tooltip": "Details anzeigen",
-        "select-all": "Alle auswählen",
-        "add-to-map-label": "Zur Karte hinzufügen",
         "custom-type-mapping": "Benutzerdefiniert…",
         "zoom-to-all-label": "Zu allen zoomen",
         "zoom-to-all-tooltip": "Zu allen Ergebnissen zoomen"

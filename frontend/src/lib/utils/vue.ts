@@ -1,5 +1,5 @@
 import { cloneDeep, isEqual, sortBy } from "lodash-es";
-import { type ComponentPublicInstance, type DeepReadonly, type Directive, type Ref, computed, onScopeDispose, readonly, ref, shallowReadonly, shallowRef, watch, type ComputedGetter, type Component, type VNodeProps, type AllowedComponentProps, onBeforeUnmount, onMounted, toRaw, type FunctionDirective, effectScope, toRef } from "vue";
+import { type ComponentPublicInstance, type DeepReadonly, type Directive, type Ref, computed, onScopeDispose, readonly, ref, shallowReadonly, shallowRef, watch, type ComputedGetter, type Component, type VNodeProps, type AllowedComponentProps, onBeforeUnmount, onMounted, toRaw, type FunctionDirective, effectScope, toRef, type DirectiveBinding } from "vue";
 import { shouldHandleGlobalShortcut, useDomEventListener, type AnyRef } from "./utils";
 
 // https://stackoverflow.com/a/73784241/242365
@@ -258,6 +258,50 @@ export const vKeyboardShortcut = vDirectiveWithScope<HTMLElement, string[] | str
 		}
 	}
 });
+
+/**
+ * Wraps a Vue directive with modifiers applied to it in a reactive way.
+ */
+export function vDirectiveWithModifiers<M extends string, D extends Directive<any, any, M, any>>(directive: D, modifiers: Ref<Record<M, boolean>>): D {
+	function adjustBinding(binding: DirectiveBinding): DirectiveBinding {
+		return {
+			...binding,
+			modifiers: new Proxy({}, {
+				get(_, prop) {
+					return Object.hasOwn(binding.modifiers, prop) ? binding.modifiers[prop as M] : modifiers.value[prop as M];
+				},
+				ownKeys() {
+					return [...new Set([...Object.keys(modifiers.value), ...Object.keys(binding.modifiers)])];
+				},
+				getOwnPropertyDescriptor(target, prop) {
+					return Object.hasOwn(modifiers.value, prop) || Object.hasOwn(binding.modifiers, prop) ? {
+						enumerable: true,
+						configurable: true
+					} : undefined;
+				},
+				has(target, prop) {
+					return prop in modifiers.value || prop in binding.modifiers;
+				}
+			})
+		};
+	}
+
+	if (typeof directive === "function") {
+		return ((el, binding, ...rest) => {
+			directive(el, adjustBinding(binding), ...rest);
+		}) as D;
+	} else {
+		return Object.fromEntries(["created", "beforeMount", "mounted", "beforeUpdate", "updated", "beforeUnmount", "unmounted"].flatMap((k) => {
+			if (k in directive) {
+				return [[k, (el: any, binding: DirectiveBinding, ...rest: any[]) => {
+					(directive as any)[k](el, adjustBinding(binding), ...rest);
+				}]];
+			} else {
+				return [];
+			}
+		})) as any;
+	}
+}
 
 export function getReactiveMediaQuery(query: string): Ref<boolean> {
 	const update = ref(0);

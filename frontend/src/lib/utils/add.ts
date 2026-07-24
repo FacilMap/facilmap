@@ -2,7 +2,7 @@ import type { CRU, Line, Marker, Point, SearchResult, Type } from "facilmap-type
 import { omit } from "lodash-es";
 import type { FileResult } from "./files";
 import type { LineString, MultiLineString, MultiPolygon, Point as GeoJSONPoint, Polygon, Position } from "geojson";
-import type { Optional } from "facilmap-utils";
+import { getOsmFeatureName, type AnalyzedOsmRelationSection, type Optional, type ResolvedOsmWay } from "facilmap-utils";
 import type { OverpassElement } from "facilmap-leaflet";
 import type { SelectedItem } from "./selection";
 import type { ClientContext } from "../components/facil-map-context-provider/client-context";
@@ -12,6 +12,7 @@ import type { FacilMapContext } from "../components/facil-map-context-provider/f
 import { requireClientContext, requireMapContext } from "../components/facil-map-context-provider/facil-map-context-provider.vue";
 import type { DeepReadonly, Ref } from "vue";
 import { getI18n } from "./i18n";
+import * as OSM from "osm-api";
 
 export type MarkerWithTags = Omit<Marker<CRU.CREATE>, "typeId"> & { tags?: Record<string, string> };
 export type LineWithTags = Omit<Line<CRU.CREATE>, "typeId"> & { tags?: Record<string, string> };
@@ -76,14 +77,57 @@ export function searchResultsToLinesWithTags(results: DeepReadonly<Array<SearchR
 }
 
 export function overpassElementsToMarkersWithTags(elements: OverpassElement[]): MarkerWithTags[] {
+	const i18n = getI18n();
+
 	return elements.map((element) => {
 		return {
-			name: element.tags.name || "",
+			name: getOsmFeatureName(element.tags, i18n.currentLanguage),
 			lat: element.lat,
 			lon: element.lon,
 			tags: element.tags,
 		};
 	});
+}
+
+export function osmNodeToMarkerWithTags(node: OSM.OsmNode): MarkerWithTags {
+	const i18n = getI18n();
+
+	return {
+		name: getOsmFeatureName(node.tags ?? {}, i18n.currentLanguage),
+		lat: node.lat,
+		lon: node.lon,
+		tags: node.tags
+	};
+}
+
+export function osmWayToLineWithTags(way: DeepReadonly<ResolvedOsmWay>): LineWithTags {
+	const i18n = getI18n();
+
+	const trackPoints = way.nodes.map((n) => ({ lat: n.lat, lon: n.lon }));
+
+	return {
+		name: getOsmFeatureName(way.tags ?? {}, i18n.currentLanguage),
+		tags: way.tags,
+		routePoints: [trackPoints[0], trackPoints[trackPoints.length - 1]],
+		mode: "track",
+		trackPoints
+	};
+}
+
+export function relationSectionToLineWithTags(section: DeepReadonly<AnalyzedOsmRelationSection>, relation?: Omit<OSM.OsmRelation, "members">): LineWithTags {
+	const i18n = getI18n();
+
+	const trackPoints = section.paths.flat().map((n) => ({ lat: n.lat, lon: n.lon }));
+
+	return {
+		routePoints: [trackPoints[0], trackPoints[trackPoints.length - 1]],
+		mode: "track",
+		trackPoints,
+		...relation ? {
+			tags: relation.tags,
+			name: getOsmFeatureName(relation.tags ?? {}, i18n.currentLanguage)
+		} : {}
+	};
 }
 
 /**

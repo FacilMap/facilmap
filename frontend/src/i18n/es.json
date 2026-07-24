@@ -1,6 +1,7 @@
 {
     "general": {
-        "coordinates": "Coordenadas"
+        "coordinates": "Coordenadas",
+        "select-all": "Seleccionar todo"
     },
     "about-dialog": {
         "license-text-license": "Licencia Pública General Affero de GNU, versión 3",
@@ -686,13 +687,9 @@
         "resize-tooltip": "Arrastre para redimensionar; pulse para restablecer"
     },
     "search-results": {
-        "select-all": "Seleccionar todo",
         "show-details-tooltip": "Mostrar detalles",
         "zoom-to-result-tooltip": "Zum a resultado",
         "no-results": "No se encontró ningún resultado.",
-        "add-to-map-label_one": "Añadir elemento seleccionado al mapa",
-        "add-to-map-label_many": "Añadir elementos seleccionados al mapa",
-        "add-to-map-label_other": "Añadir elementos seleccionados al mapa",
         "custom-type-mapping": "Asignación de tipos personalizada…"
     },
     "toolbox-collab-maps-dropdown": {

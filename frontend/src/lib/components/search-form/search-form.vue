@@ -386,6 +386,7 @@
 
 		<template v-if="result?.type === 'search'">
 			<SearchResults
+				:active="props.active"
 				:search-results="result.search"
 				:map-results="result.map"
 				:auto-zoom="storage.autoZoom"
@@ -395,6 +396,7 @@
 		</template>
 		<template v-else-if="result?.type === 'file'">
 			<FileResults
+				:active="props.active"
 				:file="result.file"
 				:auto-zoom="storage.autoZoom"
 				:union-zoom="storage.zoomToAll"

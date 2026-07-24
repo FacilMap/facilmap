@@ -9,9 +9,27 @@ export type SearchBoxEventMap = {
 	"resizereset": void;
 }
 
+export type SearchBoxSlotData = {
+	/**
+	 * True if the tab is currently active. Should enable selection features and possibly other interactions (such as
+	 * route dragging) in the layers belonging to this tab.
+	 */
+	isActive: boolean;
+	/**
+	 * Vector layers belonging to the tab should be rendered in this pane. This value will change depending on whether
+	 * the tab is active or not, so the layer pane needs to be updated reactively.
+	 */
+	overlayPane: string;
+	/**
+	 * Marker layers belonging to the tab should be rendered in this pane. This value will change depending on whether
+	 * the tab is active or not, so the layer pane needs to be updated reactively.
+	 */
+	markerPane: string;
+};
+
 export interface SearchBoxTab {
 	title: string;
-	content: Slot<{ isActive: boolean }> | undefined;
+	content: Slot<SearchBoxSlotData> | undefined;
 	onClose?: () => void;
 	hashQuery?: HashQuery;
 	class?: string;

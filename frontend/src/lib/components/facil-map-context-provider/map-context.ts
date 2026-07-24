@@ -41,6 +41,7 @@ export type MapContextData = {
 	hash: string;
 	showToolbox: boolean;
 	selection: DeepReadonly<SelectedItem>[];
+	multiSelect: ReadonlyArray<SelectedItem["type"]> | undefined;
 	activeQuery: HashQuery | undefined;
 	fallbackQuery: HashQuery | undefined;
 	setFallbackQuery: (query: HashQuery | undefined) => void;

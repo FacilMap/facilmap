@@ -38,9 +38,13 @@
 		unionZoom?: boolean;
 		/** When clicking or selecting a search result, zoom to it. */
 		autoZoom?: boolean;
+		/** If true, checkboxes will be shown and clicking an item will toggle it instead of selecting it. */
+		multiSelect?: boolean;
+		isDisabled?: boolean;
 	}>(), {
 		unionZoom: false,
-		autoZoom: false
+		autoZoom: false,
+		multiSelect: false
 	});
 
 	const emit = defineEmits<{
@@ -63,23 +67,27 @@
 			flyTo(mapContext.value.components.map, dest);
 	}
 
-	function handleClick(object: ObjectType, event: MouseEvent): void {
-		const toggle = event.ctrlKey;
+	function handleClick(object: ObjectType, event: MouseEvent | Event): void {
+		if (props.isDisabled) {
+			return;
+		}
+
+		const toggle = props.multiSelect ? true : "ctrlKey" in event ? event.ctrlKey : false;
 		selectItem(object, toggle);
 
 		if (props.autoZoom) {
 			setTimeout(() => { // Wait for selection to be applied
-				zoomToSelectedItems(props.unionZoom);
+				zoomToSelectedItems(props.unionZoom || props.multiSelect);
 			}, 0);
 		}
 	}
 
 	function selectItem(object: ObjectType, toggle = false): void {
-		emit("select", object, toggle);
+		emit("select", toRaw(object), toggle);
 	}
 
 	function handleOpen(object: ObjectType): void {
-		emit("open", object);
+		emit("open", toRaw(object));
 	}
 </script>
 
@@ -93,9 +101,10 @@
 			v-scroll-into-view="active.has(item.object)"
 		>
 			<span class="text-break">
+				<input v-if="props.multiSelect" type="checkbox" class="me-1" :checked="active.has(item.object)" @change="handleClick(item.object, $event)">
 				<Icon v-if="item.icon" :icon="item.icon" v-tooltip="item.iconTooltip" class="me-1" :style="{ color: item.iconColour }" />
 				<span class="fm-results-label" :class="{ 'ellipsis-overflow': item.ellipsisOverflow }">
-					<a href="javascript:" @click="handleClick(item.object, $event)">
+					<a href="javascript:" @click="handleClick(item.object, $event)" :class="{ disabled: props.isDisabled }">
 						<template v-if="item.ellipsisOverflow">
 							<EllipsisOverflow :value="item.label"></EllipsisOverflow>
 						</template>

@@ -1,10 +1,12 @@
 <script setup lang="ts">
-	import { type SlotsType, computed, defineComponent, h, ref, shallowRef, useSlots, watch, watchEffect } from "vue";
+	import { type SlotsType, computed, defineComponent, h, ref, shallowRef, toRef, useSlots, watch, watchEffect, withDirectives } from "vue";
 	import { getMaxSizeModifiers, type ButtonSize, type ButtonVariant, useIsNarrow } from "../../utils/bootstrap";
 	import Dropdown from "bootstrap/js/dist/dropdown";
 	import vLinkDisabled from "../../utils/link-disabled";
 	import type { TooltipPlacement } from "../../utils/tooltip";
 	import AttributePreservingElement from "./attribute-preserving-element.vue";
+	import vTooltip from "../../utils/tooltip";
+	import { vDirectiveWithModifiers } from "../../utils/vue";
 
 	const props = withDefaults(defineProps<{
 		isOpen?: boolean;
@@ -24,7 +26,8 @@
 		tag?: string;
 		isLink?: boolean;
 		tabindex?: number;
-		tooltip?: string; // TODO
+		/** The tooltip for the button. Does not work if both noWrapper and isDisabled are true. */
+		tooltip?: string;
 		tooltipPlacement?: TooltipPlacement;
 		maxWidth?: string;
 	}>(), {
@@ -103,9 +106,11 @@
 				if (props.noWrapper) {
 					return slots.default();
 				} else {
-					return h(props.tag, {
+					return withDirectives(h(props.tag, {
 						class: ["dropdown", "fm-dropdown-menu-container", props.class]
-					}, slots.default());
+					}, slots.default()), [
+						[vTooltipWithPlacement, props.tooltip]
+					]);
 				}
 			};
 		}
@@ -149,6 +154,8 @@
 		}
 	});
 
+	const vTooltipWithPlacement = vDirectiveWithModifiers(vTooltip, toRef(() => props.tooltipPlacement ? { [props.tooltipPlacement]: true } : {}));
+
 </script>
 
 <template>
@@ -167,6 +174,7 @@
 				v-link-disabled="props.isDisabled || props.isBusy"
 				:tabindex="props.tabindex"
 				draggable="false"
+				v-tooltip-with-placement="props.tooltip"
 			>
 				<slot name="label">
 					<div v-if="props.isBusy" class="spinner-border spinner-border-sm"></div>
@@ -187,6 +195,7 @@
 				data-bs-toggle="dropdown"
 				:disabled="props.isDisabled || props.isBusy"
 				:tabindex="props.tabindex"
+				v-tooltip-with-placement="props.tooltip"
 			>
 				<slot name="label">
 					<div v-if="props.isBusy" class="spinner-border spinner-border-sm"></div>

@@ -1,7 +1,7 @@
 import { cloneDeep, isEqual } from "lodash-es";
 import decodeURIComponent from "decode-uri-component";
 import type { Colour } from "facilmap-types";
-import type { OsmFeatureType } from "osm-api";
+import type { OsmBaseFeature, OsmFeatureType } from "osm-api";
 import { getI18n } from "./i18n";
 
 export function quoteHtml(str: string | number): string {
@@ -324,6 +324,10 @@ export function getOsmFeatureLabel(type: OsmFeatureType, id: number, name?: stri
 	} else {
 		return feature;
 	}
+}
+
+export function isSameOsmFeature(feature1: OsmBaseFeature, feature2: OsmBaseFeature): boolean {
+	return feature1.type === feature2.type && feature1.id === feature2.id;
 }
 
 function* generateUniqueColourParts(): Generator<number, void, void> {
