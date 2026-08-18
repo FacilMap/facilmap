@@ -15,6 +15,7 @@
 	import type { RouteDestination } from "../facil-map-context-provider/route-form-tab-context";
 	import { useI18n } from "../../utils/i18n";
 	import DropdownMenu from "../ui/dropdown-menu.vue";
+	import { vKeyboardShortcut } from "../../utils/vue";
 	import type { MapResult } from "../../utils/search";
 
 	const context = injectContextRequired();
@@ -103,11 +104,11 @@
 
 			<template v-for="field in type.fields" :key="field.name">
 				<dt>{{formatFieldName(field.name)}}</dt>
-				<dd v-html="formatFieldValue(field, marker.data[field.id], true)"></dd>
+				<dd v-html="formatFieldValue(clientSub.data.types[marker.typeId], field, marker, true)"></dd>
 			</template>
 		</dl>
 
-		<div class="btn-toolbar">
+		<div class="btn-toolbar fm-search-box-toolbar">
 			<ZoomToObjectButton
 				v-if="zoomDestination"
 				:label="i18n.t('marker-info.zoom-to-object-label')"
@@ -126,6 +127,7 @@
 				class="btn btn-secondary btn-sm"
 				@click="showEditDialog = true"
 				:disabled="isBusy || mapContext.interaction"
+				v-keyboard-shortcut="['e']"
 			>{{i18n.t("marker-info.edit-data")}}</button>
 
 			<DropdownMenu
@@ -148,6 +150,7 @@
 						href="javascript:"
 						class="dropdown-item"
 						@click="deleteMarker()"
+						v-keyboard-shortcut="['Delete', 'Backspace']"
 					>{{i18n.t("marker-info.delete")}}</a>
 				</li>
 			</DropdownMenu>

@@ -22,6 +22,7 @@
 	import ValidatedField from "../ui/validated-form/validated-field.vue";
 	import StrokePicker from "../ui/stroke-picker.vue";
 	import { useI18n } from "../../utils/i18n";
+	import EditTypeFormulaDialog from "./edit-type-formula-dialog.vue";
 
 	const context = injectContextRequired();
 	const clientContext = requireClientContext(context);
@@ -66,7 +67,7 @@
 	});
 
 	const type = ref(cloneDeep(initialType.value));
-	const editField = ref<Field>();
+	const fieldEdit = ref<Field>();
 	const modalRef = ref<InstanceType<typeof ModalDialog>>();
 
 	const isModified = computed(() => {
@@ -123,12 +124,12 @@
 		}
 	}
 
-	function editDropdown(field: Field): void {
-		editField.value = field;
+	function editField(field: Field): void {
+		fieldEdit.value = field;
 	}
 
 	function handleUpdateField(field: Field) {
-		const idx = type.value.fields.indexOf(editField.value!);
+		const idx = type.value.fields.indexOf(fieldEdit.value!);
 		if (idx === -1) {
 			toasts.showErrorToast(
 				`fm${context.id}-edit-type-dropdown-error`,
@@ -448,14 +449,15 @@
 										<option value="textarea">{{i18n.t("edit-type-dialog.field-type-textarea")}}</option>
 										<option value="dropdown">{{i18n.t("edit-type-dialog.field-type-dropdown")}}</option>
 										<option value="checkbox">{{i18n.t("edit-type-dialog.field-type-checkbox")}}</option>
+										<option value="formula">{{i18n.t("edit-type-dialog.field-type-formula")}}</option>
 									</select>
-									<template v-if="['dropdown', 'checkbox'].includes(field.type)">
-										<button type="button" class="btn btn-secondary" @click="editDropdown(field)">{{i18n.t("edit-type-dialog.field-edit")}}</button>
+									<template v-if="['dropdown', 'checkbox', 'formula'].includes(field.type)">
+										<button type="button" class="btn btn-secondary" @click="editField(field)">{{i18n.t("edit-type-dialog.field-edit")}}</button>
 									</template>
 								</div>
 							</td>
 							<td class="text-center align-middle">
-								<FieldInput :field="field" v-model="field.default" ignore-default></FieldInput>
+								<FieldInput v-if="field.type !== 'formula'" :field="field" v-model="field.default" ignore-default></FieldInput>
 							</td>
 							<td class="td-buttons">
 								<button type="button" class="btn btn-secondary" @click="deleteField(field)">{{i18n.t("edit-type-dialog.field-delete")}}</button>
@@ -478,11 +480,19 @@
 		</div>
 
 		<EditTypeDropdownDialog
-			v-if="editField != null"
+			v-if="fieldEdit != null && ['dropdown', 'checkbox'].includes(fieldEdit.type)"
 			:type="type"
-			:field="editField"
+			:field="fieldEdit"
 			@update:field="handleUpdateField($event)"
-			@hidden="editField = undefined"
+			@hidden="fieldEdit = undefined"
 		></EditTypeDropdownDialog>
+
+		<EditTypeFormulaDialog
+			v-if="fieldEdit != null && fieldEdit.type === 'formula'"
+			:type="type"
+			:field="fieldEdit"
+			@update:field="handleUpdateField($event)"
+			@hidden="fieldEdit = undefined"
+		></EditTypeFormulaDialog>
 	</ModalDialog>
 </template>

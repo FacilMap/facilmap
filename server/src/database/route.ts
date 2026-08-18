@@ -98,6 +98,7 @@ export default class DatabaseRoutes {
 			ascent: line.ascent,
 			descent: line.descent,
 			extraInfo: line.extraInfo,
+			extraInfoStats: line.extraInfoStats,
 			top: line.top,
 			left: line.left,
 			bottom: line.bottom,

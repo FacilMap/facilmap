@@ -16,6 +16,7 @@
 	import ExportDropdown, { type ExportFormat } from "../ui/export-dropdown.vue";
 	import { useI18n } from "../../utils/i18n";
 	import DropdownMenu from "../ui/dropdown-menu.vue";
+	import { vKeyboardShortcut } from "../../utils/vue";
 
 	const context = injectContextRequired();
 	const clientContext = requireClientContext(context);
@@ -197,7 +198,7 @@
 				<template v-if="line.ascent == null || !showElevationPlot">
 					<template v-for="field in clientSub.data.types[line.typeId].fields" :key="field.id">
 						<dt>{{formatFieldName(field.name)}}</dt>
-						<dd v-html="formatFieldValue(field, line.data[field.id], true)"></dd>
+						<dd v-html="formatFieldValue(clientSub.data.types[line.typeId], field, line, true)"></dd>
 					</template>
 				</template>
 			</dl>
@@ -205,7 +206,7 @@
 			<ElevationPlot :route="line" v-if="line.ascent != null && showElevationPlot"></ElevationPlot>
 		</div>
 
-		<div v-if="!isMoving" class="btn-toolbar">
+		<div v-if="!isMoving" class="btn-toolbar fm-search-box-toolbar">
 			<ZoomToObjectButton
 				v-if="zoomDestination"
 				:label="i18n.t('line-info.zoom-to-object-label')"
@@ -224,6 +225,7 @@
 				class="btn btn-secondary btn-sm"
 				@click="showEditDialog = true"
 				:disabled="isDeleting || mapContext.interaction"
+				v-keyboard-shortcut="'e'"
 			>{{i18n.t("line-info.edit-data")}}</button>
 
 			<DropdownMenu
@@ -247,6 +249,7 @@
 						href="javascript:"
 						class="dropdown-item"
 						@click="deleteLine()"
+						v-keyboard-shortcut="['Delete', 'Backspace']"
 					>{{i18n.t("line-info.delete")}}</a>
 				</li>
 			</DropdownMenu>

@@ -43,7 +43,7 @@ When you click on a marker, it is highlighted and a [search box](../ui/#search-b
 
 ## Edit marker details
 
-To edit the details of a marker, select the marker and then click “Edit data” in its [search box](../ui/#search-box) tab. A dialog will open where you can edit the following fields:
+To edit the details of a marker, select the marker and then click “Edit data” in its [search box](../ui/#search-box) tab (or press <kbd>e</kbd> on your keyboard). A dialog will open where you can edit the following fields:
 * **Name:** The name of the marker. Will be shown as the heading in the marker details and as a tooltip when hovering the marker.
 * **Colour:** The colour of the marker.
 * **Size:** The size of the marker (height in pixels). Use the + and &minus; buttons to change the value.
@@ -61,7 +61,7 @@ To change the position of a marker, select the marker and then click “Move” 
 
 ## Remove a marker
 
-To remove a marker from the map, select the marker, click “Remove” and confirm the alert box. Note that removed markers will remain in the [edit history](../history/) of the map and can be seen and restored there by admins.
+To remove a marker from the map, select the marker, click “Actions” and then “Delete” (or press the delete/backspace key on your keyboard) and confirm the alert box. Note that removed markers will remain in the [edit history](../history/) of the map and can be seen and restored there by admins.
 
 <Screencast :desktop="removeMp4" :mobile="removeMobileMp4"></Screencast>
 

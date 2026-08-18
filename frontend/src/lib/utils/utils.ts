@@ -2,6 +2,7 @@ import type { Emitter } from "mitt";
 import { type DeepReadonly, type Ref, watchEffect, toRef, effectScope } from "vue";
 import type * as z from "zod";
 import { getI18n } from "./i18n";
+import { isDropdownOpen, isModalOpen } from "./bootstrap";
 
 export type AnyRef<T> = T | Ref<T> | (() => T);
 
@@ -37,6 +38,24 @@ export function useDomEventListener<K extends string>(element: AnyRef<EventTarge
 			});
 		}
 	});
+}
+
+export function isInputFieldFocused(): boolean {
+	const el = document.activeElement;
+	return !!el && (el.tagName === "INPUT" && !["button", "image", "reset", "submit"].includes((el as HTMLInputElement).type) || (el as HTMLElement).isContentEditable);
+}
+
+export function isModifierKeyPressed(e: KeyboardEvent): boolean {
+	return e.altKey || e.ctrlKey || e.metaKey || e.shiftKey;
+}
+
+/**
+ * Returns true if an app-wide keyboard shortcut should be handled. Certain scenarios, such as an input field being focused or a modal dialog being open,
+ * should disable app-wide keyboard shortcuts. Remember to check the event with isModifierKeyPressed() for a keyboard shortcut that does not use modifier keys.
+ */
+export function shouldHandleGlobalShortcut(el: HTMLElement, e: Event): boolean {
+	const dropdown = el.closest<HTMLElement>(".dropdown-menu");
+	return !e.defaultPrevented && !isInputFieldFocused() && !isModalOpen() && !isDropdownOpen(dropdown ?? undefined);
 }
 
 /**

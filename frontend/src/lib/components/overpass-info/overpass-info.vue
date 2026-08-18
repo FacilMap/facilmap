@@ -58,7 +58,7 @@
 			</template>
 		</dl>
 
-		<div class="btn-toolbar">
+		<div class="btn-toolbar fm-search-box-toolbar">
 			<ZoomToObjectButton
 				:label="i18n.t('overpass-info.zoom-to-object-label')"
 				size="sm"

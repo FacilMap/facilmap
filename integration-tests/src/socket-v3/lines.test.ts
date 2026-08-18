@@ -70,7 +70,8 @@ describe.for([
 				ascent: null,
 				descent: null,
 				time: null,
-				extraInfo: null
+				extraInfo: null,
+				extraInfoStats: null
 			} satisfies Line;
 
 			const expectedLinePointsEvent = {
@@ -162,7 +163,8 @@ describe.for([
 				time: null,
 				ascent: null,
 				descent: null,
-				extraInfo: null
+				extraInfo: null,
+				extraInfoStats: null
 			};
 
 			const expectedLineWithTrackPoints = {
@@ -261,7 +263,8 @@ describe.for([
 				time: null,
 				ascent: null,
 				descent: null,
-				extraInfo: null
+				extraInfo: null,
+				extraInfoStats: null
 			} satisfies Line;
 
 			const expectedLinePointsEvent = {

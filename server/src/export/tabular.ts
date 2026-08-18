@@ -1,5 +1,5 @@
 import { flatMapStream, iterableToStream, mapStream } from "../utils/streams.js";
-import { compileExpression, formatDistance, formatFieldName, formatFieldValue, formatRouteTime, normalizeLineName, normalizeMarkerName, quoteHtml, round } from "facilmap-utils";
+import { compileFilterExpression, formatDistance, formatFieldName, formatFieldValue, formatRouteTime, normalizeLineName, normalizeMarkerName, quoteHtml, round } from "facilmap-utils";
 import type { Type } from "facilmap-types";
 import { getI18n } from "../i18n.js";
 import type { RawActiveMapLink } from "../utils/permissions.js";
@@ -21,7 +21,7 @@ export async function getTabularData(
 ): Promise<TabularData> {
 	const i18n = getI18n();
 
-	const filterFunc = compileExpression(filter);
+	const filterFunc = compileFilterExpression(filter);
 
 	const handlePlainText = (str: string) => html ? quoteHtml(str) : str;
 
@@ -44,7 +44,7 @@ export async function getTabularData(
 		return [[
 			() => handlePlainText(normalizeMarkerName(marker.name)),
 			() => handlePlainText(`${round(marker.lat, 5)},${round(marker.lon, 5)}`),
-			...type.fields.map((f) => () => formatFieldValue(f, marker.data[f.id], html).trim())
+			...type.fields.map((f) => () => formatFieldValue(type, f, marker.data[f.name], html).trim())
 		]];
 	}) : flatMapStream(iterableToStream((await api.getMapLines(mapLink, { typeId: type.id })).results), (line): Array<Array<() => string>> => {
 		if (!filterFunc(line, type)) {
@@ -55,7 +55,7 @@ export async function getTabularData(
 			() => handlePlainText(normalizeLineName(line.name)),
 			() => handlePlainText(formatDistance(line.distance)),
 			() => handlePlainText(line.time != null ? formatRouteTime(line.time, line.mode) : ""),
-			...type.fields.map((f) => () => formatFieldValue(f, line.data[f.id], html).trim())
+			...type.fields.map((f) => () => formatFieldValue(type, f, line.data[f.name], html).trim())
 		]];
 	});
 

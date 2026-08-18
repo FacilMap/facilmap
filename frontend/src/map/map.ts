@@ -6,6 +6,8 @@ import "../lib/bootstrap.scss"; // Not imported in lib/index.ts because we don't
 import { setLayerOptions } from "facilmap-leaflet";
 import config from "./config";
 import { registerDereferrerHandler } from "../utils/dereferrer";
+import { getFreieTonneUrl, setFreieTonneFetchAdapter } from "leaflet-freie-tonne";
+import { activeClients } from "../lib/components/client-provider.vue";
 
 if (import.meta.hot) {
 	// Prevent full reload, see https://github.com/vitejs/vite/issues/5763#issuecomment-1974235806
@@ -23,7 +25,8 @@ if ('serviceWorker' in navigator) {
 
 setLayerOptions({
 	limaLabsToken: config.limaLabsToken,
-	tracestrackToken: config.tracestrackToken
+	tracestrackToken: config.tracestrackToken,
+	thunderforestToken: config.thunderforestToken
 });
 
 const queryParams = decodeQueryString(location.search);
@@ -33,6 +36,17 @@ const baseUrl = location.protocol + "//" + location.host + location.pathname.rep
 const initialMapSlug = decodeURIComponent(location.pathname.match(/[^/]*$/)![0]) || undefined;
 
 registerDereferrerHandler(baseUrl);
+
+setFreieTonneFetchAdapter(async (bounds, zoom) => {
+	const url = getFreieTonneUrl(bounds, zoom);
+	const client = activeClients.values().next().value;
+	if (client) {
+		const result = await client.findUrl(url);
+		return await new Response(result.data).text();
+	} else {
+		return await fetch(url).then((res) => res.text());
+	}
+});
 
 if(!location.hash || location.hash == "#") {
 	const moveKeys = Object.keys(queryParams).filter((key) => ([ "zoom", "lat", "lon", "layer", "l", "q", "s", "c" ].includes(key)));

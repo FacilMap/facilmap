@@ -44,8 +44,8 @@ export default class OverpassLayer extends FeatureGroup {
 			markerColour: "000000",
 			markerSize: 35,
 			markerShape: "",
-			timeout: 1,
-			limit: 50,
+			timeout: 5,
+			limit: 200,
 			...options
 		});
 

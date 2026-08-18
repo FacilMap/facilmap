@@ -115,16 +115,17 @@
     },
     "edit-filter-dialog": {
         "title": "Filtrar",
-        "syntax-header": "Sintaxis",
+        "apply": "Aplicar",
+        "introduction": "Aquí puede establecer una expresión avanzada para mostrar/ocultar determinados marcadores/líneas en función de sus atributos. La expresión de filtro sólo se aplica a su vista del mapa, pero puede persistir como parte de una vista guardada o un enlace compartido."
+    },
+    "filter-syntax": {
+        "header": "Sintaxis",
         "example": "Ejemplo",
-        "data-description-1": "Valores de campo (ejemplo: {{example1}} o {{example2}}).",
+        "data-description-1": "Valores de campo.",
         "width-description": "Anchura de línea",
         "stroke-description": "Trazo de línea ({{solid}} (sólido) / {{dashed}} / {{dotted}})",
         "text-description": "Valor textual",
         "logical-description": "Operadores lógicos",
-        "apply": "Aplicar",
-        "variable": "Variable",
-        "operator": "Operador",
         "description": "Descripción",
         "functions-description": "Funciones matemáticas",
         "number-description": "Valor numérico",
@@ -142,7 +143,6 @@
         "routePoints-description": "Coordenadas de puntos de línea",
         "lower-description": "Convertir en minúsculas",
         "round-description": "Redondear ({{ceil}}: al alza, {{floor}}: a la baja)",
-        "introduction": "Aquí puede establecer una expresión avanzada para mostrar/ocultar determinados marcadores/líneas en función de sus atributos. La expresión de filtro sólo se aplica a su vista del mapa, pero puede persistir como parte de una vista guardada o un enlace compartido.",
         "type-description": "{{marker}} / {{line}}",
         "typeId-description": "{{items}})",
         "typeId-description-item": "{{typeId}} ({{typeName}})",
@@ -712,11 +712,9 @@
     },
     "elevation-stats": {
         "show-alt": "Mostrar estadísticas",
-        "show-tooltip": "Mostrar estadísticas de elevación",
+        "show-tooltip": "Mostrar estadísticas",
         "ascent-alt": "Ascenso",
-        "descent-alt": "Descenso",
-        "total-ascent": "Ascenso total",
-        "total-descent": "Descenso total"
+        "descent-alt": "Descenso"
     },
     "validated-field": {
         "validation-error": "Error al validar el campo del formulario"
@@ -840,7 +838,7 @@
         "attribution-notice": "Esta aplicación reutiliza datos cartográficos de [OpenStreetMap](https://www.openstreetmap.org/copyright). Para más información, consulte el diálogo «[Acerca de {{appName}}](#about-dialog)» del menú Ayuda.",
         "open-full-size": "Abrir {{appName}} a tamaño completo"
     },
-    "legend-content": {
+    "legend-map-content": {
         "click-explanation": "Pulse para mostrar u ocultar los objetos de este tipo."
     },
     "hybrid-popover": {

@@ -80,6 +80,12 @@ export enum Units {
 }
 export const unitsValidator = z.nativeEnum(Units);
 
+export const formulaValidator = z.object({
+	type: z.literal("filtrex"),
+	code: z.string()
+});
+export type Formula = z.infer<typeof formulaValidator>;
+
 export function isMapToken(mapSlug: string): boolean {
 	return !!mapSlug.match(/^[-_a-zA-Z0-9]+(\.[-_a-zA-Z0-9]+){3,4}$/);
 }

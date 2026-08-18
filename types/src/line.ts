@@ -6,6 +6,12 @@ import { numberRecordValidator } from "./utility.js";
 export const extraInfoValidator = z.record(z.array(z.tuple([z.number(), z.number(), z.number()])));
 export type ExtraInfo = z.infer<typeof extraInfoValidator>;
 
+export const extraInfoStatsValidator = z.record(z.record(z.number(), z.object({
+	distanceKm: z.number(),
+	percent: z.number()
+})));
+export type ExtraInfoStats = z.infer<typeof extraInfoStatsValidator>;
+
 export const trackPointValidator = cruValidator({
 	...pointValidator.shape,
 	ele: optionalCreate(z.number().or(z.null()), null),
@@ -25,6 +31,7 @@ export const lineValidator = cruValidator({
 	stroke: optionalCreate(strokeValidator), // defaults to type.defaultStroke
 	data: optionalCreate(numberRecordValidator(z.string()), () => ({})),
 	extraInfo: optionalCreate(extraInfoValidator.or(z.null()), null),
+	extraInfoStats: optionalCreate(extraInfoStatsValidator.or(z.null()), null),
 
 	...mapValues(bboxValidator.shape, onlyRead),
 	distance: onlyRead(z.number()),
@@ -38,4 +45,4 @@ export const lineValidator = cruValidator({
 });
 export type Line<Mode extends CRU = CRU.READ> = CRUType<Mode, typeof lineValidator>;
 
-export type LineTemplate = Omit<Line, "id" | "routePoints" | "extraInfo" | keyof Bbox | "distance" | "ascent" | "descent" | "time" | "mapId" | "own">;
+export type LineTemplate = Omit<Line, "id" | "routePoints" | "extraInfo" | "extraInfoStats" | keyof Bbox | "distance" | "ascent" | "descent" | "time" | "mapId" | "own">;

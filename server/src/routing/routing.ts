@@ -59,48 +59,36 @@ export async function calculateRouteForLine(line: Pick<Line<CRU.CREATE_VALIDATED
 			descent: null, // TODO
 			time: null,
 			extraInfo: null,
+			extraInfoStats: null,
 			trackPoints: calculateZoomLevels(line.trackPoints).map((p, idx) => ({ ...p, idx, ele: p.ele ?? null }))
 		};
 	} else if(line.routePoints && line.routePoints.length >= 2 && line.mode != "track" && decodeRouteMode(line.mode).mode) {
 		const routeData = await calculateRoute(line.routePoints, line.mode);
+		result.distance = routeData.distance;
+		result.time = routeData.time;
+		result.ascent = routeData.ascent;
+		result.descent = routeData.descent;
+		result.extraInfo = routeData.extraInfo;
+		result.extraInfoStats = routeData.extraInfoStats;
+		for(let i=0; i<routeData.trackPoints.length; i++)
+			routeData.trackPoints[i].idx = i;
 
-		result = {
-			distance: routeData.distance,
-			time: routeData.time,
-			ascent: routeData.ascent,
-			descent: routeData.descent,
-			extraInfo: routeData.extraInfo,
-			trackPoints: routeData.trackPoints.map((p, idx) => ({ ...p, idx }))
-		};
+		result.trackPoints = routeData.trackPoints;
 	} else {
-		result = {
-			distance: round(calculateDistance(line.routePoints), 2),
-			ascent: null,
-			descent: null,
-			time: null,
-			extraInfo: null,
-			trackPoints: line.routePoints.map((p, idx) => ({ ...p, ele: null, zoom: 1, idx }))
-		};
-	}
+		result.distance = round(calculateDistance(line.routePoints), 2);
+		result.time = undefined;
+		result.extraInfo = undefined;
+		result.extraInfoStats = undefined;
 
-	return {
-		...result,
-		...calculateBbox(result.trackPoints)
-	};
-}
-
-function _needsOSRM(routePoints: Point[], decodedMode: DecodedRouteMode) {
-	if (!config.mapboxToken) {
-		return false;
-	}
-
-	const maxDist = getMaximumDistanceBetweenRoutePoints(decodedMode);
-	for (let i = 1; i<routePoints.length; i++) {
-		if (calculateDistance([ routePoints[i-1], routePoints[i] ]) > maxDist) {
-			return true;
+		result.trackPoints = [ ];
+		for(let i=0; i<line.routePoints.length; i++) {
+			result.trackPoints.push({ ...line.routePoints[i], ele: null, zoom: 1, idx: i });
 		}
 	}
-	return false;
+
+	Object.assign(result, calculateBbox(result.trackPoints!));
+
+	return result as RouteInfo;
 }
 
 function _getRoutePointsFromTrack(trackPoints: Point[], maxDistance: number) {

@@ -7,15 +7,17 @@ const cacheDir = findCacheDir({ name: "facilmap-utils", create: true })
 	|| findCacheDir({ name: "facilmap-utils", create: true, cwd: fileURLToPath(new URL('./', import.meta['url'])) })!;
 const cacheFile = `${cacheDir}/languages.json`;
 
+const LANGUAGE_DIRS = [
+	fileURLToPath(new URL('./src/i18n', import.meta['url'])),
+	fileURLToPath(new URL('../frontend/src/i18n', import.meta['url'])),
+	fileURLToPath(new URL('../leaflet/src/i18n', import.meta['url'])),
+	fileURLToPath(new URL('../server/src/i18n', import.meta['url'])),
+	fileURLToPath(new URL('../utils/src/i18n', import.meta['url']))
+];
+
 async function getAllLanguages(): Promise<Set<string>> {
 	const result = new Set<string>();
-	for (const dir of [
-		fileURLToPath(new URL('./src/i18n', import.meta['url'])),
-		fileURLToPath(new URL('../frontend/src/i18n', import.meta['url'])),
-		fileURLToPath(new URL('../leaflet/src/i18n', import.meta['url'])),
-		fileURLToPath(new URL('../server/src/i18n', import.meta['url'])),
-		fileURLToPath(new URL('../utils/src/i18n', import.meta['url']))
-	]) {
+	for (const dir of LANGUAGE_DIRS) {
 		for (const file of await readdir(dir)) {
 			const m = file.match(/([^/\\]*)\.json$/i);
 			if (m) {
@@ -54,7 +56,7 @@ async function downloadLanguageNames(languages: Set<string>): Promise<Record<str
 	return result;
 }
 
-export async function fileExists(filename: string): Promise<boolean> {
+async function fileExists(filename: string): Promise<boolean> {
 	try {
 		await access(filename);
 		return true;
@@ -65,6 +67,18 @@ export async function fileExists(filename: string): Promise<boolean> {
 			throw err;
 		}
 	}
+}
+
+function flattenObject(obj: Record<keyof any, any>, _prefix = ""): Record<keyof any, any> {
+	const ret: Record<keyof any, any> = { };
+	for (const i in obj) {
+		if (typeof obj[i] === "object" && obj[i]) {
+			Object.assign(ret, flattenObject(obj[i], `${_prefix}${i}.`));
+		} else {
+			ret[_prefix + i] = obj[i];
+		}
+	}
+	return ret;
 }
 
 async function getCachedLanguageNames(): Promise<Record<string, string>> {
@@ -82,18 +96,40 @@ async function getCachedLanguageNames(): Promise<Record<string, string>> {
 	return result;
 }
 
+async function getLanguageStats(): Promise<Record<string, number>> {
+	const languages = await getAllLanguages();
+	const items: Record<string, Set<string>> = {};
+	for (const language of languages) {
+		items[language] = new Set<string>();
+
+		for (const dir of LANGUAGE_DIRS) {
+			const fname = `${dir}/${language}.json`;
+			if (await fileExists(fname)) {
+				const translations = flattenObject(JSON.parse(await readFile(fname, "utf8")), `${dir}-`);
+				for (const key of Object.keys(translations)) {
+					items[language].add(key);
+				}
+			}
+		}
+	}
+	return Object.fromEntries(Object.entries(items).map(([language, keys]) => [language, Math.round(100 * [...keys].filter((k) => items["en"].has(k)).length / items["en"].size) / 100]));
+}
+
 export default function languagesPlugin(): Plugin {
 	return {
-		name: "virtual:languages",
+		name: "FacilMap languages plugin",
 		resolveId: (id) => {
-			if (id === "virtual:languages") {
+			if (["virtual:language-names", "virtual:language-stats"].includes(id)) {
 				return id;
 			}
 		},
 		load: async (id) => {
-			if (id === "virtual:languages") {
+			if (id === "virtual:language-names") {
 				const languageNames = await getCachedLanguageNames();
 				return `export default ${JSON.stringify(languageNames)}`;
+			} else if (id === "virtual:language-stats") {
+				const languageStats = await getLanguageStats();
+				return `export default ${JSON.stringify(languageStats)}`;
 			}
 		}
 	}

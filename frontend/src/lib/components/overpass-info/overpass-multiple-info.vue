@@ -66,7 +66,7 @@
 						@open="(element) => openElement(element)"
 					></Results>
 
-					<div class="btn-toolbar mt-2">
+					<div class="btn-toolbar fm-search-box-toolbar">
 						<ZoomToObjectButton
 							v-if="zoomDestination"
 							:label="i18n.t('overpass-multiple-info.zoom-to-object-label')"

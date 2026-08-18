@@ -1,5 +1,5 @@
 import { iterableToArray, streamPromiseToStream, mapAsyncIterable, concatAsyncIterables, flatMapAsyncIterable, StringAggregationTransformStream } from "../utils/streams.js";
-import { compileExpression } from "facilmap-utils";
+import { compileFilterExpression } from "facilmap-utils";
 import { type Marker, type MarkerFeature, type TrackPoint, type Line, type InterfaceToType, type LineFeature, type ReplaceProperties, dataByFieldIdToDataByName, type Type, type Stripped } from "facilmap-types";
 import { keyBy, mapValues, omit, pick } from "lodash-es";
 import { JsonStringifier, arrayStream, serializeJsonValue, type ArrayStream } from "json-stream-es";
@@ -10,7 +10,7 @@ export function exportGeoJson(api: ApiV3Backend, mapLink: RawActiveMapLink, filt
 	return streamPromiseToStream((async () => {
 		const mapData = await api.getMap(mapLink);
 
-		const filterFunc = compileExpression(filter);
+		const filterFunc = compileFilterExpression(filter);
 
 		const types = keyBy(await iterableToArray((await api.getMapTypes(mapLink)).results), "id");
 

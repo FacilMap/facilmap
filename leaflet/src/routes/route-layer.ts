@@ -3,8 +3,10 @@ import { Map, type PolylineOptions } from "leaflet";
 import { type HighlightableLayerOptions, HighlightablePolyline } from "leaflet-highlightable-layers";
 import { trackPointsToLatLngArray } from "../utils/leaflet";
 import "leaflet-draggable-lines";
+import { getPolylineStyles } from "../utils/styles";
 
 interface RouteLayerOptions extends HighlightableLayerOptions<PolylineOptions> {
+	highlight?: boolean;
 }
 
 export default class RouteLayer extends HighlightablePolyline {
@@ -15,7 +17,10 @@ export default class RouteLayer extends HighlightablePolyline {
 	protected unsubscribeStorageUpdate: (() => void) | undefined = undefined;
 
 	constructor(clientStorage: SocketClientStorage, routeKey: string, options?: RouteLayerOptions) {
-		super([], options);
+		super([], {
+			...getPolylineStyles({ highlight: options?.highlight, width: options?.weight ?? 7 }),
+			...options
+		});
 		this.clientStorage = clientStorage;
 		this.routeKey = routeKey;
 	}

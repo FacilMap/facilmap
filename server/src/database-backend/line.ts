@@ -1,5 +1,5 @@
 import { and, col, type CreationOptional, DataTypes, fn, type ForeignKey, type HasManyGetAssociationsMixin, type InferAttributes, type InferCreationAttributes, Model, Op, where } from "sequelize";
-import type { BboxWithZoom, ID, Latitude, ExtraInfo, Longitude, Point, TrackPoint, Stroke, Colour, RouteMode, Width, BboxWithExcept } from "facilmap-types";
+import type { BboxWithZoom, ID, Latitude, ExtraInfo, Longitude, Point, TrackPoint, Stroke, Colour, RouteMode, Width, BboxWithExcept, ExtraInfoStats } from "facilmap-types";
 import DatabaseBackend from "./database-backend.js";
 import { bulkCreateInBatches, createModel, dataDefinition, dataFromArr, type DataModel, dataToArr, findAllStreamed, getDefaultIdType, getJsonType, getLatType, getLonType, getPosType, getVirtualLatType, getVirtualLonType, makeBboxCondition, makeNotNullForeignKey } from "./utils.js";
 import { isEqual, pick } from "lodash-es";
@@ -30,6 +30,7 @@ export interface LineModel extends Model<InferAttributes<LineModel>, InferCreati
 	left: Longitude;
 	right: Longitude;
 	extraInfo: CreationOptional<ExtraInfo | null>;
+	extraInfoStats: CreationOptional<ExtraInfoStats | null>;
 	identity: Buffer | null;
 
 	getLinePoints: HasManyGetAssociationsMixin<LinePointModel>;
@@ -117,6 +118,18 @@ export default class DatabaseLinesBackend {
 			left: getLonType(),
 			right: getLonType(),
 			extraInfo: getJsonType("extraInfo", { allowNull: true }),
+			extraInfoStats: {
+				type: DataTypes.TEXT,
+				allowNull: true,
+				get: function(this: LineModel) {
+					const extraInfoStats = this.getDataValue("extraInfoStats") as any as string; // https://github.com/sequelize/sequelize/issues/11558
+					return extraInfoStats != null ? JSON.parse(extraInfoStats) : extraInfoStats;
+				},
+				set: function(this: LineModel, v: ExtraInfoStats) {
+					this.setDataValue("extraInfoStats", v != null ? JSON.stringify(v) as any : v);
+				},
+				defaultValue: null
+			},
 			identity: { type: DataTypes.BLOB, allowNull: true }
 		}, {
 			sequelize: this.backend._conn,

@@ -1,6 +1,6 @@
 import { anyMapSlugValidator } from "./api/api-common.js";
 import { type Bbox, idValidator, pointValidator, routeModeValidator } from "./base.js";
-import type { ExtraInfo } from "./line.js";
+import type { ExtraInfo, ExtraInfoStats } from "./line.js";
 import * as z from "zod";
 
 export interface RouteInfo extends Bbox {
@@ -9,6 +9,7 @@ export interface RouteInfo extends Bbox {
 	ascent: number | null;
 	descent: number | null;
 	extraInfo: ExtraInfo | null;
+	extraInfoStats: ExtraInfoStats | null;
 }
 
 export const routeParametersValidator = z.object({

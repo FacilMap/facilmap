@@ -4,7 +4,7 @@
 	import type { FacilMapComponents, FacilMapContext, FacilMapSettings } from "./facil-map-context";
 	import { ClientContextMapState, type ClientContextMap } from "./client-context";
 
-	const contextInject = Symbol("contextInject") as InjectionKey<FacilMapContext>;
+	const contextInject = Symbol.for("fm-inject-context") as InjectionKey<FacilMapContext>;
 
 	export function injectContextOptional(): FacilMapContext | undefined {
 		return inject(contextInject);

@@ -80,7 +80,9 @@
     },
     "edit-filter-dialog": {
         "title": "過濾器",
-        "apply": "套用",
+        "apply": "套用"
+    },
+    "filter-syntax": {
         "description": "描述",
         "example": "範例",
         "logical-description": "邏輯運算符",

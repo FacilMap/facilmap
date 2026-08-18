@@ -1,8 +1,9 @@
 import { DefaultReactiveObjectProvider } from "facilmap-client";
-import { cloneDeep, isEqual } from "lodash-es";
-import { type ComponentPublicInstance, type DeepReadonly, type Directive, type Ref, computed, onScopeDispose, readonly, ref, shallowReadonly, shallowRef, watch, type ComputedGetter, type Component, type VNodeProps, type AllowedComponentProps, onBeforeUnmount, onMounted, toRaw, reactive, type DebuggerOptions, type ComputedRef, type WatchSource, toValue } from "vue";
+import { cloneDeep, isEqual, sortBy } from "lodash-es";
+import { type ComponentPublicInstance, type DeepReadonly, type Directive, type Ref, computed, onScopeDispose, readonly, ref, shallowReadonly, shallowRef, watch, type ComputedGetter, type Component, type VNodeProps, type AllowedComponentProps, onBeforeUnmount, onMounted, toRaw, type FunctionDirective, effectScope, toRef, reactive, type DebuggerOptions, type ComputedRef, type WatchSource, toValue } from "vue";
 // eslint-disable-next-line vue/prefer-import-from-vue, import/no-extraneous-dependencies
 import { pauseTracking, resetTracking } from "@vue/reactivity";
+import { shouldHandleGlobalShortcut, useDomEventListener, type AnyRef } from "./utils";
 
 // https://stackoverflow.com/a/73784241/242365
 export type ComponentProps<C extends Component> = C extends new (...args: any) => any
@@ -247,3 +248,99 @@ export function useImmutableModel<T>(modelRef: Ref<T>): Ref<T> {
 	}, { deep: true });
 	return value;
 }
+
+/**
+ * A wrapper for a custom function directive (the function is run on `mounted` and `updated`), but runs the function in an effect scope that is disposed on
+ * `beforeUpdate` and `beforeUnmount` so that `onScopeDispose()` can be used.
+ */
+export function vDirectiveWithScope<HostElement = any, Value = any, Modifiers extends string = string, Arg extends string = string>(directive: FunctionDirective<HostElement, Value, Modifiers, Arg>): Directive<HostElement, Value, Modifiers, Arg> {
+	const setup: FunctionDirective<HostElement, Value, Modifiers, Arg> = (el, binding, vnode, prevVNode) => {
+		const scope = (el as any)._fmDirectiveScope = effectScope();
+		scope.run(() => {
+			directive(el, binding, vnode, prevVNode);
+		});
+	};
+
+	const cleanup = (el: any) => {
+		(el as any)._fmDirectiveScope?.stop();
+	};
+
+	return {
+		mounted: setup,
+		beforeUpdate: cleanup,
+		updated: setup,
+		beforeUnmount: cleanup
+	};
+}
+
+export function useKeyboardShortcut(el: Ref<HTMLElement | undefined>, key: AnyRef<string[] | string | undefined>): void {
+	const keyRef = toRef(key);
+	const keys = computed(() => Array.isArray(keyRef.value) ? keyRef.value : keyRef.value ? [keyRef.value] : []);
+	useDomEventListener(computed(() => keys.value.length > 0 ? document : undefined), "keydown", (e) => {
+		// Do not check shift key, as arg might be an uppercase letter
+		if (el.value && keys.value.includes(e.key) && !e.altKey && !e.ctrlKey && !e.metaKey && shouldHandleGlobalShortcut(el.value, e)) {
+			// Check whether the element is visible using offsetParent. It checks for display: none, see https://stackoverflow.com/a/53068496/242365
+			// If it is not visible, for example when the button is in a search box tab that is not active, ignore the shortcut.
+			// If the element is a dropdown menu, it should also work if the dropdown is closed, but only if the dropdown toggle is visible and enabled.
+			const dropdownToggle = el.value.closest(".dropdown")?.querySelector<HTMLElement>(":scope > .dropdown-toggle");
+			if (dropdownToggle ? (dropdownToggle.offsetParent && !(dropdownToggle as HTMLButtonElement).disabled && !dropdownToggle.classList.contains("disabled")) : el.value.offsetParent) {
+				el.value.click();
+			}
+		}
+	});
+}
+
+export const vKeyboardShortcut = vDirectiveWithScope<HTMLElement, string[] | string | undefined>((el, binding) => {
+	const keys = Array.isArray(binding.value) ? binding.value : binding.value ? [binding.value] : [];
+	useKeyboardShortcut(toRef(el), keys);
+
+	// If the shortcut is a letter key and the letter is contained in the element text, wrap it in a <kbd> element to indicate the shortcut
+	if (!el.querySelector("kbd")) {
+		const letterKeys = keys.flatMap((k) => k.length === 1 ? [k.toLowerCase()] : []);
+		if (letterKeys.length > 0) {
+			const nodeIterator = document.createNodeIterator(el, NodeFilter.SHOW_TEXT);
+			let currentNode: Text | null;
+			while (currentNode = nodeIterator.nextNode() as Text | null) {
+				const node = currentNode;
+
+				const lowerText = node.data.toLowerCase();
+				const positions = sortBy(letterKeys.map((k) => [k, lowerText.indexOf(k)] as const).filter(([k, i]) => i !== -1), ([k, i]) => i);
+				if (positions.length > 0) {
+					const text = node.data;
+
+					node.data = text.slice(positions[0][1] + 1);
+
+					const beforeNode = document.createTextNode(text.slice(0, positions[0][1]));
+					node.parentNode!.insertBefore(beforeNode, node);
+
+					const kbd = document.createElement("kbd");
+					kbd.classList.add("fm-shortcut");
+					kbd.appendChild(document.createTextNode(text.slice(positions[0][1], positions[0][1] + 1)));
+					node.parentNode!.insertBefore(kbd, node);
+
+					onScopeDispose(() => {
+						beforeNode.remove();
+						kbd.remove();
+						node.data = text;
+					});
+
+					break;
+				}
+			}
+		}
+	}
+});
+
+export function getReactiveMediaQuery(query: string): Ref<boolean> {
+	const update = ref(0);
+	const match = matchMedia(query);
+	match.addEventListener("change", () => {
+		update.value++
+	});
+	return computed(() => {
+		update.value;
+		return match.matches;
+	});
+};
+
+export const canHover = getReactiveMediaQuery("(hover: hover)");

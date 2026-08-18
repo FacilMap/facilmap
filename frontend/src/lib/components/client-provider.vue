@@ -1,4 +1,4 @@
-<script setup lang="ts">
+<script lang="ts">
 	import { computed, onBeforeUnmount, reactive, ref, shallowReactive, watch, type ComputedRef } from "vue";
 	import { ClientStateType, SocketClient, SocketClientStorage } from "facilmap-client";
 	import MapSettingsDialog from "./map-settings-dialog/map-settings-dialog.vue";
@@ -16,6 +16,10 @@
 	import ModalDialog from "./ui/modal-dialog.vue";
 	import type { CustomSubmitEvent } from "./ui/validated-form/validated-form.vue";
 
+	export const activeClients = new Set<SocketClient>();
+</script>
+
+<script setup lang="ts">
 	const context = injectContextRequired();
 	const i18n = useI18n();
 	const toasts = useToasts();
@@ -37,6 +41,7 @@
 				...isUnitsExplicit() ? { units: getCurrentUnits() } : {}
 			}
 		});
+		activeClients.add(client);
 
 		const storage = new SocketClientStorage(client, {
 			reactiveObjectProvider: new VueReactiveObjectProvider()
@@ -64,6 +69,7 @@
 		});
 
 		onCleanup(() => {
+			activeClients.delete(client);
 			storage.dispose();
 			client.disconnect();
 		});

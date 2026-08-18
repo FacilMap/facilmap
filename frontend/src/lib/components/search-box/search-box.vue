@@ -390,7 +390,7 @@
 			display: grid;
 			grid-template-columns: 150px auto;
 			gap: 5px;
-			margin-bottom: 0.5rem;
+			margin-bottom: 0;
 
 			* {
 				min-width: 0;
@@ -398,6 +398,12 @@
 
 			dd {
 				margin-bottom: 0;
+			}
+		}
+
+		.fm-search-box-toolbar {
+			&:not(:empty) {
+				margin-top: 0.5rem;
 			}
 		}
 

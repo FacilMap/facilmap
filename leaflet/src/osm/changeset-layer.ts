@@ -3,6 +3,7 @@ import { FeatureGroup, Layer, type LayerOptions, type PathOptions } from "leafle
 import MarkerLayer from "../markers/marker-layer";
 import type { AnalyzedChangeset, ChangesetFeature } from "facilmap-utils";
 import { HighlightablePolyline } from "leaflet-highlightable-layers";
+import { getPolylineStyles } from "../utils/styles";
 
 declare module "leaflet" {
 	interface Layer {
@@ -110,12 +111,7 @@ export default class ChangesetLayer extends FeatureGroup {
 	createWayLayer(path: Point[], colour: Colour, highlight: boolean): Layer {
 		const weight = this.options.pathOptions?.weight ?? 6;
 		return new HighlightablePolyline(path.map((p) => [p.lat, p.lon]), {
-			color: `#${colour}`,
-			raised: highlight,
-			opacity: highlight ? 1 : 0.5,
-			weight,
-			outlineWeight: weight + 2,
-			outlineColor: "#000000",
+			...getPolylineStyles({ colour, highlight, width: weight }),
 			...this.options.pathOptions
 		});
 	}

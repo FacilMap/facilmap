@@ -1,7 +1,7 @@
 import { latLngBounds, LatLngBounds } from "leaflet";
 import { getOverpassPresets, type OverpassPreset } from "./overpass-presets";
 
-const OVERPASS_API = "https://overpass.kumi.systems/api/interpreter";
+const OVERPASS_API = "https://overpass.facilmap.org/api/interpreter";
 
 export interface OverpassElement {
 	id: number;

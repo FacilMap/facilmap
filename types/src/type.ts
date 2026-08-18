@@ -1,4 +1,4 @@
-import { colourValidator, idValidator, routeModeValidator, shapeValidator, sizeValidator, strokeValidator, iconValidator, widthValidator, type ID } from "./base.js";
+import { colourValidator, idValidator, routeModeValidator, shapeValidator, sizeValidator, strokeValidator, iconValidator, widthValidator, formulaValidator, type ID } from "./base.js";
 import { CRU, type CRUType, cruValidator, onlyUpdate, optionalCreate, exceptUpdate, optionalUpdate, onlyRead, type CRUValidator, exceptCreate } from "./cru.js";
 import * as z from "zod";
 import { entries, type DeepReadonly } from "./utility.js";
@@ -6,7 +6,7 @@ import { entries, type DeepReadonly } from "./utility.js";
 export const objectTypeValidator = z.enum(["marker", "line"]);
 export type ObjectType = z.infer<typeof objectTypeValidator>;
 
-export const fieldTypeValidator = z.enum(["textarea", "dropdown", "checkbox", "input"]);
+export const fieldTypeValidator = z.enum(["textarea", "dropdown", "checkbox", "input", "formula"]);
 export type FieldType = z.infer<typeof fieldTypeValidator>;
 
 export const fieldOptionValidator = cruValidator({
@@ -66,6 +66,7 @@ export const fieldValidator = cruValidator({
 	name: z.string().trim().min(1),
 	type: fieldTypeValidator,
 	default: z.string().optional(),
+	formula: formulaValidator.optional(),
 	controlColour: z.boolean().optional(),
 	controlSize: z.boolean().optional(),
 	controlIcon: z.boolean().optional(),

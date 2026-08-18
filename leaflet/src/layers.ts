@@ -1,8 +1,8 @@
 import { Layer, Map, tileLayer, type TileLayer } from "leaflet";
 import AutoGraticule from "leaflet-auto-graticule";
-import FreieTonne from "leaflet-freie-tonne";
 import { getI18n } from "./utils/i18n";
 import { markdownInline } from "facilmap-utils";
+import FreieTonne from "leaflet-freie-tonne";
 
 export const defaultVisibleLayers: VisibleLayers = {
 	baseLayer: "Mpnk",
@@ -29,6 +29,7 @@ export function createDefaultLayers(): Layers & { fallbackLayer: string | undefi
 	return {
 		baseLayers: {
 			Mpnk: fixAttribution(tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+				maxZoom: 19,
 				...fmName(() => getI18n().t("layers.mpnk-name")),
 				...attribution(() => getI18n().t("layers.mpnk-attribution")),
 				noWrap: true
@@ -49,6 +50,7 @@ export function createDefaultLayers(): Layers & { fallbackLayer: string | undefi
 			})*/
 
 			ToPl: fixAttribution(tileLayer("https://sgx.geodatenzentrum.de/wmts_topplus_open/tile/1.0.0/web/default/WEBMERCATOR/{z}/{y}/{x}.png", {
+				maxZoom: 18,
 				...fmName(() => getI18n().t("layers.topl-name")),
 				...attribution(() => getI18n().t("layers.topl-attribution", { year: new Date().getFullYear() })),
 				noWrap: true
@@ -61,6 +63,7 @@ export function createDefaultLayers(): Layers & { fallbackLayer: string | undefi
 			})),
 
 			Topo: fixAttribution(tileLayer("https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png", {
+				maxZoom: 17,
 				...fmName(() => getI18n().t("layers.topo-name")),
 				...attribution(() => getI18n().t("layers.topo-attribution")),
 				noWrap: true
@@ -68,6 +71,7 @@ export function createDefaultLayers(): Layers & { fallbackLayer: string | undefi
 
 			...(layerOptions.tracestrackToken ? {
 				TrTo: fixAttribution(tileLayer(`https://tile.tracestrack.com/topo__/{z}/{x}/{y}.png?key=${encodeURIComponent(layerOptions.tracestrackToken)}`, {
+					maxZoom: 19,
 					...fmName(() => getI18n().t("layers.trto-name")),
 					...attribution(() => getI18n().t("layers.trto-attribution")),
 					noWrap: true
@@ -75,6 +79,7 @@ export function createDefaultLayers(): Layers & { fallbackLayer: string | undefi
 			} : {}),
 
 			CycO: fixAttribution(tileLayer("https://{s}.tile-cyclosm.openstreetmap.fr/cyclosm/{z}/{x}/{y}.png", {
+				maxZoom: 20,
 				...fmName(() => getI18n().t("layers.cyco-name")),
 				...attribution(() => getI18n().t("layers.cyco-attribution")),
 				noWrap: true
@@ -82,6 +87,7 @@ export function createDefaultLayers(): Layers & { fallbackLayer: string | undefi
 
 			...(layerOptions.thunderforestToken ? {
 				OCyc: fixAttribution(tileLayer(`https://{s}.tile.thunderforest.com/cycle/{z}/{x}/{y}.png?apikey=${encodeURIComponent(layerOptions.thunderforestToken)}`, {
+					maxZoom: 22,
 					...fmName(() => getI18n().t("layers.ocyc-name")),
 					...attribution(() => getI18n().t("layers.ocyc-attribution")),
 					noWrap: true
@@ -94,7 +100,7 @@ export function createDefaultLayers(): Layers & { fallbackLayer: string | undefi
 				noWrap: true
 			})),
 
-			MpnW: fixAttribution(tileLayer("http://ftdl.de/tile-cache/tiles/{z}/{x}/{y}.png", {
+			MpnW: fixAttribution(tileLayer("https://www.freietonne.de/seekarte-2.0/tah.openstreetmap.org/Tiles/TileCache.php?z={z}&x={x}&y={y}.png", {
 				...fmName(() => getI18n().t("layers.mpnw-name")),
 				...attribution(() => getI18n().t("layers.mpnw-attribution")),
 				noWrap: true
@@ -102,6 +108,7 @@ export function createDefaultLayers(): Layers & { fallbackLayer: string | undefi
 		},
 		overlays: {
 			OPTM: fixAttribution(tileLayer("https://pt.facilmap.org/tile/{z}/{x}/{y}.png", {
+				maxZoom: 20,
 				...fmName(() => getI18n().t("layers.optm-name")),
 				...attribution(() => getI18n().t("layers.optm-attribution")),
 				zIndex: 300,
@@ -109,6 +116,7 @@ export function createDefaultLayers(): Layers & { fallbackLayer: string | undefi
 			})),
 
 			Hike: fixAttribution(tileLayer("https://tile.waymarkedtrails.org/hiking/{z}/{x}/{y}.png", {
+				maxZoom: 18,
 				...fmName(() => getI18n().t("layers.hike-name")),
 				...attribution(() => getI18n().t("layers.hike-attribution")),
 				zIndex: 300,
@@ -116,10 +124,41 @@ export function createDefaultLayers(): Layers & { fallbackLayer: string | undefi
 			})),
 
 			Bike: fixAttribution(tileLayer("https://tile.waymarkedtrails.org/cycling/{z}/{x}/{y}.png", {
+				maxZoom: 18,
 				...fmName(() => getI18n().t("layers.bike-name")),
 				...attribution(() => getI18n().t("layers.bike-attribution")),
 				zIndex: 300,
 				noWrap: true
+			})),
+
+			Toll: fixAttribution(tileLayer("https://tiles.facilmap.org/tolls/{z}/{x}/{y}.png", {
+				maxZoom: 20,
+				...fmName(() => getI18n().t("layers.toll-name")),
+				...attribution(() => getI18n().t("layers.facilmap-tiles-attribution")),
+				zIndex: 300,
+				noWrap: true,
+				opacity: 0.7,
+				className: "fm-toll-layer"
+			})),
+
+			CycR: fixAttribution(tileLayer("https://tiles.facilmap.org/cycling-restrictions/{z}/{x}/{y}.png", {
+				maxZoom: 20,
+				...fmName(() => getI18n().t("layers.cycr-name")),
+				...attribution(() => getI18n().t("layers.facilmap-tiles-attribution")),
+				zIndex: 300,
+				noWrap: true,
+				opacity: 0.7,
+				className: "fm-cycr-layer"
+			})),
+
+			Cobl: fixAttribution(tileLayer("https://tiles.facilmap.org/cobblestone/{z}/{x}/{y}.png", {
+				maxZoom: 20,
+				...fmName(() => getI18n().t("layers.cobl-name")),
+				...attribution(() => getI18n().t("layers.facilmap-tiles-attribution")),
+				zIndex: 300,
+				noWrap: true,
+				opacity: 0.7,
+				className: "fm-cobl-layer"
 			})),
 
 			Rlie: tileLayer("https://tiles.wmflabs.org/hillshading/{z}/{x}/{y}.png", {

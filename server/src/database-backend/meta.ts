@@ -19,6 +19,8 @@ export interface MetaProperties {
 	viewsIdxMigrationCompleted: "1";
 	fieldIconsMigrationCompleted: "1";
 	historyPadMigrationCompleted: "1";
+	hasExtraInfoStats: "1";
+	formulaObjectMigrationCompleted: "1";
 	mapIdMigrationCompleted: "1" | "2" | "3";
 }
 
@@ -35,6 +37,8 @@ const INITIAL_META: { [K in keyof MetaProperties]: MetaProperties[K] } = {
 	viewsIdxMigrationCompleted: "1",
 	fieldIconsMigrationCompleted: "1",
 	historyPadMigrationCompleted: "1",
+	hasExtraInfoStats: "1",
+	formulaObjectMigrationCompleted: "1",
 	mapIdMigrationCompleted: "3"
 };
 

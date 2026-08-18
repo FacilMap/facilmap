@@ -3,6 +3,7 @@ import { FeatureGroup, Layer, type LayerOptions, type PathOptions } from "leafle
 import MarkerLayer from "../markers/marker-layer";
 import type { AnalyzedOsmRelationSection, ResolvedOsmFeature } from "facilmap-utils";
 import { HighlightablePolyline } from "leaflet-highlightable-layers";
+import { getPolylineStyles } from "../utils/styles";
 
 export type OsmLayerFeature = ResolvedOsmFeature | AnalyzedOsmRelationSection;
 
@@ -99,11 +100,7 @@ export default class OsmLayer extends FeatureGroup {
 	createWayLayer(path: DeepReadonly<Point[]>, highlight: boolean): Layer {
 		const weight = this.options.pathOptions?.weight ?? 6;
 		return new HighlightablePolyline(path.map((p) => [p.lat, p.lon]), {
-			raised: highlight,
-			opacity: highlight ? 1 : 0.5,
-			weight,
-			outlineWeight: weight + 2,
-			outlineColor: "#000000",
+			...getPolylineStyles({ highlight, width: weight }),
 			...this.options.pathOptions
 		});
 	}

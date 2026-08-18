@@ -1,9 +1,11 @@
 <script setup lang="ts">
-	import type { Field } from "facilmap-types";
+	import type { Field, Line, Marker, Type } from "facilmap-types";
 	import { computed, type DeepReadonly } from "vue";
-	import { formatFieldName, normalizeFieldValue } from "facilmap-utils";
+	import { formatFieldName, formatFieldValue, normalizeFieldValue } from "facilmap-utils";
 
 	const props = withDefaults(defineProps<{
+		type?: DeepReadonly<Type>;
+		object?: Marker | Line;
 		field: DeepReadonly<Field>;
 		ignoreDefault?: boolean;
 		modelValue?: string;
@@ -27,7 +29,14 @@
 
 <template>
 	<div class="fm-field-input">
-		<template v-if="field.type === 'textarea'">
+		<template v-if="field.type === 'formula'">
+			<div
+				class="form-control-plaintext"
+				:id="id"
+				v-html="props.type && props.object ? formatFieldValue(props.type, field, props.object, true) : ''"
+			/>
+		</template>
+		<template v-else-if="field.type === 'textarea'">
 			<textarea class="form-control" :id="id" v-model="value"></textarea>
 		</template>
 		<template v-else-if="field.type === 'dropdown'">

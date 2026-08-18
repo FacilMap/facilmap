@@ -1,11 +1,10 @@
 <script setup lang="ts">
 	import { dataByFieldIdToDataByName, dataByNameToDataByFieldId, lineValidator, type ID, type Type } from "facilmap-types";
-	import { canControl, cloneDeep, formatFieldName, formatTypeName, getOrderedTypes, mergeObject, canUpdateType, canUpdateField, getCreatableTypes, canUpdateObject } from "facilmap-utils";
+	import { canControl, cloneDeep, formatTypeName, getOrderedTypes, mergeObject, canUpdateType, getCreatableTypes, canUpdateObject } from "facilmap-utils";
 	import { getUniqueId, getZodValidator, validateRequired } from "../utils/utils";
 	import { isEqual, omit } from "lodash-es";
 	import ModalDialog from "./ui/modal-dialog.vue";
 	import ColourPicker from "./ui/colour-picker.vue";
-	import FieldInput from "./ui/field-input.vue";
 	import RouteMode from "./ui/route-mode.vue";
 	import WidthPicker from "./ui/width-picker.vue";
 	import { computed, ref, toRef, watch, type DeepReadonly } from "vue";
@@ -15,8 +14,8 @@
 	import ValidatedField from "./ui/validated-form/validated-field.vue";
 	import StrokePicker from "./ui/stroke-picker.vue";
 	import { useI18n } from "../utils/i18n";
-	import { useMaxBreakpoint } from "../utils/bootstrap";
 	import EditTypeDialog from "./edit-type-dialog/edit-type-dialog.vue";
+	import EditObjectFields from "./ui/edit-object-fields.vue";
 
 	const context = injectContextRequired();
 	const clientContext = requireClientContext(context);
@@ -47,8 +46,6 @@
 	const type = computed(() => clientSub.value.data.types[line.value.typeId]);
 
 	const resolvedCanControl = computed(() => canControl(type.value));
-
-	const isXs = useMaxBreakpoint("xs");
 
 	const showEditTypeDialog = ref<ID>();
 
@@ -159,30 +156,10 @@
 				</div>
 			</template>
 
-			<template v-for="(field, idx) in clientSub.data.types[line.typeId].fields" :key="field.name">
-				<template v-if="canUpdateField(clientSub.activeLink.permissions, line.typeId, field.id, line.own)">
-					<template v-if="field.type !== 'checkbox' || !isXs">
-						<div class="row mb-3">
-							<label :for="`${id}-${idx}-input`" class="col-sm-3 col-form-label text-break">{{formatFieldName(field.name)}}</label>
-							<div class="col-sm-9" :class="{ 'fm-form-check-with-label': field.type === 'checkbox' }">
-								<FieldInput
-									:id="`${id}-${idx}-input`"
-									:field="field"
-									v-model="line.data[field.id]"
-								></FieldInput>
-							</div>
-						</div>
-					</template>
-					<template v-else>
-						<FieldInput
-							:id="`${id}-${idx}-input`"
-							:field="field"
-							v-model="line.data[field.id]"
-							showCheckboxLabel
-						></FieldInput>
-					</template>
-				</template>
-			</template>
+			<EditObjectFields
+				:object="line"
+				@update="(fieldId, value) => { if (value != null) { line.data[fieldId] = value; } else { delete line.data[fieldId]; } }"
+			></EditObjectFields>
 		</template>
 
 		<template #footer-left>

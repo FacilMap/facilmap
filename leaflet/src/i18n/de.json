@@ -29,7 +29,11 @@
         "rlie-name": "Relief",
         "grid-name": "Gradnetz",
         "frto-name": "Schifffahrtszeichen",
-        "frto-attribution": "© [FreieTonne](https://www.freietonne.de/) / [OSM-Mitwirkende](https://www.openstreetmap.org/copyright/de)"
+        "frto-attribution": "© [FreieTonne](https://www.freietonne.de/) / [OSM-Mitwirkende](https://www.openstreetmap.org/copyright/de)",
+        "toll-name": "Mautstraßen",
+        "cycr-name": "Radfahrverbote",
+        "facilmap-tiles-attribution": "[FacilMap tiles](https://github.com/FacilMap/tiles) / [OSM-Mitwirkende](https://www.openstreetmap.org/copyright/de)",
+        "cobl-name": "Kopfsteinpflaster"
     },
     "overpass-presets": {
         "category-amenities": "Infrastruktur",
@@ -197,7 +201,11 @@
         "town": "Stadt",
         "village": "Dorf",
         "hamlet": "Weiler",
-        "suburb": "Stadtteil"
+        "suburb": "Stadtteil",
+        "parking-no-fee": "Parkplätze (kostenlos)",
+        "parking-unknown-fee": "Parkplätze (kostenlos oder Preis unbekannt)",
+        "toilets-no-fee": "Toiletten (kostenlos)",
+        "toilets-unknown-fee": "Toiletten (kostenlos oder Preis unbekannt)"
     },
     "search-result-geojson": {
         "invalid-geojson-error": "Ungültiges GeoJSON-Objekt."

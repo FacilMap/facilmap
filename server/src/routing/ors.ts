@@ -1,6 +1,6 @@
 import config from "../config.js";
-import { calculateDistance, type DecodedRouteMode } from "facilmap-utils";
-import type { ExtraInfo, Point } from "facilmap-types";
+import { calculateDistance, createExtraInfoStats, type DecodedRouteMode } from "facilmap-utils";
+import type { ExtraInfo, ExtraInfoStats, Point } from "facilmap-types";
 import type { RawRouteInfo } from "./routing.js";
 import { getI18n } from "../i18n.js";
 
@@ -93,7 +93,8 @@ export async function calculateORSRoute(points: Point[], decodedMode: DecodedRou
 		time: 0,
 		ascent: decodedMode.details ? 0 : null,
 		descent: decodedMode.details ? 0 : null,
-		extraInfo: decodedMode.details ? {} as ExtraInfo : null
+		extraInfo: decodedMode.details ? {} as ExtraInfo : null,
+		extraInfoStats: decodedMode.details ? {} as ExtraInfoStats : null,
 	};
 
 	for(const body of results) {
@@ -128,6 +129,8 @@ export async function calculateORSRoute(points: Point[], decodedMode: DecodedRou
 					ret.extraInfo![i] = [];
 				ret.extraInfo![i].push(...body.features[0].properties.extras[i].values.map((v: any) => ([v[0]+idxAdd, v[1]+idxAdd, v[2]])));
 			}
+
+			ret.extraInfoStats = createExtraInfoStats(ret.extraInfo!, ret.trackPoints);
 		}
 	}
 

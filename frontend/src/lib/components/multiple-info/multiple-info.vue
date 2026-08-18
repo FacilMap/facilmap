@@ -13,6 +13,7 @@
 	import type { ResultsItem } from "../ui/results.vue";
 	import Results from "../ui/results.vue";
 	import Carousel, { CarouselTab } from "../ui/carousel.vue";
+	import { vKeyboardShortcut } from "../../utils/vue";
 
 	const context = injectContextRequired();
 	const clientContext = requireClientContext(context);
@@ -121,7 +122,7 @@
 					@open="(object) => openObject(object)"
 				></Results>
 
-				<div class="btn-toolbar mt-2">
+				<div class="btn-toolbar fm-search-box-toolbar">
 					<ZoomToObjectButton
 						v-if="zoomDestination"
 						:label="i18n.t('multiple-info.zoom-to-object-label')"
@@ -135,6 +136,7 @@
 						class="btn btn-secondary btn-sm"
 						@click="deleteObjects()"
 						:disabled="isDeleting || mapContext.interaction"
+						v-keyboard-shortcut="['Delete', 'Backspace']"
 					>
 						<div v-if="isDeleting" class="spinner-border spinner-border-sm"></div>
 						{{i18n.t("multiple-info.delete")}}

@@ -57,7 +57,7 @@ When you click on a line, it is highlighted and a [search box](../ui/#search-box
 
 ## Edit line details
 
-To edit the details of a line, select the line and then click “Edit data” in its [search box](../ui/#search-box) tab. A dialog will open where you can edit the following fields:
+To edit the details of a line, select the line and then click “Edit data” in its [search box](../ui/#search-box) tab (or press <kbd>e</kbd> on your keyboard). A dialog will open where you can edit the following fields:
 * **Name:** The name of the line. Will be shown as the heading in the line details and as a tooltip when hovering the line.
 * **Routing mode:** The route mode of the line. By default, “straight line” is selected, but you can select something else to make the line points into route destinations. More information about route modes can be found under [routes](../route/#route-modes).
 * **Colour:** The colour of the line.
@@ -77,7 +77,7 @@ To change the course or the position of a line, select the line and then click �
 
 ## Remove a line
 
-To remove a line from the map, select the line, click “Remove” and confirm the alert box. Note that removed lines will remain in the [edit history](../history/) of the map and can be seen and restored there by admins.
+To remove a line from the map, select the line, click “Actions” and then “Delete” (or press the delete/backspace key on your keyboard) and confirm the alert box. Note that removed lines will remain in the [edit history](../history/) of the map and can be seen and restored there by admins.
 
 <Screencast :desktop="removeMp4" :mobile="removeMobileMp4"></Screencast>
 

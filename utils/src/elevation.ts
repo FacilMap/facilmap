@@ -1,7 +1,9 @@
-import type { Point } from "facilmap-types";
+import type { ExtraInfo, ExtraInfoStats, Point } from "facilmap-types";
 import { RetryError, throttledBatch } from "./utils.js";
 import { fetchAdapter, getConfig } from "./config.js";
 import { getI18n } from "./i18n.js";
+import { calculateDistance } from "./routing.js";
+import { round } from "./format.js";
 
 const MAX_DELAY_MS = 60_000;
 
@@ -83,4 +85,42 @@ export function getAscentDescent(elevations: Array<number | null>): AscentDescen
 	}
 
 	return ret;
+}
+
+type BasicTrackPoints<T extends Point = Point> = {
+	[idx: number]: T;
+	length: number;
+}
+
+export function trackSegment<T extends Point>(trackPoints: BasicTrackPoints<T>, fromIdx: number, toIdx: number): T[] {
+	let ret: T[] = [];
+
+	for(let i=fromIdx; i<trackPoints.length; i++) {
+		if (trackPoints[i]) {
+			ret.push(trackPoints[i]);
+
+			if (i >= toIdx) { // Makes sure that if toIdx does not exist in trackPoints, the next trackPoint is added, which avoids gaps between the segments, as required by leaflet.heightgraph
+				break;
+			}
+		}
+	}
+
+	return ret;
+}
+
+export function createExtraInfoStats(extraInfo: ExtraInfo, trackPoints: BasicTrackPoints): ExtraInfoStats {
+	const totalDistance = calculateDistance(trackPoints);
+	return Object.fromEntries(Object.entries(extraInfo).map(([key, info]) => {
+		const result: Record<number, number> = {};
+		for (const segment in info) {
+			result[info[segment][2]] = (result[info[segment][2]] ?? 0) + calculateDistance(trackSegment(trackPoints, info[segment][0], info[segment][1]));
+		}
+		return [key, Object.fromEntries(Object.entries(result).map(([k, v]) => {
+			const percent = 100 * v / totalDistance;
+			return [k, {
+				distanceKm: v,
+				percent: percent < 1 ? round(percent, 1) : Math.round(percent)
+			}];
+		}))];
+	}));
 }

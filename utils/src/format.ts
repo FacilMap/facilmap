@@ -1,5 +1,5 @@
 import { marked, type MarkedOptions } from "marked";
-import { Units, type DeepReadonly, type Field, type Point, type RouteMode } from "facilmap-types";
+import { Units, type DeepReadonly, type Field, type Line, type Marker, type Point, type RouteMode, type Type } from "facilmap-types";
 import { quoteHtml, quoteRegExp } from "./utils.js";
 import linkifyStr from "linkify-string";
 import createPurify from "dompurify";
@@ -9,6 +9,7 @@ import { NodeWithChildren, Element, type Node, type ParentNode, Text, type AnyNo
 import { getI18n } from "./i18n.js";
 import { formatRouteMode } from "./routing.js";
 import { getCurrentUnits } from "./i18n-utils.js";
+import { compileFormulaExpression } from "./filter.js";
 
 const purify = createPurify(typeof window !== "undefined" ? window : new (await import("jsdom")).JSDOM("").window);
 
@@ -16,12 +17,20 @@ const markdownOptions: MarkedOptions = {
 	breaks: true
 };
 
+export const CHECKBOX_TRUE_LABEL = "✔";
+export const CHECKBOX_FALSE_LABEL = "✘";
+
 export function formatCheckboxValue(value: string): string {
-	return value == "1" ? "✔" : "✘";
+	return value == "1" ? CHECKBOX_TRUE_LABEL : CHECKBOX_FALSE_LABEL;
 }
 
-export function formatFieldValue(field: DeepReadonly<Field>, value: string | undefined, html: boolean): string {
-	const normalizedValue = normalizeFieldValue(field, value);
+export function formatFieldValue(type: DeepReadonly<Type>, field: DeepReadonly<Field>, object: DeepReadonly<Marker> | DeepReadonly<Line>, html: boolean): string {
+	if (field.type === "formula") {
+		const result = compileFormulaExpression(field.formula)(object, type);
+		return markdownInline(result, html);
+	}
+
+	const normalizedValue = normalizeFieldValue(field, object.data[field.id]);
 	switch(field.type) {
 		case "textarea":
 			return markdownBlock(normalizedValue, html);
@@ -220,7 +229,7 @@ export function renderOsmTag(key: string, value: string): string {
 		return replaceLink((v) => `https://www.wikidata.org/wiki/${encodeURIComponent(v)}`);
 	} else if (isTag("wikimedia_commons")) {
 		return replaceLink((v) => `https://commons.wikimedia.org/wiki/${encodeURIComponent(v)}`);
-	} else if (isTag("flag")) {
+	} else if (isTag("flag") || isTag("coat_of_arms")) {
 		return replaceLink((v) => v.startsWith("File:") ? `https://commons.wikimedia.org/wiki/${encodeURIComponent(v)}` : undefined);
 	} else if (isTag("wiki:symbol")) {
 		return replaceLink((v) => `https://wiki.openstreetmap.org/wiki/Image:${encodeURIComponent(v)}`);

@@ -91,12 +91,12 @@
 		</dl>
 
 		<template v-if="props.isLoading">
-			<div class="d-flex justify-content-center mb-3">
+			<div class="d-flex justify-content-center mt-2 mb-1">
 				<div class="spinner-border"></div>
 			</div>
 		</template>
 
-		<div class="btn-toolbar">
+		<div class="btn-toolbar fm-search-box-toolbar">
 			<ZoomToObjectButton
 				v-if="zoomDestination"
 				:label="i18n.t('search-result-info.zoom-to-result-label')"

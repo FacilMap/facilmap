@@ -70,7 +70,7 @@
 		tabs: HTMLElement[];
 	}
 
-	const contextKey = Symbol("fm-carousel") as InjectionKey<InternalCarouselContext>;
+	const contextKey = Symbol.for("fm-inject-carousel") as InjectionKey<InternalCarouselContext>;
 
 	export const CarouselTab = defineComponent({
 		props: {

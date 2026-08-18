@@ -97,7 +97,7 @@
 				if (result.errors)
 					toasts.showErrorToast(`fm${context.id}-import-error`, () => i18n.t("import-tab.partial-parse-error-title"), () => i18n.t("import-tab.partial-parse-error-message"), { variant: "warning" });
 
-				const layer = markRaw(new SearchResultsLayer(result.features, { pathOptions: { weight: 7 } }).addTo(mapContext.value.components.map));
+				const layer = markRaw(new SearchResultsLayer(result.features).addTo(mapContext.value.components.map));
 				if (result.features.length > 0) {
 					mapContext.value.components.map.flyToBounds(layer.getBounds());
 				}

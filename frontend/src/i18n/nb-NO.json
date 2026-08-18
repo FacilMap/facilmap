@@ -20,10 +20,12 @@
         "map-deleted-header": "Kart slettet"
     },
     "edit-filter-dialog": {
+        "apply": "Bruk"
+    },
+    "filter-syntax": {
         "description": "Beskrivelse",
         "example": "Eksempel",
         "typeId-description": "{{items}}",
-        "apply": "Bruk",
         "typeId-description-separator": " / ",
         "size-description": "Pekerstørrelse",
         "icon-description": "Pekerikon",

@@ -51,6 +51,7 @@ test("Socket v1 line name", async () => {
 			ascent: null,
 			descent: null,
 			extraInfo: null,
+			extraInfoStats: null,
 			top: 14,
 			right: 14,
 			bottom: 6,

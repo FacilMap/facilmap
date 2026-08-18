@@ -35,7 +35,7 @@ export default tseslint.config({
 
 	rules: {
 		"@typescript-eslint/explicit-module-boundary-types": ["warn", { "allowArgumentsExplicitlyTypedAsAny": true }],
-		"import/no-unresolved": ["error", { "ignore": [ "geojson", "virtual:icons", "virtual:languages" ], "caseSensitive": true }],
+		"import/no-unresolved": ["error", { "ignore": [ "geojson", "virtual:icons", "virtual:language-names", "virtual:language-stats" ], "caseSensitive": true }],
 		"import/no-extraneous-dependencies": ["error"],
 		"@typescript-eslint/no-unused-vars": ["warn", { "args": "none" }],
 		"import/no-named-as-default": ["warn"],
@@ -44,7 +44,7 @@ export default tseslint.config({
 		"@typescript-eslint/no-extra-non-null-assertion": ["error"],
 		"@typescript-eslint/no-non-null-asserted-optional-chain": ["error"],
 		"@typescript-eslint/prefer-as-const": ["error"],
-		"no-restricted-globals": ["error", "$"],
+		"no-restricted-globals": ["error", "$", "length"],
 		"no-restricted-imports": ["error", "vue/types/umd"],
 		"vue/multi-word-component-names": ["off"],
 		"@typescript-eslint/no-base-to-string": ["error"],

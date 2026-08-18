@@ -124,7 +124,7 @@
 	const suggestionMarker = ref<MarkerLayer>();
 
 	const routeLayer = computed(() => {
-		const layer = markRaw(new RouteLayer(clientContext.value.storage, props.routeKey, { weight: 7, opacity: 1, raised: true }));
+		const layer = markRaw(new RouteLayer(clientContext.value.storage, props.routeKey, { highlight: true }));
 		layer.on("click", (e) => {
 			if (!props.active && !(e.originalEvent as any).ctrlKey) {
 				emit("activate");
@@ -755,7 +755,7 @@
 
 				<ElevationPlot :route="routeObj" v-if="routeObj.ascent != null"></ElevationPlot>
 
-				<div v-if="showToolbar" class="btn-toolbar" role="group">
+				<div v-if="showToolbar" class="btn-toolbar fm-search-box-toolbar" role="group">
 					<ZoomToObjectButton
 						v-if="zoomDestination"
 						:label="i18n.t('route-form.zoom-to-object-label')"

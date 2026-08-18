@@ -1,7 +1,8 @@
 import { Units } from "facilmap-types";
 import i18next, { type CustomPluginOptions, type Module, type Newable, type i18n } from "i18next";
 import LanguageDetector from "i18next-browser-languagedetector";
-import languageNames from "virtual:languages";
+import languageNames from "virtual:language-names";
+import languageStats from "virtual:language-stats";
 
 export const LANGUAGES = Object.keys(languageNames);
 
@@ -110,4 +111,18 @@ export function setCurrentUnitsGetter(getter: typeof currentUnitsGetter): void {
 
 export function getCurrentUnits(): Units {
 	return currentUnitsGetter?.() ?? Units.METRIC;
+}
+
+/**
+ * Returns a map of each existing language key to its language name in the language itself.
+ */
+export function getLocalizedLanguageList(): Record<string, string> {
+	return languageNames;
+}
+
+/**
+ * Returns statistics about the completion of each language. The completion is given as a fraction (1 is complete).
+ */
+export function getLanguageStats(): Record<string, number> {
+	return languageStats;
 }

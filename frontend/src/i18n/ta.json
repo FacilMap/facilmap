@@ -53,10 +53,10 @@
     "edit-filter-dialog": {
         "introduction": "சில குறிப்பான்கள்/வரிகளை அவற்றின் பண்புகளின் அடிப்படையில் காட்ட/மறைக்க ஒரு மேம்பட்ட வெளிப்பாட்டை இங்கே அமைக்கலாம். வடிகட்டி வெளிப்பாடு வரைபடத்தைப் பற்றிய உங்கள் பார்வைக்கு மட்டுமே பொருந்தும், ஆனால் இது ஒரு சேமிக்கப்பட்ட பார்வையின் ஒரு பகுதியாக அல்லது பகிரப்பட்ட இணைப்பின் ஒரு பகுதியாக தொடரலாம்.",
         "title": "வடிப்பி",
-        "apply": "இடு",
-        "syntax-header": "தொடரியல்",
-        "variable": "மாறக்கூடிய",
-        "operator": "ஆபரேட்டர்",
+        "apply": "இடு"
+    },
+    "filter-syntax": {
+        "header": "தொடரியல்",
         "description": "விவரம்",
         "example": "எடுத்துக்காட்டு",
         "name-description": "மார்க்கர்/வரி பெயர்",
@@ -65,7 +65,7 @@
         "typeId-description-item": "{{typeId}} ({{typeName}})",
         "data-description-2": "தேர்வுப்பெட்டி புலங்களுக்கு, மதிப்பு {{uncheckedValue}}} (தேர்வு செய்யப்படாதது) அல்லது {{checkedValue}} (சரிபார்க்கப்பட்டது).",
         "typeId-description-separator": " / ",
-        "data-description-1": "புல மதிப்புகள் (எடுத்துக்காட்டு: {{example1}} அல்லது {{example2}}).",
+        "data-description-1": "புல மதிப்புகள்.",
         "lon-lat-description": "மார்க்கர் ஒருங்கிணைப்புகள்",
         "colour-description": "மார்க்கர்/வரி நிறம்",
         "stroke-description": "வரி பக்கவாதம் ({{solid}} (திட) / {{dashed}} / {{dotted}}))",
@@ -562,11 +562,7 @@
     },
     "elevation-stats": {
         "ascent-alt": "ஏற்றம்",
-        "descent-alt": "இறக்கம்",
-        "show-tooltip": "உயர புள்ளிவிவரங்களைக் காட்டு",
-        "show-alt": "புள்ளிவிவரங்களைக் காட்டு",
-        "total-ascent": "மொத்த ஏற்றம்",
-        "total-descent": "மொத்த வம்சாவளி"
+        "descent-alt": "இறக்கம்"
     },
     "export-dropdown": {
         "export-error": "பிழை ஏற்றுமதி பாதை",
@@ -691,7 +687,7 @@
     "legend": {
         "tab-label": "புராணக்கதை"
     },
-    "legend-content": {
+    "legend-map-content": {
         "click-explanation": "இந்த வகை பொருள்களைக் காட்ட/மறைக்க சொடுக்கு செய்க."
     },
     "manage-favourites-dialog": {

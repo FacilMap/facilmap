@@ -71,7 +71,7 @@
 		}
 
 		for(let option of (field.options || []))
-			option.oldValue = option.value;
+			(option as FieldOptionUpdate).oldValue = option.value;
 
 		return field;
 	});

@@ -1,12 +1,12 @@
 import { Map } from "leaflet";
-import { compileExpression } from "facilmap-utils";
+import { compileFilterExpression } from "facilmap-utils";
 
 Object.assign(Map.prototype, {
 	fmFilter: undefined,
-	fmFilterFunc: compileExpression(),
+	fmFilterFunc: compileFilterExpression(),
 
 	setFmFilter(this: Map, filter?: string) {
-		this.fmFilterFunc = compileExpression(filter);
+		this.fmFilterFunc = compileFilterExpression(filter);
 		this.fmFilter = filter || undefined;
 		this.fire("fmFilter");
 	}

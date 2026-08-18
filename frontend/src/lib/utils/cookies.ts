@@ -31,19 +31,19 @@ export const cookies = readonly(reactive({
 	units: cookie("units")
 }));
 
-const hasStorageAccessP = (async () => {
-	if ("hasStorageAccess" in document) {
-		return await document.hasStorageAccess();
-	} else {
-		return true;
-	}
-})();
-
 async function setLongTermCookie(name: keyof Cookies, value: string): Promise<void> {
 	try {
+		// Set cookie twice, once as regular cookie and once as partitioned cookie, in case one of them fails.
+		// In a third-party iframe, the regular cookie might fail depending on the browser settings. In an unencrypted HTTP context,
+		// the partitioned cookie will fail, since it requires HTTPS. In general, an unpartitioned cookie is desirable for us, but
+		// it is important enough to justify calling document.requestStorageAccess() to get the user's explicit permission.
+		Cookies.set(name, value, {
+			expires: 3650
+		});
 		Cookies.set(name, value, {
 			expires: 3650,
-			partitioned: !(await hasStorageAccessP)
+			partitioned: true,
+			secure: true
 		});
 	} finally {
 		cookieCounter.value++;

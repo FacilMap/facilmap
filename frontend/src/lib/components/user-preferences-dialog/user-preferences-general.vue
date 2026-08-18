@@ -1,5 +1,5 @@
 <script setup lang="ts">
-	import { getLocalizedLanguageList } from "facilmap-utils";
+	import { getLanguageStats, getLocalizedLanguageList } from "facilmap-utils";
 	import { Units } from "facilmap-types";
 	import { computed } from "vue";
 	import {  T, useI18n } from "../../utils/i18n";
@@ -13,6 +13,7 @@
 	const id = getUniqueId("fm-user-preferences-general");
 
 	const languageList = computed(() => getLocalizedLanguageList());
+	const languageStats = computed(() => getLanguageStats());
 </script>
 
 <template>
@@ -20,7 +21,7 @@
 		<label :for="`${id}-language-input`" class="col-sm-3 col-form-label">{{i18n.t("user-preferences-dialog.language")}}</label>
 		<div class="col-sm-9">
 			<select :id="`${id}-language-input`" class="form-select" v-model="lang">
-				<option v-for="(label, key) in languageList" :key="key" :value="key">{{label}}</option>
+				<option v-for="(label, key) in languageList" :key="key" :value="key">{{label}} ({{Math.round(languageStats[key] * 100)}}&#x202f;%)</option>
 			</select>
 			<div class="form-text">
 				<T k="user-preferences-dialog.language-description">

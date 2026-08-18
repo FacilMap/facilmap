@@ -1,6 +1,6 @@
 import { iterableToArray, iterableToStream, getZipEncodeStream, indentStream, stringToStream, type ZipEncodeStreamItem, streamToIterable, StringAggregationTransformStream } from "../utils/streams.js";
 import type { Field, Line, Marker, TrackPoint, Type, LineWithTrackPoints, Stripped } from "facilmap-types";
-import { compileExpression, getSafeFilename, normalizeLineName, normalizeMarkerName, normalizeMapName, quoteHtml } from "facilmap-utils";
+import { compileFilterExpression, getSafeFilename, normalizeLineName, normalizeMarkerName, normalizeMapName, quoteHtml } from "facilmap-utils";
 import { keyBy } from "lodash-es";
 import type { RawActiveMapLink } from "../utils/permissions.js";
 import type { ApiV3Backend } from "../api/api-v3.js";
@@ -107,7 +107,7 @@ function getLineTrackGpx(line: LineForExport, type: Stripped<Type> | undefined, 
 
 export function exportGpx(api: ApiV3Backend, mapLink: RawActiveMapLink, rte: boolean, filter?: string): ReadableStream<string> {
 	return iterableToStream((async function* () {
-		const filterFunc = compileExpression(filter);
+		const filterFunc = compileFilterExpression(filter);
 
 		const [mapData, types] = await Promise.all([
 			api.getMap(mapLink),
@@ -150,7 +150,7 @@ export function exportGpxZip(api: ApiV3Backend, mapLink: RawActiveMapLink, rte: 
 	const encodeZipStream = getZipEncodeStream();
 
 	void iterableToStream((async function*(): AsyncIterable<ZipEncodeStreamItem> {
-		const filterFunc = compileExpression(filter);
+		const filterFunc = compileFilterExpression(filter);
 
 		const [mapData, types] = await Promise.all([
 			api.getMap(mapLink),

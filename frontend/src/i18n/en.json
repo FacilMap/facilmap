@@ -188,10 +188,13 @@
     "edit-filter-dialog": {
         "title": "Filter",
         "apply": "Apply",
-        "introduction": "Here you can set an advanced expression to show/hide certain markers/lines based on their attributes. The filter expression only applies to your view of the map, but it can be persisted as part of a saved view or a shared link.",
-        "syntax-header": "Syntax",
-        "variable": "Variable",
-        "operator": "Operator",
+        "introduction": "Here you can set an advanced expression to show/hide certain markers/lines based on their attributes. The filter expression only applies to your view of the map, but it can be persisted as part of a saved view or a shared link."
+    },
+    "filter-syntax": {
+        "header": "Syntax",
+        "expression": "Expression",
+        "operation": "Operation",
+        "comparison": "Comparison",
         "description": "Description",
         "example": "Example",
         "name-description": "Marker/Line name",
@@ -199,7 +202,7 @@
         "typeId-description": "{{items}})",
         "typeId-description-item": "{{typeId}} ({{typeName}})",
         "typeId-description-separator": " / ",
-        "data-description-1": "Field values (example: {{example1}} or {{example2}}).",
+        "data-description-1": "Field values.",
         "data-description-2": "For checkbox fields, the value is {{uncheckedValue}} (unchecked) or {{checkedValue}} (checked).",
         "lon-lat-description": "Marker coordinates",
         "colour-description": "Marker/line colour",
@@ -214,8 +217,11 @@
         "time-description": "Line routing time in seconds",
         "ascent-descent-description": "Total climb/drop of line",
         "routePoints-description": "Line point coordinates",
+        "number": "Number",
         "number-description": "Numerical value",
         "text-description": "Text value",
+        "plus-description-1": "Addition (if all values are numbers) or string concatenation.",
+        "plus-description-2": "Use {{code}} to convert strings to numbers.",
         "mathematical-description": "Mathematical operations ({{modulo}}: modulo, {{power}}: power)",
         "logical-description": "Logical operators",
         "ternary-description": "if/then/else operator",
@@ -284,6 +290,7 @@
         "field-type-textarea": "Text area",
         "field-type-dropdown": "Dropdown",
         "field-type-checkbox": "Checkbox",
+        "field-type-formula": "Formula",
         "field-edit": "Edit",
         "field-reorder": "Reorder",
         "field-add": "Add"
@@ -319,13 +326,16 @@
         "option-reorder": "Reorder",
         "option-add": "Add"
     },
+    "edit-type-formula-dialog": {
+        "title": "Edit Formula",
+        "ok-button": "OK",
+        "introduction": "Formulas allow you to automatically generate values out of other field values or properties of the same marker or line. Here is an overview over the possibilities. If some functionality is missing for your use case, please [report an issue](https://github.com/FacilMap/facilmap/issues)."
+    },
     "elevation-stats": {
         "ascent-alt": "Ascent",
         "descent-alt": "Descent",
-        "show-tooltip": "Show elevation statistics",
-        "show-alt": "Show stats",
-        "total-ascent": "Total ascent",
-        "total-descent": "Total descent"
+        "show-tooltip": "Show statistics",
+        "show-alt": "Show stats"
     },
     "export-dialog": {
         "format-option-gpx": "GPX",
@@ -563,6 +573,47 @@
         "tab-label": "Legend"
     },
     "legend-content": {
+        "public-transportation": "Public transportation",
+        "public-transportation-train-label": "Train",
+        "public-transportation-sbahn-label": "Suburban train",
+        "public-transportation-metro-label": "Metro",
+        "public-transportation-tram-label": "Tram/monorail/funicular",
+        "public-transportation-bus-label": "Bus",
+        "public-transportation-bus-alternate-label": "Bus (alternate route)",
+        "public-transportation-trolleybus-label": "Trolleybus",
+        "public-transportation-ferry-label": "Ferry",
+        "public-transportation-aerialway-label": "Aerial way",
+        "hiking-paths": "Hiking paths",
+        "hiking-paths-international-label": "International hiking path",
+        "hiking-paths-national-label": "National hiking path",
+        "hiking-paths-regional-label": "Regional hiking path",
+        "hiking-paths-local-label": "Local hiking path",
+        "bicycle-routes": "Bicycle routes",
+        "bicycle-routes-international-label": "International bicycle route",
+        "bicycle-routes-national-label": "National bicycle route",
+        "bicycle-routes-regional-label": "Regional bicycle route",
+        "bicycle-routes-local-label": "Local bicycle route",
+        "tolls": "Tolls",
+        "tolls-tolls-label": "Toll roads",
+        "cycling-restrictions": "Cycling restrictions",
+        "cycling-restrictions-restricted-label": "Forbidden",
+        "cycling-restrictions-restricted-description": "Cycling is explicitly forbidden on this road.",
+        "cycling-restrictions-sidepath-label": "Compulsory bike path",
+        "cycling-restrictions-sidepath-description": "A separate bike path along this road is compulsory to use. Depending on local regulations, using the road might be allowed if the bike path is unusable, for example due to snow.",
+        "cycling-restrictions-motorway-label": "Motorway",
+        "cycling-restrictions-motorway-description": "This road is a motorway. It depends on local regulations whether cycling is allowed here.",
+        "cycling-restrictions-motorroad-label": "Motor road",
+        "cycling-restrictions-motorroad-description": "This road is exclusively for motor vehicles. In some places cycling might be tolerated.",
+        "cycling-restrictions-pedestrian-label": "Pedestrian priority",
+        "cycling-restrictions-pedestrian-description": "Cycling is allowed here, but pedestrians have priority. Depending on local regulations, a speed limit (such as walking speed) might be implied.",
+        "cycling-restrictions-optional-label": "Optional bike path",
+        "cycling-restrictions-optional-description": "A separate bicycle path along this road is optional to use. Cycling on the road is allowed, but depending on the local culture, there might be a risk of getting assaulted or attacked, especially by car drivers.",
+        "cycling-restrictions-allowed-label": "Allowed",
+        "cycling-restrictions-allowed-description": "Cycling is allowed in the direction of the arrow, for example in the opposite direction of a one-way street.",
+        "cobblestone": "Cobblestone",
+        "cobblestone-cobblestone-label": "Cobblestone"
+    },
+    "legend-map-content": {
         "click-explanation": "Click to show/hide objects of this type."
     },
     "line-info": {
@@ -980,6 +1031,8 @@
     },
     "search-results": {
         "no-results": "No results have been found.",
+        "zoom-to-all-label": "Zoom to all",
+        "zoom-to-all-tooltip": "Zoom to all results",
         "zoom-to-result-tooltip": "Zoom to result",
         "show-details-tooltip": "Show details",
         "select-all": "Select all",

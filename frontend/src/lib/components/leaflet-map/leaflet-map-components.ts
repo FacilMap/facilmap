@@ -15,7 +15,7 @@ import type { MapComponents, MapContextData, MapContextEvents, WritableMapContex
 import type { ClientContext } from "../facil-map-context-provider/client-context";
 import type { FacilMapContext } from "../facil-map-context-provider/facil-map-context";
 import { requireClientContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
-import { quoteHtml, type Optional } from "facilmap-utils";
+import { quoteHtml, unquoteSearchTerm, type Optional } from "facilmap-utils";
 import { getI18n, i18nResourceChangeCounter, useI18n } from "../../utils/i18n";
 import { AttributionControl } from "./attribution";
 import { isNarrowBreakpoint } from "../../utils/bootstrap";
@@ -24,6 +24,8 @@ import storage from "../../utils/storage";
 import config from "../../../map/config";
 import "leaflet-doubletapdrag";
 import "leaflet-doubletapdragzoom";
+import { cookies } from "../../utils/cookies";
+import { Units } from "facilmap-types";
 import { useToasts } from "../ui/toasts/toasts.vue";
 
 type MapContextWithoutComponents = Optional<WritableMapContext, 'components'>;
@@ -178,7 +180,22 @@ function useBboxHandler(map: Ref<Map>, clientContext: Ref<ClientContext>): Ref<R
 function useGraphicScale(map: Ref<Map>): Ref<Raw<any>> {
 	return useMapComponent(
 		map,
-		() => markRaw(control.graphicScale({ fill: "hollow" })),
+		() => markRaw(control.graphicScale({
+			fill: "hollow",
+			...cookies.units === Units.US_CUSTOMARY ? {
+				getUnitConversionFactor: (meters: number) => {
+					const miles = meters * 0.00062137;
+					return (miles>=30) ? 0.00062137 : 3.28084;
+				},
+				getDisplayUnit: (value: number, factor: number) => {
+					const displayUnit = (factor === 3.28084) ? 'ft' : 'mi';
+					return {
+						unit: displayUnit,
+						amount: value
+					};
+				}
+			} : {}
+		})),
 		(graphicScale, map) => {
 			watch(() => isNarrowBreakpoint(), (isNarrow) => {
 				graphicScale.remove();
@@ -376,7 +393,7 @@ function useOverpassLayer(map: Ref<Map>, mapContext: MapContextWithoutComponents
 function useSearchResultsLayer(map: Ref<Map>): Ref<Raw<SearchResultsLayer>> {
 	return useMapComponent(
 		map,
-		() => markRaw(new SearchResultsLayer(undefined, { pathOptions: { weight: 7 } })),
+		() => markRaw(new SearchResultsLayer(undefined)),
 		(searchResultsLayer, map) => {
 			searchResultsLayer.addTo(map);
 			onScopeDispose(() => {
@@ -470,7 +487,7 @@ function useHashHandler(map: Ref<Map>, clientContext: Ref<ClientContext>, contex
 						if (!e.query)
 							await searchFormTab?.setQuery("", false, false).zoomed;
 						else if (!await openSpecialQuery(e.query, context, e.zoom, { smooth, forceRouteQuery: true }))
-							await searchFormTab?.setQuery(e.query, e.zoom, smooth, autofocus).zoomed;
+							await searchFormTab?.setQuery(unquoteSearchTerm(e.query), e.zoom, smooth, autofocus).zoomed;
 					})();
 					await queryChangePromise;
 				})

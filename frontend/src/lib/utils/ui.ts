@@ -1,7 +1,6 @@
 import { RAINBOW_STOPS } from "facilmap-leaflet";
 import { getUniqueId } from "./utils";
 import type { Stroke } from "facilmap-types";
-import { isBright } from "facilmap-utils";
 
 function getLinePlaceholderDashArray(width: number, length: number, stroke: Stroke): string | undefined {
 	if (stroke === "dotted") {
@@ -52,28 +51,40 @@ function getLinePlaceholderDashArray(width: number, length: number, stroke: Stro
 	}
 }
 
-export function createLinePlaceholderHtml(colour: string, width: number, length: number, stroke: Stroke): string {
-	const rainbowId = (colour == "rainbow" && getUniqueId("fm-line-rainbow"));
-	const renderBorder = colour !== "rainbow" && isBright(colour);
+export function createLinePlaceholderHtml(options: { colour: string; width: number; length: number; stroke: Stroke; arrowRight?: boolean; border?: boolean }): string {
+	const rainbowId = (options.colour == "rainbow" && getUniqueId("fm-line-rainbow"));
+	const renderBorder = options.border ?? true;
+	const borderWidth = renderBorder ? 0.5 : 0;
 
 	const pathStyle = {
-		"stroke": rainbowId ? `url(#${rainbowId})` : colour,
-		"stroke-width": `${Math.max(0.8, width - (renderBorder ? 1 : 0))}px`,
+		"stroke": rainbowId ? `url(#${rainbowId})` : options.colour,
+		"stroke-width": `${Math.max(0.8, options.width - 2 * borderWidth)}px`,
 		"stroke-linecap": "round",
-		"stroke-dasharray": getLinePlaceholderDashArray(width, length, stroke),
+		"stroke-dasharray": getLinePlaceholderDashArray(options.width, options.length, options.stroke),
+		toString(): string {
+			return Object.entries(this).flatMap(([k, v]) => k !== "toString" && v ? [`${k}: ${v}`] : []).join("; ");
+		}
 	};
 
 	const borderStyle = {
 		...pathStyle,
 		"stroke": "#000000",
-		"stroke-width": `${width}px`
+		"stroke-width": options.width
 	};
 
+	const height = options.arrowRight ? options.width * 3 : options.width + 1;
+	const path = `M${options.width / 2 + borderWidth} ${height / 2} H${options.length - options.width - borderWidth - (options.arrowRight ? options.width * 2 : 0)}`;
+	const arrowPath = options.arrowRight ? `M ${options.length - height + borderWidth} ${borderWidth} L ${options.length - 2*borderWidth} ${height / 2} L ${options.length - height + borderWidth} ${height - borderWidth} Z` : undefined;
+
 	return (
-		`<svg width="${length}" height="${width}">` +
+		`<svg width="${options.length}" height="${height}">` +
 			(rainbowId ? `<defs><linearGradient id="${rainbowId}" x2="100%" y2="0" gradientUnits="userSpaceOnUse">${RAINBOW_STOPS}</linearGradient></defs>` : ``) +
-			(renderBorder ? `<path d="M${width / 2} ${width / 2} h${length - width}" style="${Object.entries(borderStyle).flatMap(([k, v]) => v ? [`${k}: ${v}`] : []).join("; ")}"/>` : "") +
-			`<path d="M${width / 2} ${width / 2} h${length - width}" style="${Object.entries(pathStyle).flatMap(([k, v]) => v ? [`${k}: ${v}`] : []).join("; ")}"/>` +
+			(renderBorder ? (
+				`<path d="${path}" style="${borderStyle}"/>` +
+				`<path d="${arrowPath}" style="stroke: #000; stroke-width: ${borderWidth * 2}; paint-order: stroke fill"/>`
+			) : "") +
+			`<path d="${path}" style="${pathStyle}"/>` +
+			(arrowPath ? `<path d="${arrowPath}" style="fill: ${rainbowId ? `url(#${rainbowId})` : options.colour}"/>` : "") +
 		`</svg>`
 	);
 }

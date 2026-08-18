@@ -52,6 +52,8 @@ export function normalizeFieldValue(field: DeepReadonly<Field>, value: string | 
 		return getSelectedOption(field, value, ignoreDefault)?.value ?? "";
 	} else if (field.type === "checkbox") {
 		return value === "1" ? "1" : "0";
+	} else if (field.type === "formula") {
+		return "";
 	} else {
 		return value ?? "";
 	}
@@ -172,7 +174,7 @@ export function getLineTemplate(type: DeepReadonly<Type>): LineTemplate {
 	return omit(resolveCreateLine({
 		typeId: type.id,
 		routePoints: [{ lat: 0, lon: 0 }, { lat: 0, lon: 0 }]
-	}, type), ["routePoints", "extraInfo", "trackPoints"]);
+	}, type), ["routePoints", "extraInfo", "extraInfoStats", "trackPoints"]);
 }
 
 export function normalizeMarkerName(name: string | undefined): string {

@@ -1,13 +1,12 @@
 <script setup lang="ts">
 	import { dataByFieldIdToDataByName, dataByNameToDataByFieldId, markerValidator, type ID, type Type } from "facilmap-types";
-	import { canControl, cloneDeep, formatFieldName, formatTypeName, getOrderedTypes, mergeObject, canUpdateType, canUpdateField, canUpdateObject, getCreatableTypes } from "facilmap-utils";
+	import { canControl, cloneDeep, formatTypeName, getOrderedTypes, mergeObject, canUpdateType, canUpdateObject, getCreatableTypes } from "facilmap-utils";
 	import { getUniqueId, getZodValidator, validateRequired } from "../utils/utils";
 	import { isEqual } from "lodash-es";
 	import ModalDialog from "./ui/modal-dialog.vue";
 	import ColourPicker from "./ui/colour-picker.vue";
 	import IconPicker from "./ui/icon-picker.vue";
 	import ShapePicker from "./ui/shape-picker.vue";
-	import FieldInput from "./ui/field-input.vue";
 	import SizePicker from "./ui/size-picker.vue";
 	import { computed, ref, toRef, watch, type DeepReadonly } from "vue";
 	import { useToasts } from "./ui/toasts/toasts.vue";
@@ -15,8 +14,8 @@
 	import { injectContextRequired, requireClientContext, requireClientSub } from "./facil-map-context-provider/facil-map-context-provider.vue";
 	import ValidatedField from "./ui/validated-form/validated-field.vue";
 	import { useI18n } from "../utils/i18n";
-	import { useMaxBreakpoint } from "../utils/bootstrap";
 	import EditTypeDialog from "./edit-type-dialog/edit-type-dialog.vue";
+	import EditObjectFields from "./ui/edit-object-fields.vue";
 
 	const context = injectContextRequired();
 	const clientContext = requireClientContext(context);
@@ -46,8 +45,6 @@
 	const type = computed(() => clientSub.value.data.types[marker.value.typeId]);
 
 	const resolvedCanControl = computed(() => canControl(type.value));
-
-	const isXs = useMaxBreakpoint("xs");
 
 	const showEditTypeDialog = ref<ID>();
 
@@ -157,30 +154,10 @@
 				</div>
 			</template>
 
-			<template v-for="(field, idx) in clientSub.data.types[marker.typeId].fields" :key="field.id">
-				<template v-if="canUpdateField(clientSub.activeLink.permissions, marker.typeId, field.id, marker.own)">
-					<template v-if="field.type !== 'checkbox' || !isXs">
-						<div class="row mb-3">
-							<label :for="`${id}-${idx}-input`" class="col-sm-3 col-form-label text-break">{{formatFieldName(field.name)}}</label>
-							<div class="col-sm-9" :class="{ 'fm-form-check-with-label': field.type === 'checkbox' }">
-								<FieldInput
-									:id="`${id}-${idx}-input`"
-									:field="field"
-									v-model="marker.data[field.id]"
-								></FieldInput>
-							</div>
-						</div>
-					</template>
-					<template v-else>
-						<FieldInput
-							:id="`${id}-${idx}-input`"
-							:field="field"
-							v-model="marker.data[field.id]"
-							showCheckboxLabel
-						></FieldInput>
-					</template>
-				</template>
-			</template>
+			<EditObjectFields
+				:object="marker"
+				@update="(fieldId, value) => { if (value != null) { marker.data[fieldId] = value; } else { delete marker.data[fieldId]; } }"
+			></EditObjectFields>
 		</template>
 
 		<template #footer-left>

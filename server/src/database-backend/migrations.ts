@@ -4,10 +4,10 @@ import { cloneDeep, isEqual, omit } from "lodash-es";
 import DatabaseBackend from "./database-backend.js";
 import type { MapModel } from "./map.js";
 import type { LinePointModel } from "./line.js";
-import { forEachAsync, getElevationForPoint } from "facilmap-utils";
+import { createExtraInfoStats, forEachAsync, getElevationForPoint } from "facilmap-utils";
 import type { MarkerModel } from "./marker.js";
 import { ADMIN_LINK_COMMENT, READ_LINK_COMMENT, WRITE_LINK_COMMENT, type ID, type MapPermissions, type Type } from "facilmap-types";
-import { streamToIterable } from "../utils/streams.js";
+import { iterableToArray, streamToIterable } from "../utils/streams.js";
 import { createJwtSecret, createMapToken, createSalt, getSlugHash } from "../utils/crypt.js";
 import type { RawLine, RawMarker } from "../utils/permissions.js";
 
@@ -37,6 +37,8 @@ export default class DatabaseBackendMigrations {
 		await this._viewsIdxMigration();
 		await this._fieldIconsMigration();
 		await this._historyPadMigration();
+		await this._extraInfoStatsMigration();
+		await this._formulaObjectMigration();
 		await this._mapIdMigration();
 		await this._fieldIdMigration();
 		await this._dropdownKeyMigration(); // This is very old, but now it only works after migrating to field IDs
@@ -790,6 +792,61 @@ export default class DatabaseBackendMigrations {
 
 		await this.backend.meta.setMeta("historyPadMigrationCompleted", "1");
 	}
+
+
+	/** Calculate extraInfoStats for all lines that have extraInfo */
+	async _extraInfoStatsMigration(): Promise<void> {
+		const hasExtraInfoStats = await this.backend.meta.getMeta("hasExtraInfoStats");
+		if (hasExtraInfoStats === "1") {
+			return;
+		}
+
+		console.log("DB migration: Calculate extra info stats");
+
+		const lines = await this.backend.lines.LineModel.findAll({ where: { extraInfo: { [Op.ne]: null }, extraInfoStats: null } });
+
+		for (const line of lines) {
+			if (line.extraInfo) {
+				const trackPoints = await iterableToArray(this.backend.lines.getLinePointsForLine(line.id));
+				const extraInfoStats = createExtraInfoStats(line.extraInfo, trackPoints);
+				await line.update({ extraInfoStats });
+			}
+		}
+
+		await this.backend.meta.setMeta("hasExtraInfoStats", "1");
+	}
+
+
+	/**
+	 * Convert field.formula to an object.
+	 */
+	async _formulaObjectMigration(): Promise<void> {
+		if (await this.backend.meta.getMeta("formulaObjectMigrationCompleted") === "1") {
+			return;
+		}
+
+		console.log("DB migration: Convert field formulas to objects");
+
+		const types = await this.backend.types.TypeModel.findAll();
+
+		for (const type of types) {
+			let changed = false;
+			const fields = type.fields;
+			for (const field of fields) {
+				if (typeof field.formula === "string") {
+					field.formula = { type: "filtrex", code: field.formula };
+					changed = true;
+				}
+			}
+
+			if (changed) {
+				await type.update({ fields });
+			}
+		}
+
+		await this.backend.meta.setMeta("formulaObjectMigrationCompleted", "1");
+	}
+
 
 	/** Rename Map.id to Map.readId and create Map.id */
 	async _mapIdMigration(): Promise<void> {

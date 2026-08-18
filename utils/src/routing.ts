@@ -15,22 +15,28 @@ export const R = 6371; // km
 /**
  * Returns the distance of the given path in kilometers.
  */
-export function calculateDistance(posList: ReadonlyArray<{ readonly lat: number; readonly lon: number; }>): number {
+export function calculateDistance(posList: { readonly [idx: number]: { readonly lat: number; readonly lon: number }; readonly length: number }): number {
 	// From http://stackoverflow.com/a/365853/242365
 	let ret = 0;
+	let last: { readonly lat: number; readonly lon: number } | undefined;
+	for (let i = 0; i < posList.length; i++) {
+		if (posList[i] != null) {
+			if (last != null) {
+				const lat1 = last.lat * Math.PI / 180;
+				const lon1 = last.lon * Math.PI / 180;
+				const lat2 = posList[i].lat * Math.PI / 180;
+				const lon2 = posList[i].lon * Math.PI / 180;
+				const dLat = lat2 - lat1;
+				const dLon = lon2 - lon1;
 
-	for (let i = 1; i < posList.length; i++) {
-		const lat1 = posList[i - 1].lat * Math.PI / 180;
-		const lon1 = posList[i - 1].lon * Math.PI / 180;
-		const lat2 = posList[i].lat * Math.PI / 180;
-		const lon2 = posList[i].lon * Math.PI / 180;
-		const dLat = lat2 - lat1;
-		const dLon = lon2 - lon1;
+				const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+					Math.sin(dLon / 2) * Math.sin(dLon / 2) * Math.cos(lat1) * Math.cos(lat2);
+				const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+				ret += R * c;
+			}
 
-		const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-			Math.sin(dLon / 2) * Math.sin(dLon / 2) * Math.cos(lat1) * Math.cos(lat2);
-		const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-		ret += R * c;
+			last = posList[i];
+		}
 	}
 
 	return ret;
@@ -125,10 +131,21 @@ function getRawRouteQueryKeywordRegExp(keyword: string): string {
 	return quoteRegExp(keyword).replaceAll(" ", "\\s+");
 }
 
-function joinRawRouteQuery<T extends string>(query: Array<RawRouteQuerySegmentInput<T>>, keywords: T[]): string {
-	const keywordsRegExp = keywords.map((t) => new RegExp(`(^| )${getRawRouteQueryKeywordRegExp(t)}( |$)`, "i"));
+function joinRawRouteQuery<T extends string>(query: Array<RawRouteQuerySegmentInput<T>>): string {
 	return query.map((q) => {
-		if (!q.keyword && (q.value.includes("\"") || keywordsRegExp.some((k) => q.value.match(k)))) {
+		// For historic reasons, we cannot distinguish between route queries serialized in English and route queries typed in the current language.
+		// For example, when https://facilmap.org/#q=Berlin%20to%20Hamburg is opened, it could be a link that was created by FacilMap, containing the
+		// serialized route query, but it could also be a route query that the user has typed into their browser where FacilMap is configured as a
+		// search engine. Unfortunately, this makes the interpretation of route queries dependent on the user’s language. For example, if a link
+		// to the URL https://facilmap.org/#q=Berlin%20vers%20Hamburg is shared, it would be interpreted as a route query if the user’s language is
+		// French, but as a search term if the user’s language is not French. This can cause trouble in both ways: If a user intends to share a link
+		// to a route, it might not be interpreted as a route on another device (but we cannot avoid this and users should share the link with the
+		// serialized route query instead). If a user intends to share a link to a search, but one word in that search happens to be a route query
+		// keyword in the user language on another device, that search would be interpreted as a route there. To prevent this, since we don’t know
+		// all the future translations of the keywords, we simply quote all search terms when serializing a route query. An exception would be the
+		// "m123" and "l123" terms for marker/line links and "n123", "w123" and "r123" terms for specific OpenStreetMap search results, since these
+		// are the most serialized search terms in FacilMap and are very unlikely to collide with a future translation of a route query keyword.
+		if (!q.keyword && !q.value.match(/^[mlnwr]\d+$/)) {
 			return `"${q.value.replaceAll("\\", "\\\\").replaceAll("\"", "\\\"")}"`;
 		} else {
 			return q.value;
@@ -187,21 +204,27 @@ export type RouteQuery = {
 }
 
 export function encodeRouteQuery(query: RouteQuery): string {
-	const rawQuery: Array<RawRouteQuerySegmentInput<"to" | "by">> = [
+	const rawQuery: Array<RawRouteQuerySegmentInput<string>> = [
 		...query.queries.flatMap((q, i) => [
 			...i > 0 ? [{ keyword: true, value: "to" } as const] : [],
 			{ keyword: false, value: q } as const
 		]),
 		...query.mode != null ? [
 			{ keyword: true, value: "by" } as const,
-			{ keyword: false, value: query.mode } as const
+			// Since mode is not a free-text field, conflicts with keyword translations are unlikely. Thus we declare it a a keyword here
+			// (it is not a keyword when it comes out of decodeRouteQuery() below) so that it is not quoted.
+			{ keyword: true, value: query.mode } as const
 		] : []
 	];
-	return joinRawRouteQuery(rawQuery, ["to", "by"]);
+	return joinRawRouteQuery(rawQuery);
 }
 
 export function quoteSearchTerm(term: string): string {
-	return joinRawRouteQuery([{ keyword: false, value: term }], ["to", "by"]);
+	return joinRawRouteQuery([{ keyword: false, value: term }]);
+}
+
+export function unquoteSearchTerm(term: string): string {
+	return splitRawRouteQuery(term, [])[0]?.value ?? "";
 }
 
 /**

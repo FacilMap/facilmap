@@ -198,7 +198,7 @@
 						</label>
 					</td>
 					<td>
-						<select :id="`${id}-map-type-${importTypeId}`" v-model="customMapping[importTypeId as number]">
+						<select :id="`${id}-map-type-${importTypeId}`" v-model="customMapping[importTypeId as number]" class="form-select">
 							<option v-for="option in options" :key="option.key" :value="option.value">{{option.text}}</option>
 						</select>
 					</td>
@@ -206,7 +206,7 @@
 				<tr v-if="untypedMarkers.length > 0">
 					<td><label :for="`${id}-map-untyped-markers`">{{i18n.t("custom-import-dialog.untyped-markers", { count: untypedMarkers.length })}}</label></td>
 					<td>
-						<select :id="`${id}-map-untyped-markers`" v-model="untypedMarkerMapping">
+						<select :id="`${id}-map-untyped-markers`" v-model="untypedMarkerMapping" class="form-select">
 							<option v-for="option in untypedMarkerMappingOptions" :key="option.key" :value="option.value">{{option.text}}</option>
 						</select>
 					</td>
@@ -214,7 +214,7 @@
 				<tr v-if="untypedLines.length > 0">
 					<td><label :for="`${id}-map-untyped-lines`">{{i18n.t("custom-import-dialog.untyped-lines", { count: untypedLines.length })}}</label></td>
 					<td>
-						<select :id="`${id}-map-untyped-lines`" v-model="untypedLineMapping">
+						<select :id="`${id}-map-untyped-lines`" v-model="untypedLineMapping" class="form-select">
 							<option v-for="option in untypedLineMappingOptions" :key="option.key" :value="option.value">{{option.text}}</option>
 						</select>
 					</td>

@@ -35,6 +35,10 @@ interface ShapeInfo {
 
 const SHAPE_HEIGHT = 36;
 const DEFAULT_SHAPE: Shape = "drop";
+/** Width of the black border around the marker. Will be scaled with the marker size. */
+const MARKER_BORDER_WIDTH = 1;
+/** Width of the white highlight around the marker in pixels. Will not be scaled with the marker size. */
+const MARKER_HIGHLIGHT_WIDTH = 4;
 
 const MARKER_SHAPES: Record<Shape, ShapeInfo> = {
 	"drop": {
@@ -247,21 +251,71 @@ export async function getIconHtml(colour: string, height: number | string, icon?
 
 let idCounter = 0;
 
+export function getShapeInfo(shape?: Shape): ShapeInfo {
+	return (shape && MARKER_SHAPES[shape]) || MARKER_SHAPES[DEFAULT_SHAPE];
+}
+
+export function getMarkerCodeMeta(height: number, shape?: Shape, highlight = false): {
+	/** The total width of the resulting marker image. */
+	outerWidth: number;
+	/** The total height of the resulting marker image. */
+	outerHeight: number;
+	/** The width of the actual marker shape (without the white highlight border). */
+	innerWidth: number;
+	/** The height of the actual marker shape (without the white highlight border). For shapes with a scale factor of 1, this is the same as was specified as `height`. */
+	innerHeight: number;
+	/** The x offset where the actual marker shape starts. */
+	offsetX: number;
+	/** The y offset where the actual marker shape starts. */
+	offsetY: number;
+	/** The x coordinate of the marker base, meaning the point where the marker image should be aligned with its map coordinates. */
+	baseX: number;
+	/** The y coordinate of the marker base, meaning the point where the marker image should be aligned with its map coordinates. */
+	baseY: number;
+	/** The x coordinate of the marker center, that is the center of its icon. */
+	centerX: number;
+	/** The y coordinate of the marker center, that is the center of its icon. */
+	centerY: number;
+	/** How much the marker shape is scaled up to reach the desired height. */
+	scale: number;
+} {
+	const shapeObj = getShapeInfo(shape);
+	const offsetX = highlight ? MARKER_HIGHLIGHT_WIDTH : 0;
+	const offsetY = offsetX;
+	const scale = shapeObj.scale * height / SHAPE_HEIGHT;
+	const innerHeight = Math.ceil(scale * SHAPE_HEIGHT);
+	const innerWidth = Math.ceil(scale * shapeObj.width);
+	return {
+		outerHeight: innerHeight + (2 * offsetY),
+		outerWidth: innerWidth + (2 * offsetX),
+		innerHeight,
+		innerWidth,
+		offsetX,
+		offsetY,
+		baseX: offsetX + (scale * shapeObj.base[0]),
+		baseY: offsetY + (scale * shapeObj.base[1]),
+		centerX: offsetX + (scale * shapeObj.center[0]),
+		centerY: offsetY + (scale * shapeObj.center[1]),
+		scale
+	};
+}
+
 export function getMarkerCodeSync(colour: string, height: number, icon?: Icon, shape?: Shape, highlight = false): string {
-	const borderColour = makeTextColour(colour, 0.3);
+	const iconColour = makeTextColour(colour, 0.3);
 	const id = `${idCounter++}`;
 	const colourCode = colour == "rainbow" ? `url(#fm-rainbow-${id})` : colour;
-	const shapeObj = (shape && MARKER_SHAPES[shape]) || MARKER_SHAPES[DEFAULT_SHAPE];
-	const iconCode = getIconCodeSync(borderColour, shapeObj.iconSize, icon);
-	const translateX = `${Math.floor(shapeObj.center[0] - shapeObj.iconSize / 2)}`;
-	const translateY = `${Math.floor(shapeObj.center[1] - shapeObj.iconSize / 2)}`;
-
+	const shapeObj = getShapeInfo(shape);
+	const iconCode = getIconCodeSync(iconColour, shapeObj.iconSize, icon);
+	const iconTranslateX = `${Math.floor(shapeObj.center[0] - shapeObj.iconSize / 2)}`;
+	const iconTranslateY = `${Math.floor(shapeObj.center[1] - shapeObj.iconSize / 2)}`;
+	const { offsetX, offsetY, scale } = getMarkerCodeMeta(height, shape, highlight);
 	return (
-		`<g transform="scale(${height / SHAPE_HEIGHT})">` +
+		`<g transform="translate(${offsetX}, ${offsetY}) scale(${scale})">` +
 			(colour == "rainbow" ? `<defs><linearGradient id="fm-rainbow-${id}" x2="0" y2="100%">${RAINBOW_STOPS}</linearGradient></defs>` : '') +
-			`<path id="shape-${id}" style="stroke: ${borderColour}; stroke-width: ${highlight ? 6 : 2}; stroke-linecap: round; fill: ${colourCode}; clip-path: url(#clip-${id})" d="${quoteHtml(shapeObj.path)}"/>"/>` +
+			(highlight ? `<path style="stroke: #fff; stroke-width: ${MARKER_HIGHLIGHT_WIDTH * 2 / scale}; stroke-linecap: round;" d="${quoteHtml(shapeObj.path)}"/>"/>` : "") +
+			`<path id="shape-${id}" style="stroke: #000; stroke-width: ${MARKER_BORDER_WIDTH * 2}; stroke-linecap: round; fill: ${colourCode}; clip-path: url(#clip-${id})" d="${quoteHtml(shapeObj.path)}"/>"/>` +
 			`<clipPath id="clip-${id}"><use xlink:href="#shape-${id}"/></clipPath>` + // Don't increase the size by increasing the border: https://stackoverflow.com/a/32162431/242365
-			`<g transform="translate(${translateX}, ${translateY})">${iconCode}</g>` +
+			`<g transform="translate(${iconTranslateX}, ${iconTranslateY})">${iconCode}</g>` +
 		`</g>`
 	);
 }
@@ -272,12 +326,11 @@ export async function getMarkerCode(colour: string, height: number, icon?: Icon,
 }
 
 export function getMarkerUrlSync(colour: string, height: number, icon?: Icon, shape?: Shape, highlight = false): string {
-	const shapeObj = (shape && MARKER_SHAPES[shape]) || MARKER_SHAPES[DEFAULT_SHAPE];
-	const width = Math.ceil(height * shapeObj.width / SHAPE_HEIGHT);
+	const meta = getMarkerCodeMeta(height, shape, highlight);
 	return "data:image/svg+xml,"+encodeURIComponent(
 		`<?xml version="1.0" encoding="UTF-8" standalone="no"?>` +
-		`<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${width}" height="${height}" viewBox="0 0 ${shapeObj.width} ${SHAPE_HEIGHT}" version="1.1">` +
-			getMarkerCodeSync(colour, SHAPE_HEIGHT, icon, shape, highlight) +
+		`<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${meta.outerWidth}" height="${meta.outerHeight}" viewBox="0 0 ${meta.outerWidth} ${meta.outerHeight}" version="1.1">` +
+			getMarkerCodeSync(colour, height, icon, shape, highlight) +
 		`</svg>`
 	);
 }
@@ -288,11 +341,10 @@ export async function getMarkerUrl(colour: string, height: number, icon?: Icon, 
 }
 
 export function getMarkerHtmlSync(colour: string, height: number, icon?: Icon, shape?: Shape, highlight = false): string {
-	const shapeObj = (shape && MARKER_SHAPES[shape]) || MARKER_SHAPES[DEFAULT_SHAPE];
-	const width = Math.ceil(height * shapeObj.width / SHAPE_HEIGHT);
+	const meta = getMarkerCodeMeta(height, shape, highlight);
 	return (
-		`<svg width="${width}" height="${height}" viewBox="0 0 ${shapeObj.width} ${SHAPE_HEIGHT}">` +
-			getMarkerCodeSync(colour, SHAPE_HEIGHT, icon, shape, highlight) +
+		`<svg width="${meta.outerWidth}" height="${meta.outerHeight}" viewBox="0 0 ${meta.outerWidth} ${meta.outerHeight}">` +
+			getMarkerCodeSync(colour, height, icon, shape, highlight) +
 		`</svg>`
 	);
 }
@@ -316,10 +368,10 @@ declare global {
 export class AsyncIcon extends LeafletIcon {
 	private _asyncIconUrl?: Promise<string>;
 
-	constructor(options: Omit<IconOptions, "iconUrl"> & { iconUrl: string | Promise<string> }) {
+	constructor(options: Omit<IconOptions, "iconUrl"> & { iconUrl: string | Promise<string>; fallbackIconUrl?: string }) {
 		super({
 			...options,
-			iconUrl: typeof options.iconUrl === "string" ? options.iconUrl : TRANSPARENT_IMAGE_URL
+			iconUrl: typeof options.iconUrl === "string" ? options.iconUrl : (options.fallbackIconUrl ?? TRANSPARENT_IMAGE_URL)
 		});
 
 		if (typeof options.iconUrl !== "string") {
@@ -352,16 +404,20 @@ export class AsyncIcon extends LeafletIcon {
 }
 
 export function getMarkerIcon(colour: string, height: number, icon?: Icon, shape?: Shape, highlight = false): LeafletIcon {
-	const shapeObj = (shape && MARKER_SHAPES[shape]) || MARKER_SHAPES[DEFAULT_SHAPE];
-	const scale = shapeObj.scale * height / SHAPE_HEIGHT;
+	const meta = getMarkerCodeMeta(height, shape, highlight);
 	const result = new AsyncIcon({
-		iconUrl: (
-			isIconPreloaded(icon) ? getMarkerUrlSync(colour, height, icon, shape, highlight)
-			: getMarkerUrl(colour, height, icon, shape, highlight)
-		),
-		iconSize: [Math.round(shapeObj.width*scale), Math.round(SHAPE_HEIGHT*scale)],
-		iconAnchor: [Math.round(shapeObj.base[0]*scale), Math.round(shapeObj.base[1]*scale)],
-		popupAnchor: [0, -height]
+		...isIconPreloaded(icon) ? {
+			iconUrl: getMarkerUrlSync(colour, height, icon, shape, highlight)
+		} : {
+			iconUrl: getMarkerUrl(colour, height, icon, shape, highlight),
+			fallbackIconUrl: getMarkerUrlSync(colour, height, "", shape, highlight)
+		},
+		iconSize: [meta.outerWidth, meta.outerHeight],
+		iconAnchor: [meta.baseX, meta.baseY],
+		// Tooltip anchor: at the right end of the marker shape (at the height of its center), always with a padding of the potential highlight
+		tooltipAnchor: [-meta.baseX + meta.offsetX + meta.innerWidth + MARKER_HIGHLIGHT_WIDTH, -meta.baseY + meta.centerY],
+		// Popup anchor: at the top end of the marker shape (at the width of its center), always with a padding of the potential highlight
+		popupAnchor: [-meta.baseX + meta.centerX, -meta.baseY + meta.offsetY - MARKER_HIGHLIGHT_WIDTH]
 	});
 
 	return result;

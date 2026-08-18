@@ -1,0 +1,59 @@
+{
+    "format": {
+        "marker-type-name": "Marker",
+        "line-type-name": "Joon",
+        "description-field-name": "Kirjeldus",
+        "unnamed-poi": "Ilma nimeta huvipunkt",
+        "time": "{{hours}}:{{minutes}} t",
+        "route-time": "{{time}} {{mode}}",
+        "distance-km": "{{distance}} km",
+        "distance-mi": "{{distance}} mi",
+        "elevation-m": "{{elevation}} m",
+        "elevation-ft": "{{elevation}} jlg"
+    },
+    "objects": {
+        "untitled-marker": "Ilma nimeta marker",
+        "untitled-line": "Ilma nimeta joon"
+    },
+    "maps": {
+        "unnamed-map": "Ilma nimeta kaart",
+        "page-title": "{{mapName}} - {{appName}}",
+        "fallback-page-description": "Täisfunktsionaalne OpenStreetMapi põhine kaart, kuhu ühistöös saab lisada jooni ja markereid."
+    },
+    "elevation": {
+        "http-error": "Kõrguste tuvastamine ei õnnestunud, päringu vastuse veakood {{status}}."
+    },
+    "utils": {
+        "node": "Sõlm {{id}}",
+        "way": "Joon {{id}}",
+        "relation": "Relatsioon {{id}}",
+        "feature-with-name-role": "{{feature}} ({{name}}, roll: {{role}})",
+        "feature-with-name": "{{feature}} ({{name}})",
+        "feature-with-role": "{{feature}} (roll: {{role}})"
+    },
+    "search": {
+        "http-error": "Otsing ei õnnestunud, päringu vastuse veakood oli {{status}}."
+    },
+    "routing": {
+        "format-by-hgv": "raskeveokiga",
+        "format-by-car": "autoga",
+        "format-by-road-bike": "linnarattaga",
+        "format-by-mountain-bike": "maastikurattaga",
+        "format-by-electric-bike": "elektrirattaga",
+        "format-by-bicycle": "jalgrattaga",
+        "format-by-wheelchair": "ratastooliga",
+        "format-by-foot": "jalgsi",
+        "query-from": "alates",
+        "query-to": "kuni",
+        "query-via": "vahepunktina",
+        "query-by-hgv": "raskeveokiga",
+        "query-by-car": "autoga",
+        "query-by-road-bike": "linnarattaga",
+        "query-by-mountain-bike": "maastikurattaga",
+        "query-by-electric-bike": "elektrirattaga",
+        "query-by-bicycle": "jalgrattaga",
+        "query-by-wheelchair": "ratastooliga",
+        "query-by-foot": "jalgsi|kõndides",
+        "query-by-straight": "linnulennult|otse|helikopteriga"
+    }
+}

@@ -1,236 +1,288 @@
 <script setup lang="ts">
-	import { getMarkerHtml, getIconHtml } from "facilmap-leaflet";
-	import { makeTypeFilter, markdownBlock } from "facilmap-utils";
-	import type { LegendItem, LegendType } from "./legend-utils";
-	import { createLinePlaceholderHtml } from "../../utils/ui";
-	import Popover from "../ui/popover.vue";
-	import { computed, reactive, ref } from "vue";
-	import { mapRef, vHtmlAsync } from "../../utils/vue";
+	import { computed, ref, type ComponentInstance } from "vue";
 	import { injectContextRequired, requireMapContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
+	import LegendMapContent from "./legend-map-content.vue";
+	import LegendItems from "./legend-items.vue";
 	import { useI18n } from "../../utils/i18n";
+	import type { Tooltip } from "bootstrap";
 
 	const context = injectContextRequired();
 	const mapContext = requireMapContext(context);
 	const i18n = useI18n();
 
-	const props = withDefaults(defineProps<{
-		legend1?: string;
-		legend2?: string;
-		items: LegendType[];
+	const props = defineProps<{
 		noPopover?: boolean;
-	}>(), {
-		noPopover: false
+		infoPlacement?: Tooltip.PopoverPlacement;
+	}>();
+
+	const legendMapContentRef = ref<ComponentInstance<typeof LegendMapContent>>();
+
+	const layers = computed(() => (["OPTM", "Hike", "Bike", "Toll", "CycR", "Cobl"] as const).filter((l) => mapContext.value.layers.overlays.includes(l)));
+
+	const isEmpty = computed(() => layers.value.length === 0 && (legendMapContentRef.value?.isEmpty ?? true));
+
+	defineExpose({
+		isEmpty
 	});
-
-	const activePopoverKey = ref<string>();
-	const itemIconRefs = reactive(new Map<string, HTMLElement>());
-
-	const legend1Html = computed(() => {
-		return props.legend1 ? markdownBlock(props.legend1, true) : "";
-	});
-
-	const legend2Html = computed(() => {
-		return props.legend2 ? markdownBlock(props.legend2, true) : "";
-	});
-
-	function toggleFilter(typeInfo: LegendType, item?: LegendItem): void {
-		let filters: Parameters<typeof makeTypeFilter>[2] = { };
-		if(!item || !item.field) // We are toggling the visibility of one whole type
-			filters = !typeInfo.filtered;
-		else {
-			for (const it of typeInfo.items) {
-				if(it.field) {
-					if(!filters[it.field])
-						filters[it.field] = { };
-
-					if(!typeInfo.filtered || it.field == item.field)
-						filters[it.field][it.value] = (it.filtered == (it != item));
-					else // If the whole type is filtered, we have to enable the filters of the other fields, otherwise the type will still be completely filtered
-						filters[it.field][it.value] = false;
-				}
-			}
-		}
-
-		mapContext.value.components.map.setFmFilter(makeTypeFilter(mapContext.value.components.map.fmFilter, typeInfo.typeId, filters));
-	}
-
-	async function makeIcon(typeInfo: LegendType, item: LegendItem, height = 15): Promise<string> {
-		if(typeInfo.type == "line")
-			return createLinePlaceholderHtml(item.colour || "rainbow", item.width || 5, 50, item.stroke ?? "");
-		else if (item.colour || item.shape != null)
-			return await getMarkerHtml(item.colour || "rainbow", height, item.icon, item.shape);
-		else
-			return await getIconHtml("#000000", height, item.icon);
-	}
-
-	function togglePopover(itemKey: string, show: boolean) {
-		const isShown = activePopoverKey.value === itemKey;
-		if (isShown !== show) {
-			activePopoverKey.value = show ? itemKey : undefined;
-		}
-	}
 </script>
 
 <template>
 	<div class="fm-legend-content">
-		<div v-if="legend1" class="fm-legend1">
-			<div v-html="legend1Html"></div>
-			<hr v-if="items.length > 0 || legend2" />
-		</div>
+		<template v-for="(layer, idx) in layers" :key="layer">
+			<hr v-if="idx > 0" />
 
-		<template v-for="(type, idx) in items" :key="type.key">
-			<hr v-if="idx > 0 && (type.items.length > 1 || items[idx - 1].items.length > 1)">
-			<dl>
-				<template v-for="(item, idx) in type.items" :key="item.key">
-					<dt
-						:class="[ 'fm-legend-icon', 'fm-' + type.type, { filtered: item.filtered, first: (item.first && idx !== 0), bright: item.bright, main: idx === 0 } ]"
-						@click="toggleFilter(type, item)"
-						v-html-async="makeIcon(type, item)"
-						@mouseenter="togglePopover(item.key, true)"
-						@mouseleave="togglePopover(item.key, false)"
-						:ref="mapRef(itemIconRefs, item.key)"
-					></dt>
-					<dd
-						class="text-break"
-						:class="[ 'fm-' + type.type, { filtered: item.filtered, first: (item.first && idx !== 0), bright: item.bright, main: idx === 0 } ]"
-						@click="toggleFilter(type, item)"
-						:style="item.strikethrough ? {'text-decoration': 'line-through'} : {}"
-						@mouseenter="togglePopover(item.key, true)"
-						@mouseleave="togglePopover(item.key, false)"
-					>{{item.label}}</dd>
-				</template>
-			</dl>
-			<div v-if="!props.noPopover" class="fm-legend-popover-wrapper">
-				<template v-for="item in type.items" :key="item.key">
-					<Popover
-						:element="itemIconRefs.get(item.key)"
-						placement="left"
-						class="fm-legend-popover"
-						:show="activePopoverKey === item.key"
-						@update:show="togglePopover(item.key, $event)"
-					>
-						<div
-							:class="[
-								'fm-legend-icon',
-								`fm-${type.type}`,
-								{
-									filtered: item.filtered,
-									bright: item.bright
-								}
-							]"
-							v-html-async="makeIcon(type, item, 40)"
-						></div>
-						<p>
-							<span class="text-break" :style="item.strikethrough ? {'text-decoration': 'line-through'} : {}">{{item.label}}</span>
-							<br>
-							<small><em>{{i18n.t("legend-content.click-explanation")}}</em></small>
-						</p>
-					</Popover>
-				</template>
-			</div>
+			<template v-if="layer === 'OPTM'">
+				<LegendItems
+					:heading="i18n.t('legend-content.public-transportation')"
+					type="line"
+					:items="[
+						{
+							key: 'train',
+							colour: '#000',
+							label: i18n.t('legend-content.public-transportation-train-label')
+						},
+						{
+							key: 'sbahn',
+							colour: '#0c0',
+							label: i18n.t('legend-content.public-transportation-sbahn-label')
+						},
+						{
+							key: 'metro',
+							colour: '#00f',
+							label: i18n.t('legend-content.public-transportation-metro-label')
+						},
+						{
+							key: 'tram',
+							colour: '#d0f',
+							label: i18n.t('legend-content.public-transportation-tram-label')
+						},
+						{
+							key: 'bus',
+							colour: '#f00',
+							label: i18n.t('legend-content.public-transportation-bus-label')
+						},
+						{
+							key: 'bus-alternate',
+							colour: '#f00',
+							stroke: 'dashed' as const,
+							label: i18n.t('legend-content.public-transportation-bus-alternate-label')
+						},
+						{
+							key: 'trolleybus',
+							colour: '#b22',
+							label: i18n.t('legend-content.public-transportation-trolleybus-label')
+						},
+						{
+							key: 'ferry',
+							colour: '#ff7fbf',
+							label: i18n.t('legend-content.public-transportation-ferry-label')
+						},
+						{
+							key: 'aerialway',
+							colour: '#642',
+							label: i18n.t('legend-content.public-transportation-aerialway-label')
+						},
+					].map((i) => ({
+						...i,
+						border: false
+					}))"
+					:noPopover="props.noPopover"
+					:infoPlacement="props.infoPlacement"
+				></LegendItems>
+			</template>
+
+			<template v-else-if="layer === 'Hike'">
+				<LegendItems
+					:heading="i18n.t('legend-content.hiking-paths')"
+					type="line"
+					:items="[
+						{
+							key: 'international',
+							colour: '#b20303',
+							label: i18n.t('legend-content.hiking-paths-international-label')
+						},
+						{
+							key: 'national',
+							colour: '#152eec',
+							label: i18n.t('legend-content.hiking-paths-national-label')
+						},
+						{
+							key: 'regional',
+							colour: '#ffa304',
+							label: i18n.t('legend-content.hiking-paths-regional-label')
+						},
+						{
+							key: 'local',
+							colour: '#7d31c6',
+							label: i18n.t('legend-content.hiking-paths-local-label')
+						}
+					].map((i) => ({
+						...i,
+						border: false
+					}))"
+					:noPopover="props.noPopover"
+					:infoPlacement="props.infoPlacement"
+				></LegendItems>
+			</template>
+
+			<template v-else-if="layer === 'Bike'">
+				<LegendItems
+					:heading="i18n.t('legend-content.bicycle-routes')"
+					type="line"
+					:items="[
+						{
+							key: 'international',
+							colour: '#b20303',
+							label: i18n.t('legend-content.bicycle-routes-international-label')
+						},
+						{
+							key: 'national',
+							colour: '#152eec',
+							label: i18n.t('legend-content.bicycle-routes-national-label')
+						},
+						{
+							key: 'regional',
+							colour: '#ffa304',
+							label: i18n.t('legend-content.bicycle-routes-regional-label')
+						},
+						{
+							key: 'local',
+							colour: '#7d31c6',
+							label: i18n.t('legend-content.bicycle-routes-local-label')
+						}
+					].map((i) => ({
+						...i,
+						border: false
+					}))"
+					:noPopover="props.noPopover"
+					:infoPlacement="props.infoPlacement"
+				></LegendItems>
+			</template>
+
+			<template v-else-if="layer === 'Toll'">
+				<LegendItems
+					:heading="i18n.t('legend-content.tolls')"
+					type="line"
+					:items="[
+						{
+							key: 'tolls',
+							colour: '#800080',
+							label: i18n.t('legend-content.tolls-tolls-label')
+						}
+					].map((i) => ({
+						...i,
+						border: false
+					}))"
+					:noPopover="props.noPopover"
+					:infoPlacement="props.infoPlacement"
+				></LegendItems>
+			</template>
+
+			<template v-else-if="layer === 'CycR'">
+				<LegendItems
+					:heading="i18n.t('legend-content.cycling-restrictions')"
+					type="line"
+					:items="[
+						{
+							key: 'restricted',
+							colour: '#D32F2F',
+							label: i18n.t('legend-content.cycling-restrictions-restricted-label'),
+							description: i18n.t('legend-content.cycling-restrictions-restricted-description')
+						},
+						{
+							key: 'sidepath',
+							colour: '#FF6600',
+							label: i18n.t('legend-content.cycling-restrictions-sidepath-label'),
+							description: i18n.t('legend-content.cycling-restrictions-sidepath-description')
+						},
+						{
+							key: 'motorway',
+							colour: '#4B0082',
+							label: i18n.t('legend-content.cycling-restrictions-motorway-label'),
+							description: i18n.t('legend-content.cycling-restrictions-motorway-description')
+						},
+						{
+							key: 'motorroad',
+							colour: '#8B008B',
+							label: i18n.t('legend-content.cycling-restrictions-motorroad-label'),
+							description: i18n.t('legend-content.cycling-restrictions-motorroad-description')
+						},
+						{
+							key: 'pedestrian',
+							colour: '#00695C',
+							label: i18n.t('legend-content.cycling-restrictions-pedestrian-label'),
+							description: i18n.t('legend-content.cycling-restrictions-pedestrian-description')
+						},
+						{
+							key: 'optional',
+							colour: '#AEEA00',
+							label: i18n.t('legend-content.cycling-restrictions-optional-label'),
+							description: i18n.t('legend-content.cycling-restrictions-optional-description')
+						},
+						{
+							key: 'allowed',
+							colour: '#00C853',
+							label: i18n.t('legend-content.cycling-restrictions-allowed-label'),
+							description: i18n.t('legend-content.cycling-restrictions-allowed-description'),
+							arrowRight: true
+						}
+					].map((i) => ({
+						...i,
+						border: false
+					}))"
+					:noPopover="props.noPopover"
+					:infoPlacement="props.infoPlacement"
+				></LegendItems>
+			</template>
+
+			<template v-else-if="layer === 'Cobl'">
+				<LegendItems
+					:heading="i18n.t('legend-content.cobblestone')"
+					type="line"
+					:items="[
+						{
+							key: 'cobblestone',
+							colour: '#A45A52',
+							label: i18n.t('legend-content.cobblestone-cobblestone-label')
+						}
+					].map((i) => ({
+						...i,
+						border: false
+					}))"
+					:noPopover="props.noPopover"
+					:infoPlacement="props.infoPlacement"
+				></LegendItems>
+			</template>
 		</template>
 
-		<div v-if="legend2" class="fm-legend2">
-			<hr v-if="items.length > 0" />
-			<div v-html="legend2Html"></div>
-		</div>
+		<hr v-if="layers.length > 0 && legendMapContentRef && !legendMapContentRef.isEmpty" />
+
+		<LegendMapContent
+			:noPopover="props.noPopover"
+			ref="legendMapContentRef"
+		></LegendMapContent>
 	</div>
 </template>
 
 <style lang="scss">
-	.fm-legend-content {
+	// We need a high specificity, as .fm-search-box overrides some of the hr styles
+
+	.fm-legend-content.fm-legend-content.fm-legend-content {
 		font-size: 12px;
 
-		:is(.fm-legend1,.fm-legend2) > div > *:first-child {
-			margin-top: 0;
-
-		}
-
-		:is(.fm-legend1,.fm-legend2) > div > *:last-child {
-			margin-bottom: 0;
-		}
-
 		h3 {
-			font-size: 1.1em;
-			margin: 0 0 5px 0;
-			padding: 0;
+			font-size: 1.4em;
+			margin: 0 0 0.5rem 0;
 			font-weight: bold;
-			cursor: pointer;
 		}
 
 		hr {
 			margin: 10px -8px;
 		}
 
-		dl {
-			// In narrow mode, SearchBox sets some styles for dl. We need to take care of overriding them here.
-
-			display: grid;
-			grid-template-columns: calc(11px + 1ex) calc(50px - 11px) 1fr;
-			margin: 0px;
-			align-items: center;
-
-			> * {
-				margin: 0;
-				cursor: pointer;
-			}
-
-			dt, dd {
-				display: inline-flex;
-				align-items: center;
-			}
-
-			dt.fm-marker {
-				grid-column: 1 / 2;
-			}
-
-			dd.fm-marker {
-				grid-column: 2 / 4;
-			}
-
-			dt.fm-line {
-				grid-column: 1 / 3;
-			}
-
-			dd.fm-line {
-				grid-column: 3 / 4;
-			}
-
-			dt:after,dl:after {
-				content: none;
-			}
-
-			.first {
-				margin-top: 6px;
-			}
+		> hr {
+			opacity: 0.75;
+			margin: 1rem -8px;
 		}
-
-		.main {
-			font-size: 1.1em;
-			font-weight: bold;
-		}
-
-		.filtered {
-			opacity: 0.5;
-		}
-	}
-
-	.fm-legend-popover {
-		max-width: none;
-
-		.popover-body {
-			display: flex;
-			align-items: center;
-			width: max-content;
-			max-width: 100%;
-
-			p {
-				margin: 0 0 0 0.5em;
-			}
-		}
-	}
-
-	.fm-legend-icon {
-		color-scheme: only light;
 	}
 </style>

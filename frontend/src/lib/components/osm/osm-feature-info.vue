@@ -272,7 +272,7 @@
 			</template>
 		</div>
 
-		<div class="btn-toolbar mt-2">
+		<div class="btn-toolbar fm-search-box-toolbar">
 			<ZoomToObjectButton
 				v-if="zoomDestination"
 				:label="getZoomTooltip(feature.type)"
