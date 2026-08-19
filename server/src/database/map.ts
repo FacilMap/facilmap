@@ -90,7 +90,7 @@ export default class DatabaseMaps {
 		}));
 
 		const result = await this.backend.createMap({
-			...data,
+			...data as MapData<CRU.CREATE_VALIDATED>, // Remove readonly typings
 			links,
 			salt,
 			jwtSecret,

@@ -107,12 +107,12 @@ function getLineTrackGpx(line: LineForExport, type: Stripped<Type> | undefined, 
 
 export function exportGpx(api: ApiV3Backend, mapLink: RawActiveMapLink, rte: boolean, filter?: string): ReadableStream<string> {
 	return iterableToStream((async function* () {
-		const filterFunc = compileFilterExpression(filter);
-
 		const [mapData, types] = await Promise.all([
 			api.getMap(mapLink),
 			iterableToArray((await api.getMapTypes(mapLink)).results).then((types) => keyBy(types, 'id'))
 		]);
+
+		const filterFunc = compileFilterExpression(filter, mapData.customFunctions);
 
 		yield (
 			`${gpxHeader}\n` +
@@ -150,12 +150,12 @@ export function exportGpxZip(api: ApiV3Backend, mapLink: RawActiveMapLink, rte: 
 	const encodeZipStream = getZipEncodeStream();
 
 	void iterableToStream((async function*(): AsyncIterable<ZipEncodeStreamItem> {
-		const filterFunc = compileFilterExpression(filter);
-
 		const [mapData, types] = await Promise.all([
 			api.getMap(mapLink),
 			iterableToArray((await api.getMapTypes(mapLink)).results).then((types) => keyBy(types, 'id'))
 		]);
+
+		const filterFunc = compileFilterExpression(filter, mapData.customFunctions);
 
 		yield {
 			filename: "markers.gpx",

@@ -1,14 +1,16 @@
 import { compileExpression as filtrexCompileExpression } from "filtrex";
 import { flattenObject, getProperty, quoteRegExp } from "./utils.js";
-import { type ID, type Marker, type Line, type Type, type CRU, currentMarkerToLegacyV2, type DeepReadonly, type Formula } from "facilmap-types";
+import { type ID, type Marker, type Line, type Type, type CRU, currentMarkerToLegacyV2, type DeepReadonly, type Formula, type Field, type Route, type CustomFunction } from "facilmap-types";
 import { cloneDeep, omit } from "lodash-es";
 import { normalizeFieldValue } from "./objects";
 import { CHECKBOX_FALSE_LABEL, CHECKBOX_TRUE_LABEL } from "./format.js";
 
-export type FormulaFunc = (obj: DeepReadonly<Marker<CRU>> | DeepReadonly<Line<CRU>>, type: DeepReadonly<Type>) => string;
+export type StrippedTypeForFormula = {
+	type: Type["type"] | "route";
+	fields: Array<Pick<Field, "id" | "name" | "type" | "formula">>;
+};
+export type FormulaFunc = (obj: DeepReadonly<Marker<CRU>> | DeepReadonly<Line<CRU>> | DeepReadonly<Omit<Route, "trackPoints">>, type: DeepReadonly<StrippedTypeForFormula>) => string;
 export type FilterFunc = (...args: Parameters<FormulaFunc>) => boolean;
-
-export type CustomFunctions = Record<string, Formula>;
 
 const customFuncs = {
 	prop(obj: any, key: string) {
@@ -22,6 +24,16 @@ const customFuncs = {
 			return obj.toLowerCase();
 		else
 			return obj;
+	},
+
+	null(obj: any) {
+		return obj == null;
+	},
+
+	log(...args: any) {
+		if (typeof window !== "undefined") { // Only call in browser, not on the server
+			console.log("Filter/formula debug output:", ...args);
+		}
 	}
 };
 
@@ -30,15 +42,15 @@ let currentObject: any = undefined;
 
 /** Keeps track synchronously of the called custom function names to prevent infinite recursion. */
 let calledCustomFunctions: string[] = [];
-export function makeCustomFunctions(customFunctions?: CustomFunctions): Record<string, Function> {
+export function makeCustomFunctions(customFunctions?: DeepReadonly<CustomFunction[]>): Record<string, Function> {
 	const extraFunctions = {
-		...Object.fromEntries(Object.entries(customFunctions ?? {}).map(([name, func]) => {
+		...Object.fromEntries((customFunctions ?? []).map((customFunction) => {
 			let compiled = false;
 			let compiledFunc;
 
-			return [name, (...args: any[]) => {
+			return [customFunction.name, (...args: any[]) => {
 				if (!compiled) {
-					compiledFunc = compileExpression(func, extraFunctions);
+					compiledFunc = compileExpression(customFunction.formula, extraFunctions);
 					compiled = true;
 				}
 
@@ -48,10 +60,10 @@ export function makeCustomFunctions(customFunctions?: CustomFunctions): Record<s
 
 				const isOuter = calledCustomFunctions.length === 0;
 				try {
-					if (calledCustomFunctions.includes(name)) {
-						throw new Error(`Infinite recursion, tried to call function ${JSON.stringify(name)} in function stack ${JSON.stringify(calledCustomFunctions)}.`);
+					if (calledCustomFunctions.includes(customFunction.name)) {
+						throw new Error(`Infinite recursion, tried to call function ${JSON.stringify(customFunction.name)} in function stack ${JSON.stringify(calledCustomFunctions)}.`);
 					}
-					calledCustomFunctions.push(name);
+					calledCustomFunctions.push(customFunction.name);
 					return compiledFunc({
 						...currentObject,
 						args
@@ -62,12 +74,13 @@ export function makeCustomFunctions(customFunctions?: CustomFunctions): Record<s
 					}
 				}
 			}];
-		}))
+		})),
+		...customFuncs
 	};
 	return extraFunctions;
 }
 
-export function filterHasError(expr: string, customFunctions?: CustomFunctions): Error | undefined {
+export function filterHasError(expr: string, customFunctions?: CustomFunction[]): Error | undefined {
 	try {
 		if(expr && expr.trim()) {
 			filtrexCompileExpression(expr, {
@@ -80,6 +93,10 @@ export function filterHasError(expr: string, customFunctions?: CustomFunctions):
 	} catch(e: any) {
 		return e;
 	}
+}
+
+export function validateFilter(filter: string): string | undefined {
+	return filterHasError(filter)?.message;
 }
 
 function compileExpression(formula: Formula, extraFunctions: Record<string, Function>): ((obj: any) => any) | undefined {
@@ -96,11 +113,11 @@ function compileExpression(formula: Formula, extraFunctions: Record<string, Func
 	}
 }
 
-export function compileFilterExpression(expr?: string, customFunctions?: CustomFunctions): FilterFunc {
+export function compileFilterExpression(expr?: string, customFunctions?: DeepReadonly<CustomFunction[]>): FilterFunc {
 	const filterFunc = compileExpression({ type: "filtrex", code: expr ?? "" }, makeCustomFunctions(customFunctions));
 	if (filterFunc) {
 		return (obj, type) => {
-			currentObject = prepareObject(obj, type);
+			currentObject = prepareObject(obj, type, customFunctions);
 			try {
 				return !!filterFunc(currentObject);
 			} finally {
@@ -112,19 +129,19 @@ export function compileFilterExpression(expr?: string, customFunctions?: CustomF
 	}
 }
 
-export function compileFormulaExpression(formula?: Formula, customFunctions?: CustomFunctions): FormulaFunc {
+export function compileFormulaExpression(formula?: Formula, customFunctions?: DeepReadonly<CustomFunction[]>): FormulaFunc {
 	const compiled = formula && compileExpression(formula, makeCustomFunctions(customFunctions));
 	if (compiled) {
 		return (obj, type) => {
 			currentObject = obj;
 			try {
-				const result = compiled(prepareObject(obj, type));
+				const result = compiled(prepareObject(obj, type, customFunctions));
 				switch (typeof result) {
 					case "boolean":
 						return result ? CHECKBOX_TRUE_LABEL : CHECKBOX_FALSE_LABEL;
 					case "number":
 					case "bigint":
-						return `${result}`;
+						return typeof result === "number" && isNaN(result) ? "" : `${result}`;
 					case "string":
 						return result;
 					default:
@@ -221,13 +238,13 @@ export function makeTypeFilter(previousFilter: string = "", typeId: ID, filtered
  */
 let handledFieldNames: string[] | undefined = undefined;
 
-export function prepareObject(obj: DeepReadonly<Marker<CRU>> | DeepReadonly<Line<CRU>>, type: DeepReadonly<Type>): any {
+export function prepareObject(obj: DeepReadonly<Marker<CRU>> | DeepReadonly<Line<CRU>> | Route, type: DeepReadonly<StrippedTypeForFormula>, customFunctions?: DeepReadonly<CustomFunction[]>): any {
 	const fixedObj: any = cloneDeep(omit(obj, ["data"]));
 
 	fixedObj.data = Object.create(null) as {};
 	for (const field of type.fields) {
 		if (field.type !== "formula") {
-			fixedObj.data[field.id] = normalizeFieldValue(field, obj.data?.[field.id]);
+			fixedObj.data[field.id] = normalizeFieldValue(field, "data" in obj ? obj.data?.[field.id] : undefined);
 		}
 	}
 
@@ -258,7 +275,7 @@ export function prepareObject(obj: DeepReadonly<Marker<CRU>> | DeepReadonly<Line
 							value = [true, ""];
 						} else {
 							handledFieldNames!.push(field.name);
-							value = [true, compileFormulaExpression(field.formula)(fixedObj, type)];
+							value = [true, compileFormulaExpression(field.formula, customFunctions)(fixedObj, type)];
 						}
 					} finally {
 						if (isOuterGetter) {

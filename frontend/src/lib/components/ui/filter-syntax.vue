@@ -447,6 +447,25 @@
 					</td>
 					<td><code>min(routePoints.0.lat,routePoints.1.lat) &lt; 50</code></td>
 				</tr>
+
+				<tr>
+					<td><code>null()</code></td>
+					<td>{{i18n.t("filter-syntax.null-description")}}</td>
+					<td>
+						<code v-if="props.isFormula">
+							null(ascent) ? "" : ascent / 20
+						</code>
+						<code v-else>
+							not null(ascent)
+						</code>
+					</td>
+				</tr>
+
+				<tr>
+					<td><code>log()</code></td>
+					<td>{{i18n.t("filter-syntax.log-description")}}</td>
+					<td><code>log(&quot;test&quot;)</code></td>
+				</tr>
 			</tbody>
 		</table>
 	</div>

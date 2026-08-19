@@ -1,20 +1,19 @@
 <script setup lang="ts">
 	import { computed, ref, watch } from "vue";
 	import { ADMIN_LINK_COMMENT, getMainAdminLink, type CRU, type MapData, type MergedUnion } from "facilmap-types";
-	import { deI18nMapLinkComments, generateRandomMapSlug, i18nMapLinkComments } from "facilmap-utils";
-	import { getUniqueId } from "../../utils/utils";
-	import { cloneDeep, isEqual } from "lodash-es";
+	import { cloneDeep, deI18nMapLinkComments, generateRandomMapSlug, i18nMapLinkComments } from "facilmap-utils";
+	import { isEqual } from "lodash-es";
 	import ModalDialog from "../ui/modal-dialog.vue";
 	import { useToasts } from "../ui/toasts/toasts.vue";
 	import { getClientSub, injectContextRequired, requireClientContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
 	import { useI18n } from "../../utils/i18n";
-	import storage, { storagePersisted } from "../../utils/storage";
-	import vTooltip from "../../utils/tooltip";
-	import Icon from "../ui/icon.vue";
 	import MapSettingsGeneral from "./map-settings-general.vue";
-	import MapSettingsLinks from "./map-settings-links.vue";
 	import MapSettingsDelete from "./map-settings-delete.vue";
+	import MapSettingsFormulas from "./map-settings-formulas.vue";
+	import { getUniqueId } from "../../utils/utils";
 	import { mergeMapData } from "./map-settings-utils";
+	import storage, { storagePersisted } from "../../utils/storage";
+	import MapSettingsLinks from "./map-settings-links.vue";
 
 	const context = injectContextRequired();
 	const clientContext = requireClientContext(context);
@@ -60,6 +59,8 @@
 		]),
 		legend1: "",
 		legend2: "",
+		customFunctions: [],
+		routeFormulas: [],
 		defaultViewId: null
 	} : undefined;
 
@@ -68,7 +69,7 @@
 			return initialMapData!;
 		} else if (clientSub.value) {
 			return {
-				...clientSub.value.data.mapData,
+				...cloneDeep(clientSub.value.data.mapData),
 				links: i18nMapLinkComments(clientSub.value.data.mapData.links)
 			};
 		} else {
@@ -144,8 +145,14 @@
 					</a>
 				</li>
 
-				<li v-if="canDelete" class="nav-item">
+				<li class="nav-item">
 					<a class="nav-link" :class="{ active: activeTab === 2 }" aria-current="page" href="javascript:" @click="activeTab = 2">
+						{{i18n.t("map-settings-dialog.tab-formulas")}}
+					</a>
+				</li>
+
+				<li v-if="canDelete" class="nav-item">
+					<a class="nav-link" :class="{ active: activeTab === 3 }" aria-current="page" href="javascript:" @click="activeTab = 3">
 						{{i18n.t("map-settings-dialog.tab-delete-map")}}
 					</a>
 				</li>
@@ -164,6 +171,13 @@
 			</div>
 
 			<div v-show="activeTab === 2" @invalid.capture="activeTab = 2">
+				<MapSettingsFormulas
+					:mapData="mapData"
+				></MapSettingsFormulas>
+			</div>
+
+
+			<div v-show="activeTab === 3" @invalid.capture="activeTab = 3">
 				<MapSettingsDelete
 					:mapData="mapData"
 					:isSubmitting="modalRef?.formData?.isSubmitting"

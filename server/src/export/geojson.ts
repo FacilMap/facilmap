@@ -10,7 +10,7 @@ export function exportGeoJson(api: ApiV3Backend, mapLink: RawActiveMapLink, filt
 	return streamPromiseToStream((async () => {
 		const mapData = await api.getMap(mapLink);
 
-		const filterFunc = compileFilterExpression(filter);
+		const filterFunc = compileFilterExpression(filter, mapData.customFunctions);
 
 		const types = keyBy(await iterableToArray((await api.getMapTypes(mapLink)).results), "id");
 

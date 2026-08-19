@@ -48,7 +48,7 @@
 <template>
 	<span class="fm-elevation-stats" v-if="route.ascent != null && route.descent != null">
 		<span>
-			<Icon icon="triangle-top" :alt="i18n.t('elevation-stats.ascent-alt')"></Icon> {{formatAscentDescent(route.ascent)}} / <Icon icon="triangle-bottom" :alt="i18n.t('elevation-status.descent-alt')"></Icon> {{formatAscentDescent(route.descent)}}
+			<Icon icon="triangle-top" :alt="i18n.t('elevation-stats.ascent-alt')"></Icon>&nbsp;{{formatAscentDescent(route.ascent)}} / <Icon icon="triangle-bottom" :alt="i18n.t('elevation-status.descent-alt')"></Icon>&nbsp;{{formatAscentDescent(route.descent)}}
 		</span>
 
 		<template v-if="hasStats && tab">
@@ -100,9 +100,11 @@
 		&, & > span {
 			display: inline-flex;
 			align-items: center;
+			vertical-align: middle; /* Fixes too big line height */
 		}
 
 		button {
+			display: inline-flex;
 			margin-left: 0.5rem;
 			padding: 0 0.25rem;
 			line-height: 1;

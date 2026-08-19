@@ -12,7 +12,7 @@ const coreIcons = [
 	"arrow-left", "arrow-right", "car", "check", "chart-line", "chevron-right", "circle-info", "cog", "copy",
 	"info-sign", "menu-hamburger", "minus", "new-window", "person-biking", "person-walking",
 	"plus", "question-sign", "qrcode", "remove", "resize-horizontal", "resize-vertical", "rotate-left",
-	"screenshot", "search", "slash", "shuffle", "square", "square-plus", "square-minus", "trash",
+	"screenshot", "search", "shuffle", "slash", "shuffle", "square", "square-plus", "square-minus", "trash",
 	"triangle-bottom", "triangle-top", "unchecked", "zoom-in"
 ];
 

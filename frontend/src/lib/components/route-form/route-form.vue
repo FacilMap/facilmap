@@ -1,7 +1,7 @@
 <script setup lang="ts">
 	import { computed, markRaw, nextTick, reactive, ref, toRaw, watch, type DeepReadonly } from "vue";
 	import Icon from "../ui/icon.vue";
-	import { decodeRouteQuery, encodeRouteQuery, formatCoordinates, formatDistance, formatRouteMode, formatRouteTime, formatTypeName, isSearchId, normalizeMarkerName } from "facilmap-utils";
+	import { compileFormulaExpression, decodeRouteQuery, encodeRouteQuery, formatCoordinates, formatDistance, formatRouteMode, formatRouteTime, formatTypeName, isSearchId, markdownInline, normalizeMarkerName, type StrippedTypeForFormula } from "facilmap-utils";
 	import { useToasts } from "../ui/toasts/toasts.vue";
 	import type { SearchResult } from "facilmap-types";
 	import { getMarkerIcon, type HashQuery, MarkerLayer, RouteLayer } from "facilmap-leaflet";
@@ -109,6 +109,16 @@
 	const sub = computed((): SocketClientRouteSubscription | undefined => clientContext.value.client.routeSubscriptions[props.routeKey]);
 	const routeObj = computed((): DeepReadonly<RouteWithTrackPoints> | undefined => clientContext.value.storage.routes[props.routeKey]);
 	const hasRoute = computed(() => !!routeObj.value);
+
+	const strippedType = computed(() => routeObj.value && clientSub.value && clientSub.value.data.mapData.routeFormulas.length > 0 ? {
+		...routeObj.value,
+		type: "route",
+		fields: clientSub.value.data.mapData.routeFormulas.map((f, i) => ({ type: "formula", id: i, name: f.name, formula: f.formula }))
+	} satisfies StrippedTypeForFormula : undefined);
+	const formulaResults = computed(() => strippedType.value ? strippedType.value.fields.flatMap((f) => {
+		const value = compileFormulaExpression(f.formula, clientSub.value?.data.mapData.customFunctions)(routeObj.value!, strippedType.value!);
+		return value === "" ? [] : [{ name: f.name, valueHtml: markdownInline(value, true) }];
+	}) : []);
 
 	const routeMode = ref(routeObj.value?.mode ?? "car");
 	const destinations = ref<Destination[]>(routeObj.value ? (
@@ -750,6 +760,11 @@
 					<template v-if="routeObj.ascent != null">
 						<dt>{{i18n.t("route-form.ascent-descent")}}</dt>
 						<dd><ElevationStats :route="routeObj"></ElevationStats></dd>
+					</template>
+
+					<template v-for="result in formulaResults" :key="result.name">
+						<dt>{{result.name}}</dt>
+						<dd v-html="result.valueHtml"></dd>
 					</template>
 				</dl>
 

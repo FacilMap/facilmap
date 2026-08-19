@@ -49,7 +49,7 @@
         "read-link-comment": "படிக்க மட்டும் இணைப்பு"
     },
     "search": {
-        "http-error": "STATE {{status}} உடன் தேடல் தோல்வியுற்றது."
+        "http-error": "{{status}} நிலை உடன் தேடல் தோல்வியுற்றது."
     },
     "utils": {
         "node": "முனை {{id}}}",

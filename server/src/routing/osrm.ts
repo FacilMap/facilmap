@@ -52,7 +52,8 @@ export async function calculateOSRMRoute(points: Point[], mode: RouteMode, simpl
 		time: 0,
 		ascent: null,
 		descent: null,
-		extraInfo: null
+		extraInfo: null,
+		extraInfoStats: null
 	};
 
 	for(const body of results) {

@@ -44,7 +44,7 @@
 					:id="`${id}-map-name-input`"
 					class="form-control"
 					type="text"
-					v-model="mapData.name"
+					v-model="props.mapData.name"
 					:ref="slotProps.inputRef"
 				/>
 				<div class="invalid-tooltip">
@@ -62,7 +62,7 @@
 					:id="`${id}-search-engines-input`"
 					class="form-check-input"
 					type="checkbox"
-					v-model="mapData.searchEngines"
+					v-model="props.mapData.searchEngines"
 				/>
 				<label :for="`${id}-search-engines-input`" class="form-check-label">
 					{{i18n.t("map-settings-dialog.search-engines-label")}}
@@ -81,7 +81,7 @@
 				:id="`${id}-description-input`"
 				class="form-control"
 				type="text"
-				v-model="mapData.description"
+				v-model="props.mapData.description"
 			/>
 			<div class="form-text">
 				{{i18n.t("map-settings-dialog.map-description-description")}}
@@ -97,7 +97,7 @@
 					:id="`${id}-cluster-markers-input`"
 					class="form-check-input"
 					type="checkbox"
-					v-model="mapData.clusterMarkers"
+					v-model="props.mapData.clusterMarkers"
 				/>
 				<label :for="`${id}-cluster-markers-input`" class="form-check-label">
 					{{i18n.t("map-settings-dialog.cluster-markers-label")}}
@@ -115,12 +115,12 @@
 			<textarea
 				:id="`${id}-legend1-input`"
 				class="form-control"
-				v-model="mapData.legend1"
+				v-model="props.mapData.legend1"
 			></textarea>
 			<textarea
 				:id="`${id}-legend2-input`"
 				class="form-control mt-1"
-				v-model="mapData.legend2"
+				v-model="props.mapData.legend2"
 			></textarea>
 			<div class="form-text">
 				<T k="map-settings-dialog.legend-text-description">

@@ -65,7 +65,7 @@ function stripOrUndefined<T>(strip: () => T): T | undefined {
 
 export function stripMapData(link: RawActiveMapLink, mapData: RawMapData): Stripped<MapData> {
 	return markStripped({
-		...pick(mapData, ["id", "name", "description", "clusterMarkers", "legend1", "legend2", "defaultViewId"]),
+		...pick(mapData, ["id", "name", "description", "clusterMarkers", "legend1", "legend2", "defaultViewId", "customFunctions", "routeFormulas"]),
 		activeLink: stripMapLink(link),
 		links: stripStoredMapLinks(link, mapData.links),
 		defaultView: mapData.defaultView && (stripView(link, mapData.defaultView) ?? null)
@@ -74,7 +74,7 @@ export function stripMapData(link: RawActiveMapLink, mapData: RawMapData): Strip
 
 export function stripHistoryEntryMapData(link: RawActiveMapLink, mapData: RawHistoryEntryObjectTypes["Map"]): Stripped<HistoryEntryObjectTypes["Map"]> {
 	return markStripped({
-		...pick(mapData, ["name", "description", "clusterMarkers", "legend1", "legend2", "defaultViewId"]),
+		...pick(mapData, ["name", "description", "clusterMarkers", "legend1", "legend2", "defaultViewId", "customFunctions", "routeFormulas"]),
 		links: stripStoredMapLinks(link, mapData.links)
 	});
 }

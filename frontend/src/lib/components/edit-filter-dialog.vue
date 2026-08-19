@@ -1,5 +1,5 @@
 <script setup lang="ts">
-	import { filterHasError } from "facilmap-utils";
+	import { validateFilter } from "facilmap-utils";
 	import ModalDialog from "./ui/modal-dialog.vue";
 	import { computed, ref } from "vue";
 	import { injectContextRequired, requireMapContext } from "./facil-map-context-provider/facil-map-context-provider.vue";
@@ -17,10 +17,6 @@
 
 	const modalRef = ref<InstanceType<typeof ModalDialog>>();
 	const filter = ref(mapContext.value.filter ?? "");
-
-	function validateFilter(filter: string) {
-		return filterHasError(filter)?.message;
-	}
 
 	const isModified = computed(() => {
 		return filter.value != (mapContext.value.filter ?? "");

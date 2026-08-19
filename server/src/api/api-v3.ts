@@ -228,6 +228,7 @@ export class ApiV3Backend implements Api<ApiVersion.V3, true> {
 			filename: `${getSafeFilename(normalizeMapName(mapData.name))} - ${getSafeFilename(type.name)}.html`,
 			data: createSingleTable(
 				this,
+				mapData,
 				activeLink,
 				type,
 				options.filter,
@@ -244,6 +245,7 @@ export class ApiV3Backend implements Api<ApiVersion.V3, true> {
 			filename: `${getSafeFilename(normalizeMapName(mapData.name))} - ${getSafeFilename(type.name)}.csv`,
 			data: exportCsv(
 				this,
+				mapData,
 				activeLink,
 				type,
 				options.filter,

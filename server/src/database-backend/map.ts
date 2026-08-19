@@ -1,5 +1,5 @@
 import { DataTypes, type InferAttributes, type InferCreationAttributes, Model, Op, Sequelize, type ForeignKey, type CreationOptional } from "sequelize";
-import { type FindMapsResult, type MapSlug, type PagedResults, type PagingInput, type ID, type MapPermissions } from "facilmap-types";
+import { type FindMapsResult, type MapSlug, type PagedResults, type PagingInput, type ID, type MapPermissions, type CustomFunction, type RouteFormula } from "facilmap-types";
 import DatabaseBackend from "./database-backend.js";
 import { createModel, getDefaultIdType, makeNotNullForeignKey } from "./utils.js";
 import type { ViewModel } from "./view.js";
@@ -25,6 +25,8 @@ export interface MapModel extends Model<InferAttributes<MapModel>, InferCreation
 	legend2: string;
 	defaultViewId: ForeignKey<ViewModel["id"]> | null;
 	defaultView?: ViewModel;
+	customFunctions: CustomFunction[];
+	routeFormulas: RouteFormula[];
 	links?: MapLinkModel[];
 	/** The ID of the next field that will be created */
 	nextFieldId: ID;
@@ -60,6 +62,28 @@ export default class DatabaseMapsBackend {
 			clusterMarkers: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false },
 			legend1: { type: DataTypes.TEXT, allowNull: false, defaultValue: "" },
 			legend2: { type: DataTypes.TEXT, allowNull: false, defaultValue: "" },
+			customFunctions: {
+				type: DataTypes.TEXT,
+				allowNull: false,
+				get: function(this: MapModel) {
+					const customFunctions = this.getDataValue("customFunctions") as any as string; // https://github.com/sequelize/sequelize/issues/11558
+					return customFunctions != null ? JSON.parse(customFunctions) : customFunctions;
+				},
+				set: function(this: MapModel, v: CustomFunction[]) {
+					this.setDataValue("customFunctions", v != null ? JSON.stringify(v) as any : v);
+				}
+			},
+			routeFormulas: {
+				type: DataTypes.TEXT,
+				allowNull: false,
+				get: function(this: MapModel) {
+					const routeFormulas = this.getDataValue("routeFormulas") as any as string; // https://github.com/sequelize/sequelize/issues/11558
+					return routeFormulas != null ? JSON.parse(routeFormulas) : routeFormulas;
+				},
+				set: function(this: MapModel, v: RouteFormula[]) {
+					this.setDataValue("routeFormulas", v != null ? JSON.stringify(v) as any : v);
+				}
+			},
 			nextFieldId: { type: DataTypes.INTEGER.UNSIGNED, allowNull: false }
 		}, {
 			sequelize: this.backend._conn,

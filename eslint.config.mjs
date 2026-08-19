@@ -44,7 +44,7 @@ export default tseslint.config({
 		"@typescript-eslint/no-extra-non-null-assertion": ["error"],
 		"@typescript-eslint/no-non-null-asserted-optional-chain": ["error"],
 		"@typescript-eslint/prefer-as-const": ["error"],
-		"no-restricted-globals": ["error", "$", "length"],
+		"no-restricted-globals": ["error", "$", "length", "name"],
 		"no-restricted-imports": ["error", "vue/types/umd"],
 		"vue/multi-word-component-names": ["off"],
 		"@typescript-eslint/no-base-to-string": ["error"],

@@ -14,7 +14,7 @@ import mitt from "mitt";
 import type { MapComponents, MapContextData, MapContextEvents, WritableMapContext } from "../facil-map-context-provider/map-context";
 import type { ClientContext } from "../facil-map-context-provider/client-context";
 import type { FacilMapContext } from "../facil-map-context-provider/facil-map-context";
-import { requireClientContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
+import { getClientSub, requireClientContext, type ClientSub } from "../facil-map-context-provider/facil-map-context-provider.vue";
 import { quoteHtml, unquoteSearchTerm, type Optional } from "facilmap-utils";
 import { getI18n, i18nResourceChangeCounter, useI18n } from "../../utils/i18n";
 import { AttributionControl } from "./attribution";
@@ -30,7 +30,7 @@ import { useToasts } from "../ui/toasts/toasts.vue";
 
 type MapContextWithoutComponents = Optional<WritableMapContext, 'components'>;
 
-function useMap(element: Ref<HTMLElement>, mapContext: MapContextWithoutComponents): Ref<Raw<Map>> {
+function useMap(element: Ref<HTMLElement>, mapContext: MapContextWithoutComponents, clientSub: Ref<ClientSub | undefined>): Ref<Raw<Map>> {
 	const mapRef = shallowRef(undefined as any as Map);
 	const interaction = ref(0);
 
@@ -89,6 +89,10 @@ function useMap(element: Ref<HTMLElement>, mapContext: MapContextWithoutComponen
 	watch(() => interaction.value, () => {
 		mapContext.interaction = interaction.value > 0;
 	}, { immediate: true });
+
+	watchEffect(() => {
+		mapRef.value.setFmFilterCustomFuncs(clientSub.value?.data.mapData.customFunctions ?? []);
+	});
 
 	return mapRef;
 }
@@ -511,7 +515,8 @@ function useHashHandler(map: Ref<Map>, clientContext: Ref<ClientContext>, contex
 
 function useMapComponents(context: FacilMapContext, mapContext: MapContextWithoutComponents, mapRef: Ref<HTMLElement>, innerContainerRef: Ref<HTMLElement>): MapComponents {
 	const clientContext = requireClientContext(context);
-	const map = useMap(mapRef, mapContext);
+	const clientSub = getClientSub(context);
+	const map = useMap(mapRef, mapContext, clientSub);
 	const attribution = useAttribution(map);
 	const zoomControl = useZoomControl(map);
 	const bboxHandler = useBboxHandler(map, clientContext);

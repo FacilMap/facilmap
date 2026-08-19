@@ -1,3 +1,4 @@
+import type { CustomFunction, DeepReadonly } from "facilmap-types";
 import type { FilterFunc as _TypeExtensions_FilterFunc } from "facilmap-utils";
 
 // These should really go in other places, but due to https://github.com/microsoft/rushstack/issues/1709, we append
@@ -9,6 +10,7 @@ declare module "leaflet" {
 		fmFilterFunc: _TypeExtensions_FilterFunc;
 
 		setFmFilter(filter?: string): void;
+		setFmFilterCustomFuncs(customFuncs: DeepReadonly<CustomFunction[]>): void;
 
 		_fmLayers?: {
 			baseLayers: Record<string, Layer>;

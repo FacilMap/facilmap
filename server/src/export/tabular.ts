@@ -1,6 +1,6 @@
 import { flatMapStream, iterableToStream, mapStream } from "../utils/streams.js";
 import { compileFilterExpression, formatDistance, formatFieldName, formatFieldValue, formatRouteTime, normalizeLineName, normalizeMarkerName, quoteHtml, round } from "facilmap-utils";
-import type { Type } from "facilmap-types";
+import type { MapData, Type } from "facilmap-types";
 import { getI18n } from "../i18n.js";
 import type { RawActiveMapLink } from "../utils/permissions.js";
 import type { ApiV3Backend } from "../api/api-v3.js";
@@ -13,6 +13,7 @@ export type TabularData = {
 
 export async function getTabularData(
 	api: ApiV3Backend,
+	mapData: MapData,
 	mapLink: RawActiveMapLink,
 	type: Type,
 	html: boolean,
@@ -21,7 +22,7 @@ export async function getTabularData(
 ): Promise<TabularData> {
 	const i18n = getI18n();
 
-	const filterFunc = compileFilterExpression(filter);
+	const filterFunc = compileFilterExpression(filter, mapData.customFunctions);
 
 	const handlePlainText = (str: string) => html ? quoteHtml(str) : str;
 
@@ -44,7 +45,7 @@ export async function getTabularData(
 		return [[
 			() => handlePlainText(normalizeMarkerName(marker.name)),
 			() => handlePlainText(`${round(marker.lat, 5)},${round(marker.lon, 5)}`),
-			...type.fields.map((f) => () => formatFieldValue(type, f, marker.data[f.name], html).trim())
+			...type.fields.map((f) => () => formatFieldValue(mapData, type, f, marker.data[f.name], html).trim())
 		]];
 	}) : flatMapStream(iterableToStream((await api.getMapLines(mapLink, { typeId: type.id })).results), (line): Array<Array<() => string>> => {
 		if (!filterFunc(line, type)) {
@@ -55,7 +56,7 @@ export async function getTabularData(
 			() => handlePlainText(normalizeLineName(line.name)),
 			() => handlePlainText(formatDistance(line.distance)),
 			() => handlePlainText(line.time != null ? formatRouteTime(line.time, line.mode) : ""),
-			...type.fields.map((f) => () => formatFieldValue(type, f, line.data[f.name], html).trim())
+			...type.fields.map((f) => () => formatFieldValue(mapData, type, f, line.data[f.name], html).trim())
 		]];
 	});
 

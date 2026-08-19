@@ -1,8 +1,78 @@
 import { viewValidator } from "./view.js";
-import { idValidator, mapSlugValidator } from "./base.js";
+import { formulaValidator, idValidator, mapSlugValidator } from "./base.js";
 import * as z from "zod";
 import { CRU, type CRUType, cruValidator, optionalCreate, onlyRead, onlyCreate, exceptCreate } from "./cru.js";
 import { keys, numberRecordValidator, type DeepReadonly } from "./utility.js";
+
+export const forbiddenCustomFunctionNames = Object.freeze([
+	// Operators
+	"and", "or", "not", "in", "of",
+
+	// Built-in functions
+	"abs", "ceil", "floor", "log", "max", "min", "random", "round", "sqrt",
+
+	// Our custom functions
+	"prop", "lower", "null",
+
+	// Reserved JavaScript keywords
+	"break", "case", "catch", "class", "const", "continue", "debugger", "default",
+	"delete", "do", "else", "export", "extends", "false", "finally", "for",
+	"function", "if", "import", "in", "instanceof", "new", "null", "return",
+	"super", "switch", "this", "throw", "true", "try", "typeof", "var", "void",
+	"while", "with", "yield", "let", "static", "enum", "await"
+]);
+export const customFunctionNameValidator = z.string()
+	.min(1)
+	.regex(/^[a-zA-Z_$][a-zA-Z0-9_$]*$/, { message: "May only contain simple letters, numbers and underscores and must not start with a number." })
+	.refine((val) => !forbiddenCustomFunctionNames.includes(val), { message: "This function name is not permitted." });
+
+export const customFunctionValidator = z.object({
+	name: z.string(),
+	formula: formulaValidator
+});
+export type CustomFunction = z.infer<typeof customFunctionValidator>;
+
+
+const noDuplicateCustomFunctionNames = (customFunctions: CustomFunction[], ctx: z.RefinementCtx) => {
+	const names: Record<string, number> = {};
+	for (const customFunction of customFunctions) {
+		names[customFunction.name] = (names[customFunction.name] ?? 0) + 1;
+	}
+
+	for (let i = 0; i < customFunctions.length; i++) {
+		if (names[customFunctions[i].name] > 1) {
+			ctx.addIssue({
+				code: z.ZodIssueCode.custom,
+				message: "Custom function names must be unique.",
+				path: [i, "name"]
+			});
+		}
+	}
+};
+
+export const routeFormulaValidator = z.object({
+	name: z.string(),
+	formula: formulaValidator
+});
+export type RouteFormula = z.infer<typeof routeFormulaValidator>;
+
+const noDuplicateRouteFormulaNames = (routeFormulas: RouteFormula[], ctx: z.RefinementCtx) => {
+	const names: Record<string, number> = {};
+	for (const customFunction of routeFormulas) {
+		names[customFunction.name] = (names[customFunction.name] ?? 0) + 1;
+	}
+
+	for (let i = 0; i < routeFormulas.length; i++) {
+		if (names[routeFormulas[i].name] > 1) {
+			ctx.addIssue({
+				code: z.ZodIssueCode.custom,
+				message: "Route formula names must be unique.",
+				path: [i, "name"]
+			});
+		}
+	}
+};
+
 
 export const mapPermissionTypeValidator = z.boolean().or(z.enum(["own"]));
 export type MapPermissionType = z.infer<typeof mapPermissionTypeValidator>;
@@ -50,6 +120,7 @@ export const mapPermissionsValidator = z.object({
 });
 export type MapPermissions = z.infer<typeof mapPermissionsValidator>;
 
+
 export const mapLinkValidator = cruValidator({
 	id: exceptCreate(idValidator),
 	slug: mapSlugValidator,
@@ -77,6 +148,7 @@ export const mapLinksValidator = {
 	update: z.array(mapLinkValidator.update.or(mapLinkValidator.create))
 };
 
+
 export const mapDataValidator = cruValidator({
 	id: onlyRead(idValidator),
 	name: optionalCreate(z.string().max(100), ""),
@@ -85,6 +157,8 @@ export const mapDataValidator = cruValidator({
 	legend1: optionalCreate(z.string(), ""),
 	legend2: optionalCreate(z.string(), ""),
 	defaultViewId: optionalCreate(idValidator.or(z.null()), null),
+	customFunctions: optionalCreate(z.array(customFunctionValidator).superRefine(noDuplicateCustomFunctionNames), () => []),
+	routeFormulas: optionalCreate(z.array(routeFormulaValidator).superRefine(noDuplicateRouteFormulaNames), () => []),
 	links: {
 		create: mapLinksValidator.create,
 		read: mapLinksValidator.read,

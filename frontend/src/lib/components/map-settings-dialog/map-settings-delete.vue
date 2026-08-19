@@ -1,18 +1,18 @@
 <script setup lang="ts">
 	import { computed, ref, watch } from "vue";
-	import { T, useI18n } from "../../utils/i18n";
+	import { type CRU, type MapData, type MergedUnion } from "facilmap-types";
 	import { getUniqueId } from "../../utils/utils";
 	import { useToasts } from "../ui/toasts/toasts.vue";
-	import { getClientSub, injectContextRequired, requireClientContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
 	import { showConfirm } from "../ui/alert.vue";
-	import type { CRU, MapData, MergedUnion } from "facilmap-types";
-
-	const i18n = useI18n();
-	const toasts = useToasts();
+	import { getClientSub, injectContextRequired, requireClientContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
+	import { T, useI18n } from "../../utils/i18n";
 
 	const context = injectContextRequired();
 	const clientContext = requireClientContext(context);
 	const clientSub = getClientSub(context);
+
+	const toasts = useToasts();
+	const i18n = useI18n();
 
 	const id = getUniqueId("fm-map-settings-delete");
 

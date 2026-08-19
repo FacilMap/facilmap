@@ -21,6 +21,8 @@ describe.for([
 		legend2: "",
 		defaultViewId: null,
 		defaultView: null,
+			customFunctions: [],
+			routeFormulas: [],
 	} satisfies Partial<MapData>;
 
 	const customMapProperties = {
@@ -30,6 +32,14 @@ describe.for([
 		clusterMarkers: true,
 		legend1: "Legend 1",
 		legend2: "Legend 1",
+		customFunctions: [
+			{ name: "func1", formula: { type: "filtrex", code: "asdf" } },
+			{ name: "func2", formula: { type: "filtrex", code: "bla" } },
+		],
+		routeFormulas: [
+			{ name: "f1", formula: { type: "filtrex", code: "oooo" } },
+			{ name: "f2", formula: { type: "filtrex", code: "aaaa" } },
+		],
 		defaultViewId: null
 	} satisfies Partial<MapData<CRU.CREATE>>;
 
@@ -150,7 +160,15 @@ describe.for([
 				description: "Test description",
 				clusterMarkers: true,
 				legend1: "Legend 1",
-				legend2: "Legend 1"
+				legend2: "Legend 1",
+			customFunctions: [
+				{ name: "func1", formula: { type: "filtrex", code: "asdf" } },
+				{ name: "func2", formula: { type: "filtrex", code: "bla" } },
+			],
+			routeFormulas: [
+				{ name: "f1", formula: { type: "filtrex", code: "oooo" } },
+				{ name: "f2", formula: { type: "filtrex", code: "aaaa" } },
+			]
 			} satisfies MapData<CRU.UPDATE>;
 
 			const updatedMapData = await (restClient ?? storage.client).updateMap(createMapData.adminId, update);

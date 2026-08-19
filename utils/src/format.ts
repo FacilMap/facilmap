@@ -1,5 +1,5 @@
 import { marked, type MarkedOptions } from "marked";
-import { Units, type DeepReadonly, type Field, type Line, type Marker, type Point, type RouteMode, type Type } from "facilmap-types";
+import { Units, type DeepReadonly, type Field, type Line, type MapData, type Marker, type Point, type RouteMode, type Type } from "facilmap-types";
 import { quoteHtml, quoteRegExp } from "./utils.js";
 import linkifyStr from "linkify-string";
 import createPurify from "dompurify";
@@ -24,9 +24,9 @@ export function formatCheckboxValue(value: string): string {
 	return value == "1" ? CHECKBOX_TRUE_LABEL : CHECKBOX_FALSE_LABEL;
 }
 
-export function formatFieldValue(type: DeepReadonly<Type>, field: DeepReadonly<Field>, object: DeepReadonly<Marker> | DeepReadonly<Line>, html: boolean): string {
+export function formatFieldValue(mapData: DeepReadonly<MapData>, type: DeepReadonly<Type>, field: DeepReadonly<Field>, object: DeepReadonly<Marker> | DeepReadonly<Line>, html: boolean): string {
 	if (field.type === "formula") {
-		const result = compileFormulaExpression(field.formula)(object, type);
+		const result = compileFormulaExpression(field.formula, mapData.customFunctions)(object, type);
 		return markdownInline(result, html);
 	}
 
