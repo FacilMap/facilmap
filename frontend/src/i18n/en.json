@@ -1072,5 +1072,9 @@
         "bing-maps-satellite": "Bing Maps (Satellite)",
         "mapy-cz": "Mapy.cz",
         "park4night": "park4night"
+    },
+    "markdown-editor": {
+        "toggle-code-tooltip": "Toggle markdown code view",
+        "toggle-code-alt": "Code"
     }
 }

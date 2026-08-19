@@ -2,6 +2,7 @@
 	import type { Field, Line, MapData, Marker, Type } from "facilmap-types";
 	import { computed } from "vue";
 	import { formatFieldName, formatFieldValue, normalizeFieldValue } from "facilmap-utils";
+	import MarkdownEditor from "./markdown-editor.vue";
 
 	const props = withDefaults(defineProps<{
 		mapData?: MapData;
@@ -38,7 +39,7 @@
 			/>
 		</template>
 		<template v-else-if="field.type === 'textarea'">
-			<textarea class="form-control" :id="id" v-model="value"></textarea>
+			<MarkdownEditor :id="id" v-model="value"></MarkdownEditor>
 		</template>
 		<template v-else-if="field.type === 'dropdown'">
 			<select class="form-select" :id="id" v-model="value">

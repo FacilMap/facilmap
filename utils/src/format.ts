@@ -13,9 +13,9 @@ import { compileFormulaExpression } from "./filter.js";
 
 const purify = createPurify(typeof window !== "undefined" ? window : new (await import("jsdom")).JSDOM("").window);
 
-const markdownOptions: MarkedOptions = {
+export const markdownOptions = {
 	breaks: true
-};
+} satisfies MarkedOptions;
 
 export const CHECKBOX_TRUE_LABEL = "✔";
 export const CHECKBOX_FALSE_LABEL = "✘";
