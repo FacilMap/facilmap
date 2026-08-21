@@ -1,10 +1,11 @@
 <script setup lang="ts">
-	import { type SlotsType, computed, defineComponent, h, ref, shallowRef, useSlots, watch, watchEffect } from "vue";
+	import { type DirectiveArguments, type SlotsType, computed, defineComponent, h, ref, shallowRef, useSlots, watch, watchEffect, withDirectives } from "vue";
 	import { getMaxSizeModifiers, type ButtonSize, type ButtonVariant, useIsNarrow } from "../../utils/bootstrap";
 	import Dropdown from "bootstrap/js/dist/dropdown";
 	import vLinkDisabled from "../../utils/link-disabled";
 	import type { TooltipPlacement } from "../../utils/tooltip";
 	import AttributePreservingElement from "./attribute-preserving-element.vue";
+	import vTooltip from "../../utils/tooltip";
 
 	const props = withDefaults(defineProps<{
 		isOpen?: boolean;
@@ -24,7 +25,8 @@
 		tag?: string;
 		isLink?: boolean;
 		tabindex?: number;
-		tooltip?: string; // TODO
+		/** Tooltip (does not work if noWrapper is true) */
+		tooltip?: string;
 		tooltipPlacement?: TooltipPlacement;
 		maxWidth?: string;
 	}>(), {
@@ -103,9 +105,13 @@
 				if (props.noWrapper) {
 					return slots.default();
 				} else {
-					return h(props.tag, {
+					return withDirectives(h(props.tag, {
 						class: ["dropdown", "fm-dropdown-menu-container", props.class]
-					}, slots.default());
+					}, slots.default()), [
+						...props.tooltip ? [
+							[vTooltip, props.tooltip, undefined, props.tooltipPlacement ? { [props.tooltipPlacement]: true } : {}]
+						] satisfies DirectiveArguments: []
+					]);
 				}
 			};
 		}

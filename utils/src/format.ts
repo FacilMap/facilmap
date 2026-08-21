@@ -1,4 +1,4 @@
-import { marked, type MarkedOptions } from "marked";
+import { Marked, type MarkedOptions } from "marked";
 import { Units, type Field, type Line, type MapData, type Marker, type Point, type RouteMode, type Type } from "facilmap-types";
 import { quoteHtml, quoteRegExp } from "./utils.js";
 import linkifyStr from "linkify-string";
@@ -16,6 +16,11 @@ const purify = createPurify(typeof window !== "undefined" ? window : new (await 
 export const markdownOptions = {
 	breaks: true
 } satisfies MarkedOptions;
+
+export const tableClasses = "table table-hover table-bordered";
+export const taskListClasses = "task-list";
+
+const marked = new Marked(markdownOptions);
 
 export const CHECKBOX_TRUE_LABEL = "✔";
 export const CHECKBOX_FALSE_LABEL = "✘";
@@ -73,7 +78,7 @@ export function formatPOIName(name: string): string {
 export function markdownBlock(string: string, html: boolean): string {
 	const $ = load("<div/>");
 	const el = $.root();
-	el.html(purify.sanitize(marked(string, markdownOptions) as string));
+	el.html(purify.sanitize(marked.parse(string) as string));
 	applyMarkdownModifications(el);
 	return html ? el.html()! : getTextContent(el);
 }
@@ -81,7 +86,7 @@ export function markdownBlock(string: string, html: boolean): string {
 export function markdownInline(string: string, html: boolean): string {
 	const $ = load("<div/>");
 	const el = $.root();
-	el.html(purify.sanitize(marked.parseInline(string, markdownOptions) as string));
+	el.html(purify.sanitize(marked.parseInline(string) as string));
 	applyMarkdownModifications(el);
 	return html ? el.html()! : getTextContent(el);
 }
@@ -202,10 +207,33 @@ export function formatAscentDescent(ascentDescent: number): string {
 	return formatElevation(ascentDescent);
 }
 
+function cheerioEach(elements: Cheerio<AnyNode>, callback: (el: Cheerio<AnyNode>) => void): void {
+	for (let i = 0; i < elements.length; i++) {
+		callback(elements.eq(i));
+	}
+}
+
 function applyMarkdownModifications($el: Cheerio<AnyNode>): void {
 	$el.find("a[href]").attr({
 		target: "_blank",
 		rel: "noopener noreferer"
+	});
+
+	cheerioEach($el.find("table"), (el) => {
+		el.addClass(tableClasses);
+	});
+
+	cheerioEach($el.find("ul"), (ul) => {
+		if (ul.find("> li > input[type=checkbox]").length > 0) {
+			ul.addClass(taskListClasses);
+
+			// Wrap items in <label> to make text clickable
+			cheerioEach(ul.find("> li"), (li) => {
+				const html = li.html() ?? "";
+				li.html("<label></label>");
+				li.children().html(html);
+			});
+		}
 	});
 }
 

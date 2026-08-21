@@ -52,8 +52,15 @@ $color-mode-type: media-query;
 
 @import "bootstrap/scss/utilities/api";
 
+$secondary-gray: $gray-600;
 
 // Customizations
+
+:root {
+	--#{$prefix}secondary-gray: #{$secondary-gray};
+	--#{$prefix}secondary-gray-rgb: #{to-rgb($secondary-gray)};
+	--#{$prefix}table-selection-bg: #{shift-color($secondary-gray, $table-bg-scale)};
+}
 
 html,body {
 	font-size: 14px;
@@ -106,13 +113,13 @@ html,body {
 
 // Reset btn-outline-secondary colour scheme to original, as #fff makes the text invisible
 .btn-outline-secondary {
-	@include button-outline-variant(#6c757d);
+	@include button-outline-variant($secondary-gray);
 }
 
 // Above, we override $secondary with white like in Bootstrap 3 instead of gray like in Bootstrap 4/5. In dark mode, use gray again.
 @include color-mode(dark) {
 	$color: secondary;
-	$value: $gray-600;
+	$value: $secondary-gray;
 
 	.btn-#{$color} {
 		@include button-variant($value, $value);
@@ -132,4 +139,9 @@ html,body {
 
 .list-group-item.active a {
 	color: inherit;
+}
+
+// Restore border-secondary gray
+.border-secondary {
+	border-color: rgba(var(--bs-secondary-gray-rgb), var(--bs-border-opacity)) !important;
 }

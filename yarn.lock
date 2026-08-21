@@ -1361,7 +1361,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@tiptap/extension-list@npm:3.30.2":
+"@tiptap/extension-list@npm:3.30.2, @tiptap/extension-list@npm:^3.30.2":
   version: 3.30.2
   resolution: "@tiptap/extension-list@npm:3.30.2"
   peerDependencies:
@@ -4506,6 +4506,7 @@ __metadata:
     "@kalisio/leaflet-graphicscale": ^1.0.0
     "@tiptap/extension-image": ^3.30.2
     "@tiptap/extension-link": ^3.30.2
+    "@tiptap/extension-list": ^3.30.2
     "@tiptap/extension-subscript": ^3.30.2
     "@tiptap/extension-superscript": ^3.30.2
     "@tiptap/extension-table": ^3.30.2
@@ -4774,7 +4775,7 @@ __metadata:
     linkify-string: ^4.2.0
     linkifyjs: ^4.2.0
     lodash-es: ^4.17.21
-    marked: ^15.0.7
+    marked: ^18.0.10
     osm-api: ^2.4.0
     p-throttle: ^7.0.0
     parse-gps-coordinates: ^1.1.0
@@ -6412,21 +6413,21 @@ __metadata:
   languageName: node
   linkType: hard
 
-"marked@npm:^15.0.7":
-  version: 15.0.7
-  resolution: "marked@npm:15.0.7"
-  bin:
-    marked: bin/marked.js
-  checksum: 5863eddd39b9b47dd8dc0d9aa1a4a675580c5c2194ea25b887b905ea9c1e8115e3da50293db4814d5e84a98c466f164c4aebf6c3b9a0e86ecde43c1c4273dbee
-  languageName: node
-  linkType: hard
-
 "marked@npm:^17.0.1":
   version: 17.0.6
   resolution: "marked@npm:17.0.6"
   bin:
     marked: bin/marked.js
   checksum: 0143f449ba253053bc27f48a1a2ab3a0619f3c1b527f5cd9eb6af9d879ab97c93d5d2b2c4ab81e8c42106f7f1731173c1f3aebfd176c66f1f2cd728aa9966cbf
+  languageName: node
+  linkType: hard
+
+"marked@npm:^18.0.10":
+  version: 18.0.10
+  resolution: "marked@npm:18.0.10"
+  bin:
+    marked: bin/marked.js
+  checksum: eba9a149310fd04e86ee5ac7ed40ac54916bae0b82eb7792e061c40fae34980886d7cd48aacb19d6a03530dda5988d4916f77fb860ff45de146af580ce0765ae
   languageName: node
   linkType: hard
 

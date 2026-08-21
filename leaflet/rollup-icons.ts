@@ -9,11 +9,12 @@ import { fileURLToPath } from "url";
 const require = createRequire(import.meta.url);
 
 const coreIcons = [
-	"arrow-left", "arrow-right", "car", "check", "chart-line", "chevron-right", "circle-info", "code",
-	"cog", "copy", "info-sign", "menu-hamburger", "minus", "new-window", "person-biking", "person-walking",
-	"plus", "question-sign", "qrcode", "remove", "resize-horizontal", "resize-vertical",
-	"screenshot", "search", "shuffle", "slash", "square", "square-plus", "square-minus", "trash",
-	"triangle-bottom", "triangle-top", "unchecked", "zoom-in"
+	"align-left", "arrow-left", "arrow-right", "car", "check", "chart-line", "chevron-right", "circle-info", "code",
+	"cog", "copy", "eraser", "heading", "image", "info-sign", "list-check", "list-ol", "list-ul", "menu-hamburger", "minus",
+	"new-window", "object-group", "object-ungroup", "person-biking",
+	"person-walking", "plus", "question-sign", "qrcode", "quote-left", "remove", "resize-horizontal", "resize-vertical",
+	"screenshot", "search", "shuffle", "slash", "square", "square-plus", "square-minus", "strikethrough", "subscript",
+	"superscript", "table", "trash", "triangle-bottom", "triangle-top", "unchecked", "zoom-in"
 ];
 
 async function getIconFilenames(): Promise<Record<string, Record<string, string>>> {
@@ -30,8 +31,9 @@ async function getIconFilenames(): Promise<Record<string, Record<string, string>
 
 	icons["fontawesome"] = {};
 	for (const name of [
-		"arrow-left", "arrow-right", "person-biking", "car", "chart-line", "code", "copy", "circle-info", "slash",
-		"person-walking", "shuffle", "square", "square-plus", "square-minus", "trash"
+		"align-left", "arrow-left", "arrow-right", "person-biking", "car", "chart-line", "code", "copy", "circle-info",
+		"eraser", "heading", "image", "list-check", "list-ol", "list-ul", "object-group", "object-ungroup", "person-walking", "quote-left", "shuffle", "slash",
+		"square", "square-plus", "square-minus", "strikethrough", "subscript", "superscript", "table", "trash"
 	]) {
 		icons["fontawesome"][name] = require.resolve(`@fortawesome/fontawesome-free/svgs/solid/${name}.svg`);
 	}

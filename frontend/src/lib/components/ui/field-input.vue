@@ -2,7 +2,7 @@
 	import type { Field, Line, MapData, Marker, Type } from "facilmap-types";
 	import { computed } from "vue";
 	import { formatFieldName, formatFieldValue, normalizeFieldValue } from "facilmap-utils";
-	import MarkdownEditor from "./markdown-editor.vue";
+	import MarkdownEditor from "./markdown-editor/markdown-editor.vue";
 
 	const props = withDefaults(defineProps<{
 		mapData?: MapData;

@@ -43,3 +43,66 @@ kbd.fm-shortcut {
 	padding: 0;
 	text-decoration: underline;
 }
+
+.td-buttons {
+	white-space: nowrap;
+	width: 1px;
+
+	> button {
+		margin-left: 0.25rem;
+	}
+}
+
+.fm-drag-handle {
+	cursor: grab !important;
+}
+
+.btn-toolbar {
+	> * + * {
+		margin-left: 0.25rem;
+	}
+}
+
+.closeable-tab-title {
+	display: inline-flex;
+	width: 100%;
+
+	> span {
+		align-items: center;
+		min-width: 0;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		flex-grow: 1;
+	}
+
+	a {
+		padding: 0 !important;
+	}
+
+	object, a, .fm-icon {
+		display: inline-flex;
+		align-items: center;
+	}
+}
+
+ul.task-list {
+	list-style-type: none;
+	margin-left: 0;
+	padding-left: 0;
+
+	> li, > li > label {
+		display: flex;
+		align-items: center;
+		gap: 0.25rem;
+	}
+}
+
+blockquote {
+	color: var(--bs-secondary-color);
+	border-left: 3px solid var(--bs-secondary-gray);
+	padding: 0.25rem 0 0.25rem 1rem;
+
+	> :last-child {
+		margin-bottom: 0;
+	}
+}
