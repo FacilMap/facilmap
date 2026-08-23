@@ -127,6 +127,8 @@
 	}
 
 	// TODO: Insert columns/rows
+	// TODO: Render differently for cases where top/left cell is a merged cell
+	// TODO: Handle entire row/column selection when last cell is a merged cell
 </script>
 
 <template>

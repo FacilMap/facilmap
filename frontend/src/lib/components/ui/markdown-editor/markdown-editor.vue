@@ -3,7 +3,7 @@
 	import { StarterKit } from "@tiptap/starter-kit";
 	import { Markdown } from "@tiptap/markdown";
 	import { ref, toRef, watch, watchEffect } from "vue";
-	import { markdownOptions, tableClasses, taskListClasses } from "facilmap-utils";
+	import { markdownOptions, subscriptTokenizer, superscriptTokenizer, tableClasses, taskListClasses } from "facilmap-utils";
 	import storage from "../../../utils/storage";
 	import Icon from "../icon.vue";
 	import vTooltip from "../../../utils/tooltip";
@@ -17,19 +17,26 @@
 	import MarkdownEditorFormatMenu from "./markdown-editor-format-menu.vue";
 	import MarkdownEditorInsertMenu from "./markdown-editor-insert-menu.vue";
 	import TableCellNodeView from "./table-cell-node-view.vue";
+	import { preserveScrollPosition } from "../../../utils/ui";
+	import { Marked } from "marked";
 
 	const i18n = useI18n();
+
+	const props = defineProps<{
+		disableRte?: boolean;
+	}>();
 
 	const modelValue = defineModel<string | undefined>({ required: true });
 
 	const editor = ref<Editor>();
-	const editorAreaRef = ref<HTMLElement>();
 	const textareaRef = ref<HTMLElement>();
 
-	watch(() => storage.showMarkdownCode, (showMarkdownCode, old, onCleanup) => {
+	const showCode = toRef(() => props.disableRte || storage.showMarkdownCode);
+
+	watch(showCode, (showMarkdownCode, old, onCleanup) => {
 		if (!showMarkdownCode) {
 			const ed = editor.value = new Editor({
-				content: modelValue.value,
+				content: modelValue.value ?? "",
 				contentType: "markdown",
 				extensions: [
 					StarterKit.configure({
@@ -41,7 +48,7 @@
 					}),
 					Markdown.configure({
 						indentation: { style: "tab", size: 1 },
-						markedOptions: markdownOptions
+						marked: new Marked(markdownOptions)
 					}),
 					Image,
 					TableKit.configure({
@@ -67,17 +74,31 @@
 					}),
 
 					Superscript.extend({
+						markdownTokenName: superscriptTokenizer.name,
+
+						parseMarkdown: (token, helpers) => {
+							const content = helpers.parseInline(token.tokens || []);
+							return helpers.applyMark("superscript", content);
+						},
 						renderMarkdown: (node, helpers) => {
-							const content = helpers.renderChildren(node.content || [])
-							return `<sup>${content}</sup>`;
+							const content = helpers.renderChildren(node.content || []);
+							return `${superscriptTokenizer.fmDelimiter}${content}${superscriptTokenizer.fmDelimiter}`;
 						}
 					}),
+
 					Subscript.extend({
+						markdownTokenName: subscriptTokenizer.name,
+
+						parseMarkdown: (token, helpers) => {
+							const content = helpers.parseInline(token.tokens || []);
+							return helpers.applyMark("subscript", content);
+						},
 						renderMarkdown: (node, helpers) => {
-							const content = helpers.renderChildren(node.content || [])
-							return `<sub>${content}</sub>`;
+							const content = helpers.renderChildren(node.content || []);
+							return `${subscriptTokenizer.fmDelimiter}${content}${subscriptTokenizer.fmDelimiter}`;
 						}
 					}),
+
 					TaskList.configure({
 						HTMLAttributes: {
 							class: taskListClasses
@@ -95,8 +116,6 @@
 				}
 			});
 
-			editorAreaRef.value = ed.view.dom;
-
 			onCleanup(() => {
 				ed.destroy();
 				editor.value = undefined;
@@ -106,9 +125,19 @@
 
 	watch(modelValue, (newValue) => {
 		if (editor.value && newValue !== editor.value.getMarkdown()) {
-			editor.value.commands.setContent(newValue ?? "", { contentType: "markdown" });
+			// setContent will cause the scroll parent to scroll in Chrome (same happens when setting innerHTML, so it is
+			// not a Tiptap/ProseMirror issue).
+			preserveScrollPosition(editor.value.view.dom, () => {
+				editor.value!.commands.setContent(newValue ?? "", { contentType: "markdown" });
+			});
 		}
 	});
+
+	// watch(modelValue, (newValue) => {
+	// 	const json1 = editor.schema.nodeFromJSON(editor.markdown!.parse(newValue ?? "")).toJSON();
+	// 	const json2 = editor.schema.nodeFromJSON(editor.markdown!.parse(editor.markdown!.serialize(json1))).toJSON();
+	// 	console.log(isEqual(json1, json2));
+	// });
 
 	// When the editor is used inside a dialog, the textarea is rendered while the dialog fades in (so we have a ref),
 	// but is not visible yet (so scrollHeight is 0). As a fix, we only start resizing it once its scrollHeight gets
@@ -133,7 +162,7 @@
 
 <template>
 	<div class="fm-markdown-editor">
-		<template v-if="storage.showMarkdownCode">
+		<template v-if="showCode">
 			<textarea
 				class="form-control"
 				v-model="modelValue"
@@ -149,10 +178,11 @@
 		</template>
 
 		<button
+			v-if="!props.disableRte"
 			type="button"
 			class="btn btn-secondary code-toggle"
-			:class="{ active: storage.showMarkdownCode }"
-			:aria-pressed="storage.showMarkdownCode"
+			:class="{ active: showCode }"
+			:aria-pressed="showCode"
 			@click="storage.showMarkdownCode = !storage.showMarkdownCode"
 			v-tooltip="i18n.t('markdown-editor.toggle-code-tooltip')"
 		>
@@ -180,7 +210,11 @@
 
 		.tiptap {
 			// Tiptap wraps various contents (list item, task list item, table cell) in a <p>
-			li > :last-child, li > div > :last-child, td > :last-child, th > :last-child {
+			li > :last-child,
+			li > div > :last-child,
+			td > :last-child,
+			th > :last-child,
+			li > :has(+ ul) {
 				margin-bottom: 0;
 			}
 

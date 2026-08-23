@@ -100,6 +100,7 @@ export const mapDataValidator = cruValidator({
 	defaultViewId: optionalCreate(idValidator.or(z.null()), null),
 	customFunctions: optionalCreate(z.array(customFunctionValidator).superRefine(noDuplicateCustomFunctionNames), () => []),
 	routeFormulas: optionalCreate(z.array(routeFormulaValidator).superRefine(noDuplicateRouteFormulaNames), () => []),
+	disableRte: optionalCreate(z.boolean(), false),
 
 	createDefaultTypes: onlyCreate(z.boolean().default(true)),
 

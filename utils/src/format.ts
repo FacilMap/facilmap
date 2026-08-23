@@ -1,4 +1,4 @@
-import { Marked, type MarkedOptions } from "marked";
+import { Marked, type MarkedExtension, type TokenizerAndRendererExtension } from "marked";
 import { Units, type Field, type Line, type MapData, type Marker, type Point, type RouteMode, type Type } from "facilmap-types";
 import { quoteHtml, quoteRegExp } from "./utils.js";
 import linkifyStr from "linkify-string";
@@ -13,9 +13,51 @@ import { compileFormulaExpression } from "./filter.js";
 
 const purify = createPurify(typeof window !== "undefined" ? window : new (await import("jsdom")).JSDOM("").window);
 
-export const markdownOptions = {
-	breaks: true
-} satisfies MarkedOptions;
+function getInlineTokenizer(name: string, delimiter: string, tag: string): TokenizerAndRendererExtension & { fmDelimiter: string } {
+	const quotedDelim = quoteRegExp(delimiter);
+	const rule = new RegExp(`^(${quotedDelim})([\\s\\S]+?)(${quotedDelim})`);
+
+	return {
+		name,
+		level: "inline",
+		start(src) {
+			return src.indexOf(delimiter);
+		},
+		tokenizer(src, tokens) {
+			const match = rule.exec(src);
+
+			if (!match) {
+				return undefined;
+			}
+
+			const innerContent = match[2].trim();
+
+			return {
+				type: name,
+				raw: match[0],
+				text: innerContent,
+				tokens: this.lexer.inlineTokens(innerContent),
+			};
+		},
+		renderer(token) {
+			return `<${tag}>${this.parser.parseInline(token.tokens ?? [])}</${tag}>`;
+		},
+		fmDelimiter: delimiter
+	};
+}
+
+export const superscriptTokenizer = getInlineTokenizer("superscript", "^", "sup");
+export const subscriptTokenizer = getInlineTokenizer("subscript", ",,", "sub");
+export const underlineTokenizer = getInlineTokenizer("underline", "++", "u");
+
+export const markdownOptions: MarkedExtension = {
+	breaks: true,
+	extensions: [
+		superscriptTokenizer,
+		subscriptTokenizer,
+		underlineTokenizer
+	]
+};
 
 export const tableClasses = "table table-hover table-bordered";
 export const taskListClasses = "task-list";

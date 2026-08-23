@@ -115,3 +115,20 @@ export function arrowNavigation<V>(values: V[], value: V | undefined, grid: Elem
 		ArrowRight: 1
 	}[event.key]!] ?? value;
 }
+
+export function preserveScrollPosition(element: HTMLElement, callback: () => void): void {
+	const scrollTop = new Map<HTMLElement, number>();
+	let cur: HTMLElement | null = element;
+	while (cur) {
+		scrollTop.set(cur, cur.scrollTop);
+		cur = cur.parentElement;
+	}
+
+	try {
+		callback();
+	} finally {
+		for (const [el, s] of scrollTop) {
+			el.scrollTop = s;
+		}
+	}
+}

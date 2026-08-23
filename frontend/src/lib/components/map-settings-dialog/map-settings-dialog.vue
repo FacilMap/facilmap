@@ -10,6 +10,7 @@
 	import MapSettingsGeneral from "./map-settings-general.vue";
 	import MapSettingsDelete from "./map-settings-delete.vue";
 	import MapSettingsFormulas from "./map-settings-formulas.vue";
+	import MapSettingsAdvanced from "./map-settings-advanced.vue";
 
 	const context = injectContextRequired();
 	const client = requireClientContext(context);
@@ -105,8 +106,14 @@
 					</a>
 				</li>
 
-				<li v-if="!props.isCreate" class="nav-item">
+				<li class="nav-item">
 					<a class="nav-link" :class="{ active: activeTab === 2 }" aria-current="page" href="javascript:" @click="activeTab = 2">
+						{{i18n.t("map-settings-dialog.tab-advanced")}}
+					</a>
+				</li>
+
+				<li v-if="!props.isCreate" class="nav-item">
+					<a class="nav-link" :class="{ active: activeTab === 3 }" aria-current="page" href="javascript:" @click="activeTab = 3">
 						{{i18n.t("map-settings-dialog.tab-delete-map")}}
 					</a>
 				</li>
@@ -125,6 +132,12 @@
 			</div>
 
 			<div v-show="activeTab === 2" @invalid.capture="activeTab = 2">
+				<MapSettingsAdvanced
+					:mapData="mapData"
+				></MapSettingsAdvanced>
+			</div>
+
+			<div v-show="activeTab === 3" @invalid.capture="activeTab = 3">
 				<MapSettingsDelete
 					:mapData="mapData"
 					:isSubmitting="modalRef?.formData?.isSubmitting"

@@ -18,11 +18,11 @@
 			getBlockStylesDropdown(props.editor)
 		],
 		[
-			{
-				icon: "image",
-				toggle: () => undefined,
-				tooltip: "Image"
-			},
+			// {
+			// 	icon: "image",
+			// 	toggle: () => undefined,
+			// 	tooltip: "Image"
+			// },
 
 			{
 				icon: "table",

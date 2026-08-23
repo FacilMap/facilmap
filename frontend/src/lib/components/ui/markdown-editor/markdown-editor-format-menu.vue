@@ -1,30 +1,35 @@
 <script lang="ts">
 	import { Editor, type ChainedCommands } from "@tiptap/vue-3";
 	import { BubbleMenu } from "@tiptap/vue-3/menus";
-	import { computed, watchEffect } from "vue";
+	import { computed, toRef } from "vue";
 	import { range } from "lodash-es";
 	import MenuContent, { type MenuStyleDropdown, type MenuStyles } from "./menu-content.vue";
-import { CellSelection } from "@tiptap/pm/tables";
+	import { CellSelection } from "@tiptap/pm/tables";
+	import type { Node, ResolvedPos } from "@tiptap/pm/model";
+	import { TextSelection } from "@tiptap/pm/state";
+	import { getI18n, useI18n } from "../../../utils/i18n";
 
 	export function getBlockStylesDropdown(ed: Editor): MenuStyleDropdown {
+		const i18n = getI18n();
+
 		const blockStyles: MenuStyleDropdown["sections"] = [
 			{
 				items: [
 					{
-						label: "Paragraph",
+						label: i18n.t("markdown-editor.paragraph-label"),
 						icon: "align-left",
 						toggle: (chain) => chain.setParagraph(),
 						active: ed.isActive("paragraph") && !ed.isActive("bulletList") && !ed.isActive("orderedList")
 					},
 					{
-						label: "Code block",
+						label: i18n.t("markdown-editor.code-block-label"),
 						icon: "code",
 						toggle: (chain) => chain.toggleCodeBlock(),
 						active: ed.isActive("codeBlock"),
 						tag: "code"
 					},
 					{
-						label: "Block quote",
+						label: i18n.t("markdown-editor.block-quote-label"),
 						icon: "quote-left",
 						toggle: (chain) => chain.toggleBlockquote(),
 						active: ed.isActive("blockquote")
@@ -36,21 +41,21 @@ import { CellSelection } from "@tiptap/pm/tables";
 				heading: "Lists",
 				items: [
 					{
-						label: "Bullet list",
+						label: i18n.t("markdown-editor.bullet-list-label"),
 						icon: "list-ul",
 						toggle: (chain) => chain.toggleBulletList(),
 						active: ed.isActive("bulletList")
 					},
 
 					{
-						label: "Ordered list",
+						label: i18n.t("markdown-editor.ordered-list-label"),
 						icon: "list-ol",
 						toggle: (chain) => chain.toggleOrderedList(),
 						active: ed.isActive("orderedList")
 					},
 
 					{
-						label: "Task list",
+						label: i18n.t("markdown-editor.task-list-label"),
 						icon: "list-check",
 						toggle: (chain) => chain.toggleTaskList(),
 						active: ed.isActive("taskList")
@@ -62,7 +67,7 @@ import { CellSelection } from "@tiptap/pm/tables";
 				heading: "Headings",
 				items: [
 					...range(1, 7).map((level) => ({
-						label: `Heading ${level}`,
+						label: i18n.t("markdown-editor.heading-label", { level }),
 						icon: "heading",
 						toggle: (chain: ChainedCommands) => chain.toggleHeading({ level: level as any }),
 						active: ed.isActive("heading", { level }),
@@ -73,20 +78,143 @@ import { CellSelection } from "@tiptap/pm/tables";
 		];
 
 		return {
-			label: blockStyles.flatMap((s) => s.items).find((s) => s.active)?.label ?? "Paragraph",
+			label: blockStyles.flatMap((s) => s.items).find((s) => s.active)?.label ?? i18n.t("markdown-editor.paragraph-label"),
 			sections: blockStyles
 		};
 	}
 </script>
 
 <script setup lang="ts">
+	const i18n = useI18n();
+
 	const props = defineProps<{
 		editor: Editor;
 	}>();
 
-	const isCellSelection = computed(() => props.editor.state.selection instanceof CellSelection);
-	const isRowSelection = computed(() => props.editor.state.selection instanceof CellSelection && props.editor.state.selection.isRowSelection());
-	const isColSelection = computed(() => props.editor.state.selection instanceof CellSelection && props.editor.state.selection.isColSelection());
+	const cellSelection = toRef(() => props.editor.state.selection instanceof CellSelection ? props.editor.state.selection : undefined);
+	const isCellSelection = toRef(() => !!cellSelection.value);
+	const isRowSelection = computed(() => cellSelection.value?.isRowSelection());
+	const isColSelection = computed(() => cellSelection.value?.isColSelection());
+	const selectedCells = computed(() => {
+		const result: Node[] = [];
+		cellSelection.value?.forEachCell((node) => {
+			result.push(node);
+		});
+		return result;
+	});
+
+	function findClosestAncestorCell($node: ResolvedPos) {
+		for (let d = $node.depth; d > 0; d--) {
+			const node = $node.node(d);
+			if (node.type.name === "tableCell" || node.type.name === "tableHeader") {
+				return node;
+			}
+		}
+	}
+
+	const textSelectionInsideTableCell = computed(() => {
+		if (!(props.editor.state.selection instanceof TextSelection)) {
+			return;
+		}
+
+		const fromCell = findClosestAncestorCell(props.editor.state.selection.$from);
+		if (!fromCell) {
+			return;
+		}
+
+		const toCell = findClosestAncestorCell(props.editor.state.selection.$to);
+		if (fromCell === toCell) {
+			return fromCell;
+		}
+	});
+
+	const isCombinedCell = computed(() => {
+		const selectedSingleCell = (
+			cellSelection.value && selectedCells.value.length === 1 ? selectedCells.value[0] :
+			textSelectionInsideTableCell.value
+		);
+		return selectedSingleCell && (selectedSingleCell.attrs.colspan > 0 || selectedSingleCell.attrs.rowspan > 0);
+	});
+
+	const inlineStyles = computed((): MenuStyles[number] => [
+		{
+			label: i18n.t("markdown-editor.bold-icon"),
+			toggle: (chain) => chain.toggleBold(),
+			active: props.editor.isActive("bold"),
+			style: "font-weight: bold",
+			tooltip: i18n.t("markdown-editor.bold-label")
+		},
+		{
+			label: i18n.t("markdown-editor.italic-icon"),
+			toggle: (chain) => chain.toggleItalic(),
+			active: props.editor.isActive("italic"),
+			style: "font-style: italic",
+			tooltip: i18n.t("markdown-editor.italic-label")
+		},
+		{
+			label: i18n.t("markdown-editor.underline-icon"),
+			toggle: (chain) => chain.toggleUnderline(),
+			active: props.editor.isActive("underline"),
+			style: "text-decoration: underline",
+			tooltip: i18n.t("markdown-editor.underline-label")
+		},
+		{
+			sections: [
+				{
+					items: [
+						{
+							icon: "strikethrough",
+							label: i18n.t("markdown-editor.strikethrough-label"),
+							toggle: (chain) => chain.toggleStrike(),
+							active: props.editor.isActive("strike")
+						},
+						{
+							icon: "code",
+							label: i18n.t("markdown-editor.code-label"),
+							toggle: (chain) => chain.toggleCode(),
+							active: props.editor.isActive("code")
+						},
+						{
+							icon: "superscript",
+							label: i18n.t("markdown-editor.superscript-label"),
+							toggle: (chain) => chain.toggleSuperscript(),
+							active: props.editor.isActive("superscript")
+						},
+						{
+							icon: "subscript",
+							label: i18n.t("markdown-editor.subscript-label"),
+							toggle: (chain) => chain.toggleSubscript(),
+							active: props.editor.isActive("subscript")
+						}
+					]
+				}
+			],
+			tooltip: i18n.t("markdown-editor.more-inline-tooltip")
+		},
+		{
+			icon: "eraser",
+			toggle: () => void props.editor.commands.unsetAllMarks(),
+			active: false,
+			tooltip: i18n.t("markdown-editor.clear-inline-tooltip")
+		}
+	]);
+
+	const cellStyles = computed((): MenuStyles[number] => [
+		...selectedCells.value.length > 1 ? [
+			{
+				icon: "object-group",
+				tooltip: "Merge cells",
+				toggle: (chain) => chain.mergeCells()
+			}
+		] satisfies MenuStyles[number] : [],
+		...isCombinedCell.value ? [
+			{
+				icon: "object-ungroup",
+				tooltip: "Split cell",
+				toggle: (chain) => chain.splitCell()
+			}
+		] satisfies MenuStyles[number] : []
+	]);
 
 	const styles = computed((): MenuStyles => {
 
@@ -95,109 +223,66 @@ import { CellSelection } from "@tiptap/pm/tables";
 
 		if (isRowSelection.value && isColSelection.value) {
 			// A whole table is selected
+
 			return [
+				inlineStyles.value,
 				[
+					...cellStyles.value,
 					{
 						icon: "trash",
 						toggle: (chain) => chain.deleteTable(),
-						tooltip: "Delete table"
+						tooltip: i18n.t("markdown-editor.delete-table-label")
 					}
 				]
 			];
 		} else if (isRowSelection.value) {
 			// One or more whole table rows are selected
+
 			return [
+				inlineStyles.value,
 				[
+					...cellStyles.value,
 					{
 						icon: "trash",
 						toggle: (chain) => chain.deleteRow(),
-						tooltip: "Delete row(s)"
+						tooltip: i18n.t("markdown-editor.delete-rows-label")
 					}
 				]
 			];
 		} else if (isColSelection.value) {
 			// One or more whole table columns are selected
+
 			return [
+				inlineStyles.value,
 				[
+					...cellStyles.value,
 					{
 						icon: "trash",
 						toggle: (chain) => chain.deleteColumn(),
-						tooltip: "Delete column(s)"
+						tooltip: i18n.t("markdown-editor.delete-columns-label")
 					}
 				]
 			];
 		} else if (isCellSelection.value) {
 			// One or more table cells are selected
-			return [];
+
+			return [
+				inlineStyles.value,
+				cellStyles.value
+			];
 		} else {
+			// Regular text is selected
+
 			return [
 				[
 					getBlockStylesDropdown(props.editor)
 				],
 				[
-					{
-						label: "B",
-						toggle: (chain) => chain.toggleBold(),
-						active: props.editor.isActive("bold"),
-						style: "font-weight: bold",
-						tooltip: "Bold"
-					},
-					{
-						label: "I",
-						toggle: (chain) => chain.toggleItalic(),
-						active: props.editor.isActive("italic"),
-						style: "font-style: italic",
-						tooltip: "Italic"
-					},
-					{
-						label: "U",
-						toggle: (chain) => chain.toggleUnderline(),
-						active: props.editor.isActive("underline"),
-						style: "text-decoration: underline",
-						tooltip: "Underline"
-					},
-					{
-						sections: [
-							{
-								items: [
-									{
-										icon: "strikethrough",
-										label: "Strikethrough",
-										toggle: (chain) => chain.toggleStrike(),
-										active: props.editor.isActive("strike")
-									},
-									{
-										icon: "code",
-										label: "Code",
-										toggle: (chain) => chain.toggleCode(),
-										active: props.editor.isActive("code")
-									},
-									{
-										icon: "superscript",
-										label: "Superscript",
-										toggle: (chain) => chain.toggleSuperscript(),
-										active: props.editor.isActive("superscript")
-									},
-									{
-										icon: "subscript",
-										label: "Subscript",
-										toggle: (chain) => chain.toggleSubscript(),
-										active: props.editor.isActive("subscript")
-									}
-								]
-							}
-						],
-						tooltip: "More inline styles"
-					},
-					{
-						icon: "eraser",
-						toggle: () => void props.editor.commands.unsetAllMarks(),
-						active: false,
-						tooltip: "Clear inline styles"
-					}
+					...inlineStyles.value
 
 					// Link
-				]
+				],
+				...cellStyles.value.length > 0 ? [cellStyles.value] : []
 			];
 		}
 	});

@@ -19,6 +19,7 @@ export interface MapModel extends Model<InferAttributes<MapModel>, InferCreation
 	legend2: string;
 	customFunctions: CustomFunction[];
 	routeFormulas: RouteFormula[];
+	disableRte: boolean;
 	defaultViewId: ForeignKey<ViewModel["id"]> | null
 	toJSON: () => RawMapData;
 };
@@ -71,6 +72,7 @@ export default class DatabaseMaps {
 					this.setDataValue("routeFormulas", v != null ? JSON.stringify(v) as any : v);
 				}
 			},
+			disableRte: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false },
 		}, {
 			sequelize: this._db._conn,
 			modelName: "Map"

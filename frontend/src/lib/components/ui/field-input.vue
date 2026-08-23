@@ -39,7 +39,11 @@
 			/>
 		</template>
 		<template v-else-if="field.type === 'textarea'">
-			<MarkdownEditor :id="id" v-model="value"></MarkdownEditor>
+			<MarkdownEditor
+				:id="id"
+				v-model="value"
+				:disableRte="props.mapData?.disableRte"
+			></MarkdownEditor>
 		</template>
 		<template v-else-if="field.type === 'dropdown'">
 			<select class="form-select" :id="id" v-model="value">
