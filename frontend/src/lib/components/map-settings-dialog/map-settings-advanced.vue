@@ -1,12 +1,7 @@
 <script setup lang="ts">
-	import { customFunctionNameValidator, type CRU, type CustomFunction, type MapData, type RouteFormula } from "facilmap-types";
-	import ValidatedField from "../ui/validated-form/validated-field.vue";
+	import { type CRU, type MapData } from "facilmap-types";
 	import { useI18n } from "../../utils/i18n";
-	import { markdownInline, validateFilter } from "facilmap-utils";
-	import { showConfirm } from "../ui/alert.vue";
-	import { getUniqueId, getZodValidator, validateRequired } from "../../utils/utils";
-	import Draggable from "vuedraggable";
-	import Icon from "../ui/icon.vue";
+	import { getUniqueId } from "../../utils/utils";
 
 	const i18n = useI18n();
 

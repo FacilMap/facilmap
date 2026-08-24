@@ -12,7 +12,8 @@
 	export type MenuStyleDropdownItem = {
 		label: string;
 		icon?: string;
-		toggle: (chain: ChainedCommands) => ChainedCommands | undefined;
+		toggle?: (chain: ChainedCommands) => ChainedCommands | undefined;
+		click?: () => void;
 		active: boolean;
 		tag?: string;
 		className?: string;
@@ -21,10 +22,12 @@
 	export type MenuStyleButton = {
 		label?: string;
 		icon?: string;
-		toggle: (chain: ChainedCommands) => ChainedCommands | undefined;
+		toggle?: (chain: ChainedCommands) => ChainedCommands | void;
+		click?: () => void;
 		active?: boolean;
 		style?: string;
 		tooltip?: string;
+		ref?: (el: HTMLElement | undefined) => void;
 	};
 
 	export type MenuStyleDropdown = {
@@ -55,7 +58,7 @@
 										<a
 											href="javascript:"
 											class="dropdown-item"
-											@click="item.toggle(props.editor.chain().focus())?.run()"
+											@click="item.click?.(); item.toggle?.(props.editor.chain().focus())?.run()"
 											:class="{ active: item.active }"
 										>
 											<template v-if="item.icon">
@@ -71,18 +74,20 @@
 						</DropdownMenu>
 					</template>
 					<template v-else>
-						<button
-							type="button"
-							@click="style.toggle(props.editor.chain().focus())?.run()"
-							class="btn btn-secondary"
-							:class="{ active: style.active }"
-							:style="style.style"
-							v-tooltip="style.tooltip"
-						>
-							<Icon v-if="style.icon" :icon="style.icon"></Icon>
-							<template v-if="style.icon && style.label">{{" "}}</template>
-							{{style.label}}
-						</button>
+						<span class="btn-group" v-tooltip="style.tooltip">
+							<button
+								type="button"
+								@click="style.click?.(); style.toggle?.(props.editor.chain().focus())?.run()"
+								class="btn btn-secondary"
+								:class="{ active: style.active }"
+								:style="style.style"
+								:ref="style.ref && ((el) => style.ref?.((el as HTMLElement | null) ?? undefined))"
+							>
+								<Icon v-if="style.icon" :icon="style.icon"></Icon>
+								<template v-if="style.icon && style.label">{{" "}}</template>
+								{{style.label}}
+							</button>
+						</span>
 					</template>
 				</template>
 			</div>

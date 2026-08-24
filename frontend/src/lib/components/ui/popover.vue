@@ -57,14 +57,16 @@
 	}>();
 
 	const popover = ref<CustomPopover>();
-	const popoverContent = ref<HTMLElement>();
+	const popoverRef = ref<HTMLElement>();
 	const renderPopover = ref(false);
 
+	const hasFocus = ref(false);
+
 	watchEffect((onCleanup) => {
-		if (props.element && popoverContent.value) {
+		if (props.element && popoverRef.value) {
 			popover.value = new CustomPopover(props.element, {
 				placement: props.placement,
-				content: popoverContent.value,
+				content: popoverRef.value,
 				trigger: 'manual',
 				popperConfig: (defaultConfig) => ({
 					...defaultConfig,
@@ -98,35 +100,43 @@
 	});
 
 	watch(() => props.show, (show) => {
+		console.log("show", show);
 		if (show) {
 			renderPopover.value = true;
 		} else {
 			popover.value?.hide();
 		}
-	});
+	}/*, { immediate: true }*/);
 
 	useDomEventListener(() => props.element, "focusout", (e: Event) => {
 		const event = e as FocusEvent;
 		// relatedTarget == null: target is out of viewport (ignore to allow focussing dev tools)
-		if (props.show && event.relatedTarget && !popoverContent.value?.contains(event.relatedTarget as Node) && !props.element?.contains(event.relatedTarget as Node)) {
+		if (props.show && event.relatedTarget && !popoverRef.value?.contains(event.relatedTarget as Node) && !props.element?.contains(event.relatedTarget as Node)) {
 			emit("update:show", false);
 		}
 	});
 
+	function handlePopoverFocusIn() {
+		hasFocus.value = true;
+	}
+
 	function handlePopoverFocusOut(event: FocusEvent) {
+		hasFocus.value = false;
 		// relatedTarget == null: target is out of viewport (ignore to allow focussing dev tools)
-		if (props.show && event.relatedTarget && !popoverContent.value?.contains(event.relatedTarget as Node) && !props.element?.contains(event.relatedTarget as Node)) {
+		if (props.show && event.relatedTarget && !popoverRef.value?.contains(event.relatedTarget as Node) && !props.element?.contains(event.relatedTarget as Node)) {
 			emit("update:show", false);
 		}
 	}
 
 	useDomEventListener(document, "click", (e: Event) => {
-		if (props.show && props.hideOnOutsideClick && e.target instanceof Node && !props.element?.contains(e.target) && !popoverContent.value?.contains(e.target)) {
+		if (props.show && props.hideOnOutsideClick && e.target instanceof Node && !props.element?.contains(e.target) && !popoverRef.value?.contains(e.target)) {
 			emit("update:show", false);
 		}
 	}, { capture: true });
 
 	const elementSize = useResizeObserver(computed(() => props.enforceElementWidth ? props.element : undefined));
+
+	defineExpose({ popoverRef, hasFocus });
 </script>
 
 <template>
@@ -135,6 +145,7 @@
 		class="popover fm-popover fade bs-popover-auto"
 		ref="popoverContent"
 		:style="props.enforceElementWidth && elementSize ? { maxWidth: 'none', width: `${elementSize.contentRect.width}px` } : undefined"
+		@focusin="handlePopoverFocusIn"
 		@focusout="handlePopoverFocusOut"
 		:tabindex="-1 /* Allow focusing by click (for focusout event relatedTarget), do not allow focusing by tab */"
 	>

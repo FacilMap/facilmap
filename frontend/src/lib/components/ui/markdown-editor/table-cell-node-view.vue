@@ -1,6 +1,6 @@
 <script setup lang="ts">
 	import { CellSelection, findTable, TableMap } from "@tiptap/pm/tables";
-	import { NodeViewContent, nodeViewProps, NodeViewWrapper } from "@tiptap/vue-3";
+	import { isProseMirrorCellSelection, NodeViewContent, nodeViewProps, NodeViewWrapper } from "@tiptap/vue-3";
 	import { computed, toRaw, toRef, watchEffect } from "vue";
 
 	const props = defineProps(nodeViewProps);
@@ -31,7 +31,7 @@
 
 	/** A rect describing the selected cells. */
 	const selectedRect = computed(() => {
-		if (rect.value && tableNode.value && tableMap.value && props.editor.state.selection instanceof CellSelection) {
+		if (rect.value && tableNode.value && tableMap.value && isProseMirrorCellSelection(props.editor.state.selection)) {
 			return tableMap.value!.rectBetween(
 				props.editor.state.selection.$anchorCell.pos - tableNode.value!.start,
 				props.editor.state.selection.$headCell.pos - tableNode.value!.start

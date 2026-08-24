@@ -2,7 +2,7 @@
 	import { EditorContent, Editor, VueNodeViewRenderer } from "@tiptap/vue-3";
 	import { StarterKit } from "@tiptap/starter-kit";
 	import { Markdown } from "@tiptap/markdown";
-	import { ref, toRef, watch, watchEffect } from "vue";
+	import { nextTick, ref, toRef, watch, watchEffect, type ComponentInstance } from "vue";
 	import { markdownOptions, subscriptTokenizer, superscriptTokenizer, tableClasses, taskListClasses } from "facilmap-utils";
 	import storage from "../../../utils/storage";
 	import Icon from "../icon.vue";
@@ -19,6 +19,8 @@
 	import TableCellNodeView from "./table-cell-node-view.vue";
 	import { preserveScrollPosition } from "../../../utils/ui";
 	import { Marked } from "marked";
+	import Popover from "../popover.vue";
+	import EditLink from "./edit-link.vue";
 
 	const i18n = useI18n();
 
@@ -30,6 +32,10 @@
 
 	const editor = ref<Editor>();
 	const textareaRef = ref<HTMLElement>();
+
+	const linkPopoverEl = ref<HTMLElement>();
+	const showLinkPopover = ref(false);
+	const linkPopoverRef = ref<ComponentInstance<typeof Popover>>();
 
 	const showCode = toRef(() => props.disableRte || storage.showMarkdownCode);
 
@@ -112,6 +118,16 @@
 				editorProps: {
 					attributes: {
 						class: "form-control"
+					},
+					handleClickOn(view, pos, node, nodePos, event, direct) {
+						const linkMark = view.state.doc.resolve(pos).marks().find((mark) => mark.type.name === "link");
+						if (linkMark) {
+							nextTick(() => {
+								linkPopoverEl.value = (event.target as HTMLElement | null)?.closest("a") ?? undefined;
+								showLinkPopover.value = true;
+							});
+						}
+						return false;
 					}
 				}
 			});
@@ -158,6 +174,18 @@
 			textareaRef.value.style.height = `${textareaRef.value.scrollHeight + 1}px`;
 		}
 	});
+
+	watchEffect(() => {
+		console.log(editor.value?.view.hasFocus(), linkPopoverRef.value?.popoverRef?.contains(document.activeElement));
+		if (showLinkPopover.value && (
+			!editor.value ||
+			//!(editor.value.view.hasFocus() || linkPopoverRef.value?.popoverRef?.contains(document.activeElement)) ||
+			!editor.value.isActive("link") ||
+			!editor.value.state.selection.empty // Format menu will be shown instead
+		)) {
+			showLinkPopover.value = false;
+		}
+	});
 </script>
 
 <template>
@@ -175,6 +203,18 @@
 			<MarkdownEditorFormatMenu v-if="editor" :editor="editor"></MarkdownEditorFormatMenu>
 
 			<MarkdownEditorInsertMenu v-if="editor" :editor="editor"></MarkdownEditorInsertMenu>
+
+			<Popover
+				v-if="editor && linkPopoverEl"
+				:element="linkPopoverEl"
+				placement="bottom"
+				v-model:show="showLinkPopover"
+				@hidden="linkPopoverEl = undefined"
+				class="fm-markdown-editor-link-popover"
+				ref="linkPopoverRef"
+			>
+				<EditLink :editor="editor"></EditLink>
+			</Popover>
 		</template>
 
 		<button
@@ -229,6 +269,10 @@
 				padding-top: calc(0.75rem + 3px);
 				padding-left: calc(0.75rem + 3px);
 			}
+		}
+
+		.fm-markdown-editor-link-popover > .popover-body {
+			padding: 0.5rem;
 		}
 	}
 </style>
