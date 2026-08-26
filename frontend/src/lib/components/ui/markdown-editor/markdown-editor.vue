@@ -10,17 +10,19 @@
 	import { useI18n } from "../../../utils/i18n";
 	import { useResizeObserver } from "../../../utils/vue";
 	import { Image } from "@tiptap/extension-image";
-	import { TableKit, TableCell, TableHeader } from "@tiptap/extension-table";
+	import { TableKit, TableCell, TableHeader, TableRow, Table } from "@tiptap/extension-table";
 	import { Superscript } from "@tiptap/extension-superscript";
 	import { Subscript } from "@tiptap/extension-subscript";
 	import { TaskList, TaskItem } from "@tiptap/extension-list";
 	import MarkdownEditorFormatMenu from "./markdown-editor-format-menu.vue";
 	import MarkdownEditorInsertMenu from "./markdown-editor-insert-menu.vue";
-	import TableCellNodeView from "./table-cell-node-view.vue";
+	import TableCellNodeView from "./table-node-view.vue";
 	import { preserveScrollPosition } from "../../../utils/ui";
 	import { Marked } from "marked";
-	import Popover from "../popover.vue";
-	import EditLink from "./edit-link.vue";
+	import EditLinkPopover from "./edit-link-popover.vue";
+	import { Link } from "@tiptap/extension-link";
+import TableRowNodeView from "./table-row-node-view.vue";
+import TableNodeView from "./table-node-view.vue";
 
 	const i18n = useI18n();
 
@@ -35,7 +37,7 @@
 
 	const linkPopoverEl = ref<HTMLElement>();
 	const showLinkPopover = ref(false);
-	const linkPopoverRef = ref<ComponentInstance<typeof Popover>>();
+	const linkPopoverRef = ref<ComponentInstance<typeof EditLinkPopover>>();
 
 	const showCode = toRef(() => props.disableRte || storage.showMarkdownCode);
 
@@ -46,36 +48,48 @@
 				contentType: "markdown",
 				extensions: [
 					StarterKit.configure({
-						link: {
-							openOnClick: false,
-							linkOnPaste: false,
-							defaultProtocol: "https"
-						}
+						link: false
 					}),
 					Markdown.configure({
 						indentation: { style: "tab", size: 1 },
-						marked: new Marked(markdownOptions)
+						marked: new Marked(markdownOptions) as any
+					}),
+					Link.extend({
+						addAttributes() {
+							return {
+								...this.parent?.(),
+
+								// fmId is a temporary unique ID for each link that is used by EditLinkPopover
+								// to detect when the focus changes to a different link.
+								fmId: {
+									default: null,
+									parseHTML: (element) => element.getAttribute("data-fm-id"),
+									renderHTML: (attributes) => {
+										return { "data-fm-id": attributes.fmId };
+									},
+								}
+							};
+						}
+					}).configure({
+						openOnClick: false,
+						linkOnPaste: false,
+						defaultProtocol: "https"
 					}),
 					Image,
 					TableKit.configure({
-						table: {
-							HTMLAttributes: {
-								class: tableClasses
-							}
-						},
-						tableHeader: false,
-						tableCell: false
+						table: false,
+						tableRow: false
 					}),
 
-					TableHeader.extend({
-						addNodeView() {
-							return VueNodeViewRenderer(TableCellNodeView, { trackNodeViewPosition: true });
-						}
+					Table.extend({
+						// addNodeView() {
+						// 	return VueNodeViewRenderer(TableNodeView, { trackNodeViewPosition: true });
+						// }
 					}),
 
-					TableCell.extend({
+					TableRow.extend({
 						addNodeView() {
-							return VueNodeViewRenderer(TableCellNodeView, { trackNodeViewPosition: true });
+							return VueNodeViewRenderer(TableRowNodeView, { trackNodeViewPosition: true });
 						}
 					}),
 
@@ -122,10 +136,19 @@
 					handleClickOn(view, pos, node, nodePos, event, direct) {
 						const linkMark = view.state.doc.resolve(pos).marks().find((mark) => mark.type.name === "link");
 						if (linkMark) {
-							nextTick(() => {
+							void nextTick(() => {
 								linkPopoverEl.value = (event.target as HTMLElement | null)?.closest("a") ?? undefined;
 								showLinkPopover.value = true;
 							});
+						}
+						return false;
+					},
+					handleKeyDown(view, event) {
+						if (event.key === "Escape" && showLinkPopover.value && linkPopoverRef.value) {
+							event.preventDefault();
+							event.stopPropagation();
+							linkPopoverRef.value.cancel();
+							return true;
 						}
 						return false;
 					}
@@ -176,10 +199,9 @@
 	});
 
 	watchEffect(() => {
-		console.log(editor.value?.view.hasFocus(), linkPopoverRef.value?.popoverRef?.contains(document.activeElement));
 		if (showLinkPopover.value && (
 			!editor.value ||
-			//!(editor.value.view.hasFocus() || linkPopoverRef.value?.popoverRef?.contains(document.activeElement)) ||
+			!(editor.value.view.hasFocus() || linkPopoverRef.value?.hasFocus) ||
 			!editor.value.isActive("link") ||
 			!editor.value.state.selection.empty // Format menu will be shown instead
 		)) {
@@ -204,17 +226,15 @@
 
 			<MarkdownEditorInsertMenu v-if="editor" :editor="editor"></MarkdownEditorInsertMenu>
 
-			<Popover
+			<EditLinkPopover
 				v-if="editor && linkPopoverEl"
 				:element="linkPopoverEl"
-				placement="bottom"
+				:editor="editor"
 				v-model:show="showLinkPopover"
-				@hidden="linkPopoverEl = undefined"
-				class="fm-markdown-editor-link-popover"
+				noHideOnOutsideClick
 				ref="linkPopoverRef"
-			>
-				<EditLink :editor="editor"></EditLink>
-			</Popover>
+				@hidden="linkPopoverEl = undefined"
+			></EditLinkPopover>
 		</template>
 
 		<button
@@ -269,10 +289,6 @@
 				padding-top: calc(0.75rem + 3px);
 				padding-left: calc(0.75rem + 3px);
 			}
-		}
-
-		.fm-markdown-editor-link-popover > .popover-body {
-			padding: 0.5rem;
 		}
 	}
 </style>

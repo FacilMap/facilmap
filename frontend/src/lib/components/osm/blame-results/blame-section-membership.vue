@@ -36,7 +36,6 @@
 		:element="infoButtonRef"
 		placement="bottom"
 		class="fm-blame-section-membership-popover"
-		hideOnOutsideClick
 		v-model:show="show"
 	>
 		<h3>{{i18n.t("blame-section-membership.heading")}}</h3>

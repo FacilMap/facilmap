@@ -103,7 +103,6 @@
 			@update:show="handleShowPopoverChange"
 			:element="trigger"
 			:class="props.customClass"
-			hideOnOutsideClick
 			:enforceElementWidth="props.enforceElementWidth"
 			@shown="emit('shown')"
 			@hide="emit('hide')"

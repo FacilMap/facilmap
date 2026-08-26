@@ -14,7 +14,7 @@
 	<a href="javascript:" ref="helpLinkRef" @click.prevent="showPopover = !showPopover">
 		<Icon icon="question-sign" :alt="i18n.t('help-popover.show-alt')"></Icon>
 	</a>
-	<Popover :element="helpLinkRef" v-model:show="showPopover" hideOnOutsideClick>
+	<Popover :element="helpLinkRef" v-model:show="showPopover">
 		<slot></slot>
 	</Popover>
 </template>

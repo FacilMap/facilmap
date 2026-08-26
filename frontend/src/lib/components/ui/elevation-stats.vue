@@ -65,7 +65,6 @@
 			<Popover
 				:element="statsButtonContainerRef"
 				v-model:show="showStatsPopover"
-				hideOnOutsideClick
 				class="fm-elevation-stats-popover"
 			>
 				<ul class="nav nav-tabs mb-2">

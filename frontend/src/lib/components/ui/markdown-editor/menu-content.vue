@@ -24,6 +24,7 @@
 		icon?: string;
 		toggle?: (chain: ChainedCommands) => ChainedCommands | void;
 		click?: () => void;
+		noFocus?: boolean;
 		active?: boolean;
 		style?: string;
 		tooltip?: string;
@@ -40,6 +41,16 @@
 	};
 
 	export type MenuStyles = Array<Array<MenuStyleButton | MenuStyleDropdown>>;
+
+	function handleClick(item: Pick<MenuStyleButton, "toggle" | "noFocus">) {
+		if (item.toggle) {
+			let chain = props.editor.chain();
+			if (!item.noFocus) {
+				chain = chain.focus();
+			}
+			item.toggle(chain)?.run();
+		}
+	}
 </script>
 
 <template>
@@ -58,7 +69,7 @@
 										<a
 											href="javascript:"
 											class="dropdown-item"
-											@click="item.click?.(); item.toggle?.(props.editor.chain().focus())?.run()"
+											@click="handleClick(item)"
 											:class="{ active: item.active }"
 										>
 											<template v-if="item.icon">
@@ -77,7 +88,7 @@
 						<span class="btn-group" v-tooltip="style.tooltip">
 							<button
 								type="button"
-								@click="style.click?.(); style.toggle?.(props.editor.chain().focus())?.run()"
+								@click="handleClick(style)"
 								class="btn btn-secondary"
 								:class="{ active: style.active }"
 								:style="style.style"

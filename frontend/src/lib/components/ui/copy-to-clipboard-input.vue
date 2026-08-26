@@ -96,7 +96,7 @@
 		</template>
 	</ValidatedField>
 
-	<Popover v-if="!props.noQr" :element="qrButtonRef" v-model:show="showQr" placement="left" hideOnOutsideClick>
+	<Popover v-if="!props.noQr" :element="qrButtonRef" v-model:show="showQr" placement="left">
 		<QrcodeVue :value="fullUrl" :size="150" level="L" render-as="svg"></QrcodeVue>
 	</Popover>
 </template>

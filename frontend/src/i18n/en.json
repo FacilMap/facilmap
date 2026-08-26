@@ -1102,6 +1102,7 @@
         "more-inline-tooltip": "More inline styles",
         "clear-inline-tooltip": "Clear inline styles",
         "link-label": "Link",
+        "remove-link-tooltip": "Remove link",
         "delete-table-label": "Delete table",
         "delete-rows-label": "Delete row(s)",
         "delete-columns-label": "Delete column(s)"

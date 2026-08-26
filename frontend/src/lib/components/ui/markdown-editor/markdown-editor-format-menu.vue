@@ -1,18 +1,12 @@
 <script lang="ts">
 	import { Editor, isProseMirrorCellSelection, isTextSelection, type ChainedCommands } from "@tiptap/vue-3";
 	import { BubbleMenu } from "@tiptap/vue-3/menus";
-	import { computed, ref, toRef, watch, watchEffect, type ComponentInstance } from "vue";
+	import { computed, ref, toRef } from "vue";
 	import { range } from "lodash-es";
 	import MenuContent, { type MenuStyleDropdown, type MenuStyles } from "./menu-content.vue";
-	import { CellSelection } from "@tiptap/pm/tables";
 	import type { Node, ResolvedPos } from "@tiptap/pm/model";
-	import { TextSelection } from "@tiptap/pm/state";
 	import { getI18n, useI18n } from "../../../utils/i18n";
-	import Popover from "../popover.vue";
-	import Icon from "../icon.vue";
-	import type { ComponentProps, ComponentType } from "vue-component-type-helpers";
-	import BubbleMenuPlugin from "@tiptap/extension-bubble-menu";
-	import EditLink from "./edit-link.vue";
+	import EditLinkPopover from "./edit-link-popover.vue";
 
 	export function getBlockStylesDropdown(ed: Editor): MenuStyleDropdown {
 		const i18n = getI18n();
@@ -98,9 +92,6 @@
 
 	const linkRef = ref<HTMLElement>();
 	const showLinkPopover = ref(false);
-	const editLinkRef = ref<ComponentInstance<typeof EditLink>>();
-
-	const menuContentRef = ref<HTMLElement>();
 
 	const cellSelection = toRef(() => isProseMirrorCellSelection(props.editor.state.selection) ? props.editor.state.selection : undefined);
 	const isCellSelection = toRef(() => !!cellSelection.value);
@@ -293,9 +284,13 @@
 					{
 						icon: "link",
 						tooltip: i18n.t("markdown-editor.link-label"),
-						click: () => {
+						toggle: (chain) => {
 							showLinkPopover.value = !showLinkPopover.value;
+							if (!props.editor.isActive("link")) {
+								return chain.setLink({ href: "" });
+							}
 						},
+						noFocus: true,
 						ref: (el) => {
 							linkRef.value = el;
 						},
@@ -306,26 +301,6 @@
 			];
 		}
 	});
-
-	function shouldShow({ editor, view, state, from, to }: Pick<Parameters<NonNullable<ComponentProps<typeof BubbleMenu>["shouldShow"]>>[0], "editor" | "view" | "state" | "from" | "to">) {
-		// Logic copied from BubbleMenu shouldShow() default implementation
-		if (view.hasFocus() || menuContentRef.value?.contains(document.activeElement)) {
-			const empty = state.selection.empty || (isTextSelection(state.selection) && !state.doc.textBetween(from, to));
-			if (!empty) {
-				return "formats";
-			} else if (editor.isActive("link")) {
-				return "link";
-			}
-		}
-	}
-
-	const shouldShowValue = computed(() => shouldShow({
-		editor: props.editor,
-		view: props.editor.view,
-		state: props.editor.state,
-		from: props.editor.state.selection.from,
-		to: props.editor.state.selection.to
-	}));
 </script>
 
 <template>
@@ -336,15 +311,12 @@
 	>
 		<MenuContent :editor="editor" :styles="styles"></MenuContent>
 
-		<Popover
+		<EditLinkPopover
 			:element="linkRef"
-			placement="bottom"
 			v-model:show="showLinkPopover"
-			@shown="editLinkRef?.linkHrefRef?.focus()"
-			class="fm-markdown-editor-link-popover"
-		>
-			<EditLink :editor="props.editor" ref="editLinkRef"></EditLink>
-		</Popover>
+			:editor="props.editor"
+			autofocus
+		></EditLinkPopover>
 	</BubbleMenu>
 </template>
 

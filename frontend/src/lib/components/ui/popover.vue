@@ -40,8 +40,7 @@
 <script lang="ts" setup>
 	const props = withDefaults(defineProps<{
 		element: HTMLElement | undefined;
-		show: boolean;
-		hideOnOutsideClick?: boolean;
+		noHideOnOutsideClick?: boolean;
 		/** If true, the width of the popover will be fixed to the width of the element. */
 		enforceElementWidth?: boolean;
 		placement?: Tooltip.PopoverPlacement;
@@ -50,11 +49,12 @@
 	});
 
 	const emit = defineEmits<{
-		"update:show": [show: boolean];
 		shown: [];
 		hide: [];
 		hidden: [];
 	}>();
+
+	const show = defineModel<boolean>("show", { required: true });
 
 	const popover = ref<CustomPopover>();
 	const popoverRef = ref<HTMLElement>();
@@ -99,20 +99,19 @@
 		emit("hidden");
 	});
 
-	watch(() => props.show, (show) => {
-		console.log("show", show);
+	watch(show, (show) => {
 		if (show) {
 			renderPopover.value = true;
 		} else {
 			popover.value?.hide();
 		}
-	}/*, { immediate: true }*/);
+	}, { immediate: true });
 
 	useDomEventListener(() => props.element, "focusout", (e: Event) => {
 		const event = e as FocusEvent;
 		// relatedTarget == null: target is out of viewport (ignore to allow focussing dev tools)
-		if (props.show && event.relatedTarget && !popoverRef.value?.contains(event.relatedTarget as Node) && !props.element?.contains(event.relatedTarget as Node)) {
-			emit("update:show", false);
+		if (!props.noHideOnOutsideClick && show.value && event.relatedTarget && !popoverRef.value?.contains(event.relatedTarget as Node) && !props.element?.contains(event.relatedTarget as Node)) {
+			show.value = false;
 		}
 	});
 
@@ -123,14 +122,22 @@
 	function handlePopoverFocusOut(event: FocusEvent) {
 		hasFocus.value = false;
 		// relatedTarget == null: target is out of viewport (ignore to allow focussing dev tools)
-		if (props.show && event.relatedTarget && !popoverRef.value?.contains(event.relatedTarget as Node) && !props.element?.contains(event.relatedTarget as Node)) {
-			emit("update:show", false);
+		if (!props.noHideOnOutsideClick && show.value && event.relatedTarget && !popoverRef.value?.contains(event.relatedTarget as Node) && !props.element?.contains(event.relatedTarget as Node)) {
+			show.value = false;
+		}
+	}
+
+	function handleKeyDown(event: KeyboardEvent) {
+		if (event.key === "Escape") {
+			event.preventDefault();
+			event.stopPropagation();
+			show.value = false;
 		}
 	}
 
 	useDomEventListener(document, "click", (e: Event) => {
-		if (props.show && props.hideOnOutsideClick && e.target instanceof Node && !props.element?.contains(e.target) && !popoverRef.value?.contains(e.target)) {
-			emit("update:show", false);
+		if (!props.noHideOnOutsideClick && show.value && e.target instanceof Node && !props.element?.contains(e.target) && !popoverRef.value?.contains(e.target)) {
+			show.value = false;
 		}
 	}, { capture: true });
 
@@ -143,10 +150,11 @@
 	<div
 		v-if="renderPopover"
 		class="popover fm-popover fade bs-popover-auto"
-		ref="popoverContent"
+		ref="popoverRef"
 		:style="props.enforceElementWidth && elementSize ? { maxWidth: 'none', width: `${elementSize.contentRect.width}px` } : undefined"
 		@focusin="handlePopoverFocusIn"
 		@focusout="handlePopoverFocusOut"
+		@keydown="handleKeyDown"
 		:tabindex="-1 /* Allow focusing by click (for focusout event relatedTarget), do not allow focusing by tab */"
 	>
 		<div class="popover-arrow"></div>
