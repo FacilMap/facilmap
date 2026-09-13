@@ -5,7 +5,7 @@ import * as z from "zod";
 export const extraInfoValidator = z.record(z.array(z.tuple([z.number(), z.number(), z.number()])));
 export type ExtraInfo = z.infer<typeof extraInfoValidator>;
 
-export const extraInfoStatsValidator = z.record(z.record(z.number(), z.object({
+export const extraInfoStatsValidator = z.record(z.record(z.coerce.number(), z.object({
 	distanceKm: z.number(),
 	percent: z.number()
 })));
