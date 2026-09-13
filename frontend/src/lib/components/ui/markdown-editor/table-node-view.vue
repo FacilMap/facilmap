@@ -2,7 +2,7 @@
 	import { CellSelection, findTable, TableMap } from "@tiptap/pm/tables";
 	import { isProseMirrorCellSelection, NodeViewContent, nodeViewProps, NodeViewWrapper } from "@tiptap/vue-3";
 import { tableClasses } from "facilmap-utils";
-	import { computed, toRaw, toRef, watchEffect } from "vue";
+	import { computed, ref, toRaw, toRef, watchEffect, type ComponentInstance } from "vue";
 
 	const props = defineProps(nodeViewProps);
 
@@ -14,10 +14,6 @@ import { tableClasses } from "facilmap-utils";
 		if (pos.value != null) {
 			return findTable(props.editor.state.doc.resolve(pos.value));
 		}
-	});
-
-	watchEffect(() => {
-		console.log(tableNode.value, toRaw(props), toRaw(props.node));
 	});
 
 	/** A map with info about the rows/columns of the table containing the cell. */
@@ -151,14 +147,29 @@ import { tableClasses } from "facilmap-utils";
 		}
 	}
 
+	const testRef = ref<ComponentInstance<typeof NodeViewContent>>();
+
+	watchEffect(() => {
+		if (pos.value) {
+			const tableDom = props.editor.view.nodeDOM(pos.value);
+			if (tableDom && tableDom instanceof HTMLElement) {
+				const rows = tableDom.querySelectorAll(":scope > tr, :scope > * > tr");
+			}
+		}
+	});
+
+	watchEffect(() => {
+		console.log("testRef", testRef.value?.nodeViewContentRef);
+	});
+
 	// TODO: Insert columns/rows
 	// TODO: Render differently for cases where top/left cell is a merged cell
 	// TODO: Handle entire row/column selection when last cell is a merged cell
 </script>
 
 <template>
-	<NodeViewWrapper as="table" class="fm-table-cell-node-view" :class="tableClasses" v-bind="props.HTMLAttributes" :decorations="props.decorations">
-		<tr>
+	<NodeViewWrapper class="fm-table-node-view">
+		<!-- <tr>
 			<td>
 				<button
 					type="button"
@@ -188,9 +199,9 @@ import { tableClasses } from "facilmap-utils";
 					@click="insert('right')"
 				>+</button>
 			</td>
-		</tr>
+		</tr> -->
 
-		<NodeViewContent></NodeViewContent>
+		<NodeViewContent as="table" ref="testRef" :class="tableClasses" v-bind="props.HTMLAttributes" :decorations="props.decorations"></NodeViewContent>
 	</NodeViewWrapper>
 </template>
 

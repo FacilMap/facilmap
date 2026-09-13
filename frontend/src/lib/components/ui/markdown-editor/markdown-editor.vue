@@ -88,9 +88,9 @@ import TableNodeView from "./table-node-view.vue";
 					}),
 
 					TableRow.extend({
-						addNodeView() {
-							return VueNodeViewRenderer(TableRowNodeView, { trackNodeViewPosition: true });
-						}
+						// addNodeView() {
+						// 	return VueNodeViewRenderer(TableRowNodeView, { trackNodeViewPosition: true });
+						// }
 					}),
 
 					Superscript.extend({

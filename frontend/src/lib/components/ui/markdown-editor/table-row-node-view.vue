@@ -16,10 +16,6 @@ import { tableClasses } from "facilmap-utils";
 		}
 	});
 
-	watchEffect(() => {
-		console.log(tableNode.value?.node.children);
-	});
-
 	/** A map with info about the rows/columns of the table containing the cell. */
 	const tableMap = computed(() => {
 		if (pos.value != null && tableNode.value) {
