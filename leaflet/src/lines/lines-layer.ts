@@ -1,12 +1,14 @@
-import type { ID, Line, LinePointsEvent, LineTemplate, ObjectWithId, Point, Stroke, Type, Width } from "facilmap-types";
-import { FeatureGroup, latLng, type LayerOptions, type Map as LeafletMap, Marker as LeafletMarker, type LatLngBounds, type LeafletMouseEvent } from "leaflet";
+import type { ID, Line, LinePointsEvent, ObjectWithId, Stroke, Type, Width } from "facilmap-types";
+import { FeatureGroup, latLng, type LayerOptions, type Map as LeafletMap, type LatLngBounds } from "leaflet";
 import { HighlightablePolyline } from "leaflet-highlightable-layers";
 import { type BasicTrackPoints, disconnectSegmentsOutsideViewport, tooltipOptions, trackPointsToLatLngArray, fmToLeafletBbox, type LatLngWithIdx } from "../utils/leaflet";
-import { formatElevation, getExtraInfoAtIdx, getTranslatedExtraInfoTypes, getTranslatedExtraInfoValues, numberKeys, quoteHtml } from "facilmap-utils";
-import { addClickListener, type ClickListenerHandle } from "../click-listener/click-listener";
+import { formatElevation, formatSteepness, getExtraInfoAfterIdx, getSteepnessAtIdx, getTranslatedExtraInfoTypes, getTranslatedExtraInfoValues, numberKeys, quoteHtml } from "facilmap-utils";
 import type Client from "facilmap-client";
 import { getPolylineStyles } from "../utils/styles";
 import { LineString } from "locate-on-line";
+import LinesLayerClick from "./lines-layer-click";
+import LinesLayerDraw from "./lines-layer-draw";
+import { getI18n } from "../utils/i18n";
 
 export function getDashArrayForStroke(stroke: Stroke, width: Width): string | undefined {
 	if (stroke === "dashed") {
@@ -31,17 +33,14 @@ export default class LinesLayer extends FeatureGroup {
 	protected hiddenLinesIds = new Set<ID>();
 	protected lastMapBounds?: LatLngBounds;
 	protected filterResults = new Map<ID, boolean>();
-	protected expectingClick: {
-		id: ID;
-		lineString?: LineString<L.LatLng[][]>;
-		touchMode: boolean;
-		dragMarker?: L.Marker;
-		cancel: () => void;
-	} | undefined = undefined;
+	protected click: LinesLayerClick;
+	protected draw: LinesLayerDraw;
 
 	constructor(client: Client, options?: LinesLayerOptions) {
 		super([], options);
 		this.client = client;
+		this.click = new LinesLayerClick(this);
+		this.draw = new LinesLayerDraw(this);
 	}
 
 	onAdd(map: LeafletMap): this {
@@ -67,7 +66,7 @@ export default class LinesLayer extends FeatureGroup {
 	}
 
 	onRemove(map: LeafletMap): this {
-		this.expectingClick?.cancel();
+		this.click.dispose();
 
 		super.onRemove(map);
 
@@ -193,280 +192,95 @@ export default class LinesLayer extends FeatureGroup {
 			this.handleLine(this.client.lines[id]);
 	}
 
-	endDrawLine(save = false): void {
-		if (!this._endDrawLine)
-			throw new Error("No drawing in process.");
-		else
-			this._endDrawLine(save);
+	drawLine(...args: Parameters<LinesLayerDraw["drawLine"]>): ReturnType<LinesLayerDraw["drawLine"]> {
+		return this.draw.drawLine(...args);
 	}
 
-	protected _endDrawLine?: (save: boolean) => void;
-
-	drawLine(lineTemplate: LineTemplate, onAddPoint?: (point: Point, points: Point[]) => void): Promise<Point[] | undefined> {
-		return new Promise<Point[] | undefined>((resolve) => {
-			const line: Line & { trackPoints: BasicTrackPoints } = {
-				id: -1,
-				mapId: "",
-				top: 0,
-				right: 0,
-				bottom: 0,
-				left: 0,
-				distance: 0,
-				time: null,
-				ascent: null,
-				descent: null,
-				...lineTemplate,
-				routePoints: [],
-				trackPoints: [],
-				extraInfo: {}
-			};
-			line.trackPoints = line.routePoints;
-
-			const routePoints: Point[] = [];
-			let handler: ClickListenerHandle | undefined = undefined;
-
-			const addPoint = (pos: Point) => {
-				routePoints.push(pos);
-				line.routePoints.push(pos);
-				if (line.routePoints.length == 1)
-					line.routePoints.push(pos); // Will be updated by handleMouseMove
-				this._addLine(line);
-				handler = addClickListener(this._map, handleClick, handleMouseMove);
-
-				onAddPoint?.(pos, routePoints);
-			};
-
-			const handleClick = (pos?: Point) => {
-				if (isFinishing) {
-					// Called by handler.cancel()
-					return;
-				}
-
-				handler = undefined;
-				if (pos) {
-					if(routePoints.length > 0 && pos.lon == routePoints[routePoints.length-1].lon && pos.lat == routePoints[routePoints.length-1].lat)
-						void finishLine(true);
-					else
-						addPoint(pos);
-				} else {
-					void finishLine(false);
-				}
-			};
-
-			const handleMouseMove = (pos: Point) => {
-				if(line.routePoints!.length > 0) {
-					line.routePoints![line.routePoints!.length-1] = pos;
-					this._addLine(line);
-				}
-			};
-
-			const handleKeyDown = (e: KeyboardEvent) => {
-				if (e.code === "Enter") {
-					e.preventDefault();
-					void finishLine(true);
-				}
-			};
-
-			let isFinishing = false;
-
-			const finishLine = async (save: boolean) => {
-				isFinishing = true;
-				if (handler)
-					handler.cancel();
-				document.removeEventListener("keydown", handleKeyDown);
-
-				this._deleteLine(line);
-
-				delete this._endDrawLine;
-
-				if(save && routePoints.length >= 2)
-					resolve(routePoints);
-				else
-					resolve(undefined);
-			};
-
-			document.addEventListener("keydown", handleKeyDown);
-			handler = addClickListener(this._map, handleClick, handleMouseMove);
-
-			this._endDrawLine = finishLine;
-		});
+	endDrawLine(...args: Parameters<LinesLayerDraw["endDrawLine"]>): ReturnType<LinesLayerDraw["endDrawLine"]> {
+		return this.draw.endDrawLine(...args);
 	}
 
-	expectLineClick(
-		lineId: ID,
-		touchMode: boolean,
-		onFinish: (point: Point) => (void | boolean | Promise<void | boolean>),
-		onUpdate?: (point: Point | undefined) => void
-	): {
-		finish: () => void;
-		cancel: () => void;
-	} {
-		if (this.expectingClick) {
-			throw new Error("Already expecting a line click.");
-		}
-
-		const handleClick = async (e: LeafletMouseEvent) => {
-			if (e.propagatedFrom?.line?.id === lineId) {
-				await finish(e.latlng);
-			}
-		};
-
-		const handleMouseMove = !touchMode && ((e: LeafletMouseEvent) => {
-			if (e.propagatedFrom?.line?.id === lineId && this.expectingClick) {
-				const closest = this.expectingClick.lineString?.locate(e.latlng);
-				if (closest && this.expectingClick.dragMarker) {
-					this.expectingClick.dragMarker.setLatLng(closest.closest).addTo(this._map);
-					onUpdate?.({ lat: closest.closest.lat, lon: closest.closest.lng });
-				} else {
-					this.expectingClick.dragMarker?.remove();
-					onUpdate?.(undefined);
-				}
-			}
-		});
-
-		const handleMouseOut = !touchMode && ((e: LeafletMouseEvent) => {
-			if (e.propagatedFrom?.line?.id === lineId && this.expectingClick) {
-				if (this.expectingClick.dragMarker) {
-					this.expectingClick.dragMarker.remove();
-					onUpdate?.(undefined);
-				}
-			}
-		});
-
-		const handleMoveEnd = touchMode && (() => {
-			if (this.expectingClick?.dragMarker && onUpdate) {
-				const pos = this.expectingClick.dragMarker.getLatLng();
-				if (this._map.getBounds().contains(pos)) {
-					onUpdate({ lat: pos.lat, lon: pos.lng });
-				} else {
-					onUpdate(undefined);
-				}
-			}
-		});
-
-		this.addEventListener("click", handleClick);
-		if (handleMouseMove) {
-			this.addEventListener("mousemove", handleMouseMove);
-		}
-		if (handleMouseOut) {
-			this.addEventListener("mouseout", handleMouseOut);
-		}
-		if (handleMoveEnd) {
-			this._map.addEventListener("moveend", handleMoveEnd);
-			this._map.addEventListener("zoomend", handleMoveEnd);
-		}
-
-		const cancel = () => {
-			if (this.expectingClick !== expectingClick) {
-				return;
-			}
-
-			this.removeEventListener("click", handleClick);
-			if (handleMouseMove) {
-				this.removeEventListener("mousemove", handleMouseMove);
-			}
-			if (handleMouseOut) {
-				this.removeEventListener("mouseout", handleMouseOut);
-			}
-			if (handleMoveEnd) {
-				this._map.removeEventListener("moveend", handleMoveEnd);
-				this._map.removeEventListener("zoomend", handleMoveEnd);
-			}
-
-			this.expectingClick.dragMarker?.remove();
-
-			this.expectingClick = undefined;
-		};
-
-		const finish = async (latlng?: L.LatLng) => {
-			const pos = latlng ?? this.expectingClick?.dragMarker?.getLatLng();
-			if (pos) {
-				if (await onFinish({ lat: pos.lat, lon: pos.lng }) !== false) {
-					cancel();
-				}
-			}
-		};
-
-		const expectingClick = this.expectingClick = {
-			id: lineId,
-			touchMode,
-			cancel
-		};
-
-		this._updateLineClick();
-		if (handleMoveEnd) {
-			handleMoveEnd();
-		}
-
-		return {
-			cancel,
-			finish: async () => await finish()
-		};
+	expectLineClick(...args: Parameters<LinesLayerClick["expectLineClick"]>): ReturnType<LinesLayerClick["expectLineClick"]> {
+		return this.click.expectLineClick(...args);
 	}
 
-	_updateLineClick(): void {
-		if (this.expectingClick) {
-			const latlngs = this.linesById[this.expectingClick.id]?.getLatLngs() as L.LatLng[][] | undefined;
-			this.expectingClick.lineString = latlngs && LineString.hasTrackPoints(latlngs) ? new LineString(latlngs) : undefined;
-
-			// Track points appearing for the first time: Add drag marker
-			if (this.expectingClick.lineString && !this.expectingClick.dragMarker) {
-				const point = this.expectingClick.lineString.locate(this._map.getCenter());
-				this.expectingClick.dragMarker = new LeafletMarker(point.closest, {
-					interactive: this.expectingClick.touchMode,
-					draggable: this.expectingClick.touchMode,
-					pane: "fm-raised-marker"
-				}).on("drag", (e) => {
-					const closest = this.expectingClick?.lineString?.locate((e as any).latlng as L.LatLng);
-					if (closest) {
-						this.expectingClick?.dragMarker?.setLatLng(closest.closest);
-					}
-				});
-				if (this.expectingClick.touchMode) {
-					this.expectingClick.dragMarker.addTo(this._map);
-				}
-			}
-		}
-	}
-
-	protected _getLineTooltipHtml(line: Line & { trackPoints?: BasicTrackPoints }, pos: L.LatLng | undefined, highlight: boolean): string {
+	protected _getLineTooltipHtml(line: Line & { trackPoints?: BasicTrackPoints }, pos: L.LatLng | undefined, options: { name: boolean; details: boolean }): string {
 		const layer = this.linesById[line.id];
 		if (!layer) {
 			return "";
 		}
 
-		const nameHtml = quoteHtml(this.client.lines[line.id].name);
-		const detailsHtml: string[] = [];
+		const i18n = getI18n();
+		const details: Array<{ name: string; value: string }> = [];
 
-		if (pos && highlight && line.trackPoints && layer._fmTrackPoints) {
+		if (pos && options.details && line.trackPoints && layer._fmTrackPoints) {
 			const closest = new LineString(layer._fmTrackPoints).locate(pos);
-			const closestIdx = layer._fmTrackPoints[Math.round(closest.idx)]?.fmIdx;
+			const roundedIdx = Math.round(closest.idx);
+			const closestIdx = layer._fmTrackPoints[roundedIdx]?.fmIdx;
 			if (closestIdx != null) {
-				const closestPoint = line.trackPoints[closestIdx];
-				if (closestPoint.ele != null) {
-					detailsHtml.push(`Elevation: ${formatElevation(closestPoint.ele)}`);
+
+				const idxBefore = Math.floor(closest.idx);
+				const idxAfter = Math.ceil(closest.idx);
+				const pointBefore = line.trackPoints[layer._fmTrackPoints[idxBefore].fmIdx];
+				const pointAfter = line.trackPoints[layer._fmTrackPoints[idxAfter].fmIdx];
+				if (pointBefore?.ele != null && pointAfter?.ele != null) {
+					const ele = idxBefore === idxAfter ? pointBefore.ele : ((idxAfter - closest.idx) * pointBefore.ele + (closest.idx - idxBefore) * pointAfter.ele);
+					details.push({
+						name: i18n.t("lines-layer.elevation"),
+						value: formatElevation(ele)
+					});
+				}
+
+				const idx = layer._fmTrackPoints[idxBefore].fmIdx + closest.idx - Math.floor(closest.idx);
+				const steepness = getSteepnessAtIdx(line.trackPoints, idx);
+				if (steepness != null) {
+					details.push({
+						name: i18n.t("lines-layer.steepness"),
+						value: formatSteepness(steepness)
+					});
 				}
 
 				if (line.extraInfo) {
-					const extraInfo = getExtraInfoAtIdx(line.extraInfo, closestIdx);
+					const extraInfo = getExtraInfoAfterIdx(line.extraInfo, closestIdx - (roundedIdx > closest.idx || closest.idx === layer._fmTrackPoints.length - 1 ? 1 : 0));
 					const types = getTranslatedExtraInfoTypes();
 					const values = getTranslatedExtraInfoValues();
 					for (const [type, value] of Object.entries(extraInfo)) {
-						detailsHtml.push(`${quoteHtml(types[type])}: ${quoteHtml(values[type][value].text)}`);
+						if (type !== "steepness") {
+							details.push({
+								name: types[type],
+								value: values[type][value].text
+							});
+						}
 					}
 				}
 			}
 		}
 
-		if (detailsHtml.length > 0) {
-			return `<strong>${nameHtml}</strong>${detailsHtml.map((h) => `<br/>${h}`).join("")}`;
-		} else {
-			return nameHtml;
+		const itemsHtml = details.map(({ name, value }) => i18n.t("lines-layer.detail", { name, value }));
+
+		if (options.name && this.client.lines[line.id].name) {
+			const nameHtml = quoteHtml(this.client.lines[line.id].name);
+			if (itemsHtml.length > 0) {
+				itemsHtml.unshift(`<strong>${nameHtml}</strong>`);
+			} else {
+				itemsHtml.unshift(nameHtml);
+			}
 		}
+
+		return itemsHtml.join("<br/>");
 	}
 
 	protected _updateLineTooltip(line: Line & { trackPoints?: BasicTrackPoints }): void {
-		this.linesById[line.id]?.setTooltipContent(this._getLineTooltipHtml(line, this.linesById[line.id]._fmLastHoverLatLng, line.id == null || this.highlightedLinesIds.has(line.id)));
+		// line.id == null: We are currently drawing the line, don't render a tooltip
+
+		const tooltipHtml = line.id != null && this._getLineTooltipHtml(line, this.linesById[line.id]._fmLastHoverLatLng, { name: true, details: this.highlightedLinesIds.has(line.id) });
+		if (!tooltipHtml) {
+			this.linesById[line.id].unbindTooltip();
+		} else if (!this.linesById[line.id]._tooltip) {
+			this.linesById[line.id].bindTooltip(tooltipHtml, { ...tooltipOptions, sticky: true, offset: [ 20, 0 ] });
+		} else if (this.linesById[line.id]._tooltip!.getContent() !== tooltipHtml) {
+			this.linesById[line.id].setTooltipContent(tooltipHtml);
+		}
 	}
 
 	protected _addLine(line: Line & { trackPoints?: BasicTrackPoints }): void {
@@ -489,10 +303,6 @@ export default class LinesLayer extends FeatureGroup {
 
 			if(line.id != null) {
 				this.linesById[line.id]
-					.bindTooltip("", { ...tooltipOptions, sticky: true, offset: [ 20, 0 ] })
-					.on("tooltipopen", () => {
-						// this.linesById[line.id].setTooltipContent(this._getLineTooltipHtml(line));
-					})
 					.on("mousemove", (e) => {
 						this.linesById[line.id]._fmLastHoverLatLng = e.latlng;
 						this._updateLineTooltip(line);
@@ -504,7 +314,6 @@ export default class LinesLayer extends FeatureGroup {
 		}
 
 		this.linesById[line.id]._fmTrackPoints = trackPoints;
-		this._updateLineTooltip(line);
 
 		const highlight = line.id == null || this.highlightedLinesIds.has(line.id);
 
@@ -519,23 +328,12 @@ export default class LinesLayer extends FeatureGroup {
 
 		this.linesById[line.id].setLatLngs(splitLatLngs);
 
-		if (line.name && line.id != null) { // We don't want a popup for lines that we are drawing right now
-			const quoted = quoteHtml(line.name);
-			if (!this.linesById[line.id]._tooltip) {
-				this.linesById[line.id].bindTooltip(quoted, { ...tooltipOptions, sticky: true, offset: [ 20, 0 ] });
-			} else if (this.linesById[line.id]._tooltip!.getContent() !== quoted) {
-				this.linesById[line.id].setTooltipContent(quoted);
-			}
-		} else if (this.linesById[line.id]._tooltip) {
-			this.linesById[line.id].unbindTooltip();
-		}
-
 		if (!this.hasLayer(this.linesById[line.id]))
 			this.addLayer(this.linesById[line.id]);
 
-		if (this.expectingClick && this.expectingClick.id === line.id) {
-			this._updateLineClick();
-		}
+		this._updateLineTooltip(line);
+
+		this.click.handleLineUpdate(line.id);
 	}
 
 	protected _deleteLine(line: ObjectWithId): void {

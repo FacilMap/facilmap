@@ -125,7 +125,7 @@ export function createExtraInfoStats(extraInfo: ExtraInfo, trackPoints: BasicTra
 	}));
 }
 
-export function getExtraInfoAtIdx(extraInfo: ExtraInfo, idx: number): Record<string, number> {
+export function getExtraInfoAfterIdx(extraInfo: ExtraInfo, idx: number): Record<string, number> {
 	return Object.fromEntries(Object.entries(extraInfo).flatMap(([key, info]) => {
 		const segment = info.find((i) => idx >= i[0] && idx < i[1]);
 		return segment ? [[key, segment[2]]] : [];

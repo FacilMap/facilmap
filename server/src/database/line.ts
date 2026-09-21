@@ -323,6 +323,7 @@ export default class DatabaseLines {
 	async* getLinePointsForMap(mapId: MapId, bboxWithZoom: BboxWithZoom & BboxWithExcept): AsyncIterable<{ id: ID; trackPoints: TrackPoint[] }> {
 		const lines = await this.LineModel.findAll({ attributes: ["id"], where: { mapId } });
 		const chunks = chunk(lines.map((line) => line.id), 50000);
+		console.log(chunks);
 		for (const lineIds of chunks) {
 			const linePoints = await this.LinePointModel.findAll({
 				where: {

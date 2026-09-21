@@ -306,3 +306,41 @@ export function isSimpleRoute(decodedMode: DecodedRouteMode): boolean {
 		(!decodedMode.avoid || decodedMode.avoid.length == 0) &&
 		!decodedMode.details;
 }
+
+export function getTrackPointBefore<P extends Point>(trackPoints: { [idx: number]: P; length: number }, idx: number, filter?: (point: P) => boolean): number | undefined {
+	for (let i = Math.ceil(idx) - 1; i >= 0; i--) {
+		if (trackPoints[i] && (!filter || filter(trackPoints[i]))) {
+			return i;
+		}
+	}
+}
+
+export function getTrackPointAfter<P extends Point>(trackPoints: { [idx: number]: P; length: number }, idx: number, filter?: (point: P) => boolean): number | undefined {
+	for (let i = Math.floor(idx) + 1; i < trackPoints.length; i++) {
+		if (trackPoints[i] && (!filter || filter(trackPoints[i]))) {
+			return i;
+		}
+	}
+}
+
+export function getTrackPointsSlice<P extends Point>(trackPoints: { [idx: number]: P; length: number }, fromIdx: number, toIdx: number): P[] {
+	const result = [];
+	for (let i = fromIdx; i <= toIdx; i++) {
+		if (trackPoints[i]) {
+			result.push(trackPoints[i]);
+		}
+	}
+	return result;
+}
+
+export function getSteepnessAtIdx(trackPoints: { [idx: number]: Point & { ele?: number | null }; length: number }, idx: number): number | undefined {
+	const idxBefore = getTrackPointBefore(trackPoints, idx, (p) => p.ele != null);
+	const idxAfter = getTrackPointAfter(trackPoints, idx, (p) => p.ele != null);
+	if (idxBefore == null || idxAfter == null) {
+		return undefined;
+	}
+
+	const section = getTrackPointsSlice(trackPoints, idxBefore, idxAfter);
+	const km = calculateDistance(section).distance;
+	return (trackPoints[idxAfter].ele! - trackPoints[idxBefore].ele!) / km / 10;
+}

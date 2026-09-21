@@ -194,8 +194,12 @@ export function formatElevation(elevation: number): string {
 	if (units === Units.US_CUSTOMARY) {
 		return getI18n().t("format.elevation-ft", { elevation: round(mToFt(elevation), 0) });
 	} else {
-		return getI18n().t("format.elevation-m", { elevation });
+		return getI18n().t("format.elevation-m", { elevation: round(elevation, 0) });
 	}
+}
+
+export function formatSteepness(percent: number): string {
+	return getI18n().t("format.steepness", { percent: `${round(percent, 0)}`.replace("-", "\u2212") });
 }
 
 export function formatAscentDescent(ascentDescent: number): string {
