@@ -9,6 +9,8 @@ export * from "./click-listener/click-listener";
 import "./filter/map-filter";
 export { default as LinesLayer } from "./lines/lines-layer";
 export * from "./lines/lines-layer";
+export { default as LinesLayerClick } from "./lines/lines-layer-click";
+export * from "./lines/lines-layer-click";
 export { default as MarkerCluster } from "./markers/marker-cluster";
 export { default as MarkerLayer } from "./markers/marker-layer";
 export { default as MarkersLayer } from "./markers/markers-layer";

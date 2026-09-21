@@ -29,7 +29,7 @@ export function useSplitLine(line: Ref<Line>): {
 			try {
 				if (pos) {
 					isSaving.value = true;
-					await client.value.splitLine({ id: line.value.id, lat: pos.lat, lon: pos.lat });
+					await client.value.splitLine({ id: line.value.id, lat: pos.lat, lon: pos.lon });
 				}
 
 				toasts.hideToast(`fm${context.id}-line-info-split`);

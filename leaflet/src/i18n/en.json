@@ -209,5 +209,10 @@
     },
     "search-result-geojson": {
         "invalid-geojson-error": "Invalid GeoJSON object."
+    },
+    "lines-layer": {
+        "detail": "{{name}}: {{value}}",
+        "elevation": "Elevation",
+        "steepness": "Steepness"
     }
 }

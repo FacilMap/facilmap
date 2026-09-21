@@ -12,7 +12,8 @@
         "distance-km": "{{distance}} km",
         "distance-mi": "{{distance}} mi",
         "elevation-m": "{{elevation}} m",
-        "elevation-ft": "{{elevation}} ft"
+        "elevation-ft": "{{elevation}} ft",
+        "steepness": "{{percent}} %"
     },
     "objects": {
         "untitled-marker": "Untitled marker",
