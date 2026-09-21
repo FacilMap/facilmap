@@ -1,5 +1,5 @@
 import { io, type ManagerOptions, type Socket as SocketIO, type SocketOptions } from "socket.io-client";
-import { type Bbox, type BboxWithZoom, type CRU, type EventHandler, type EventName, type FindOnMapQuery, type FindMapsQuery, type FindMapsResult, type FindQuery, type GetMapQuery, type HistoryEntry, type ID, type Line, type LineExportRequest, type LineTemplateRequest, type LineToRouteCreate, type SocketEvents, type Marker, type MultipleEvents, type ObjectWithId, type MapData, type MapId, type PagedResults, type SocketRequest, type SocketRequestName, type SocketResponse, type Route, type RouteClear, type RouteCreate, type RouteExportRequest, type RouteInfo, type RouteRequest, type SearchResult, type SocketVersion, type TrackPoint, type Type, type View, type Writable, type SocketClientToServerEvents, type SocketServerToClientEvents, type LineTemplate, type LinePointsEvent, MapNotFoundError, type SetLanguageRequest } from "facilmap-types";
+import { type Bbox, type BboxWithZoom, type CRU, type EventHandler, type EventName, type FindOnMapQuery, type FindMapsQuery, type FindMapsResult, type FindQuery, type GetMapQuery, type HistoryEntry, type ID, type Line, type LineExportRequest, type LineTemplateRequest, type LineToRouteCreate, type SocketEvents, type Marker, type MultipleEvents, type ObjectWithId, type MapData, type MapId, type PagedResults, type SocketRequest, type SocketRequestName, type SocketResponse, type Route, type RouteClear, type RouteCreate, type RouteExportRequest, type RouteInfo, type RouteRequest, type SearchResult, type SocketVersion, type TrackPoint, type Type, type View, type Writable, type SocketClientToServerEvents, type SocketServerToClientEvents, type LineTemplate, type LinePointsEvent, MapNotFoundError, type SetLanguageRequest, type SplitLineRequest } from "facilmap-types";
 import { addKnownErrorConstructor, deserializeError, serializeError } from "serialize-error";
 
 export interface ClientEventsInterface extends SocketEvents<SocketVersion.V3> {
@@ -471,6 +471,10 @@ class Client {
 
 	async editLine(data: Line<CRU.UPDATE> & { id: ID }): Promise<Line> {
 		return await this._emit("editLine", data);
+	}
+
+	async splitLine(data: SplitLineRequest): Promise<Line[]> {
+		return await this._emit("splitLine", data);
 	}
 
 	async deleteLine(data: ObjectWithId): Promise<Line> {

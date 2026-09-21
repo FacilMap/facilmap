@@ -9,6 +9,8 @@ import type { Point as GeoJsonPoint } from "geojson";
 import type { TypeModel } from "./type";
 import { getLineTemplate, resolveCreateLine, resolveUpdateLine } from "facilmap-utils";
 import { getI18n } from "../i18n.js";
+import { asyncIteratorToArray } from "../utils/streams.js";
+import { LineString } from "locate-on-line";
 
 export type LineWithTrackPoints = Line & {
 	trackPoints: TrackPoint[];
@@ -47,6 +49,7 @@ export interface LinePointModel extends Model<InferAttributes<LinePointModel>, I
 	lon: Longitude;
 	zoom: number;
 	idx: number;
+	km: number;
 	ele: number | null;
 	toJSON: () => TrackPoint & { lineId: ID; pos: GeoJsonPoint };
 }
@@ -161,6 +164,7 @@ export default class DatabaseLines {
 			pos: getPosType(),
 			zoom: { type: DataTypes.INTEGER.UNSIGNED, allowNull: false, validate: { min: 1, max: 20 } },
 			idx: { type: DataTypes.INTEGER.UNSIGNED, allowNull: false },
+			km: { type: DataTypes.FLOAT, allowNull: false },
 			ele: {
 				type: DataTypes.INTEGER,
 				allowNull: true,
@@ -283,6 +287,30 @@ export default class DatabaseLines {
 
 		if(!_noEvent)
 			this._db.emit("linePoints", mapId, lineId, points.map((point) => omit(point, ["id", "lineId", "pos"]) as TrackPoint));
+	}
+
+	async splitLine(mapId: MapId, lineId: ID, point: Point): Promise<Line[]> {
+		const line = await this.getLine(mapId, lineId);
+		const trackPoints = await asyncIteratorToArray(this.getAllLinePoints(line.id));
+		const [closest, ...routePointsClosest] = new LineString(trackPoints.map((t) => ({ lat: t.lat, lng: t.lon })))
+			.locate([point, ...line.routePoints].map((p) => ({ lat: p.lat, lng: p.lon })))
+			.map((p) => ({ idx: p.idx, closest: { lat: p.closest.lat, lon: p.closest.lng } }));
+
+		const routePoints1 = line.routePoints.filter((p, i) => routePointsClosest[i].idx <= closest.idx);
+		const routePoints2 = line.routePoints.filter((p, i) => routePointsClosest[i].idx >= closest.idx);
+		if (routePoints1[routePoints1.length - 1] !== routePoints2[0]) {
+			routePoints1.push(closest.closest);
+			routePoints2.unshift(closest.closest);
+		}
+
+		if (routePoints1.length < 2 || routePoints2.length < 2) {
+			throw new Error(getI18n().t("database.split-line-error"));
+		}
+
+		return await Promise.all([
+			this.updateLine(mapId, lineId, { routePoints: routePoints1 }),
+			this.createLine(mapId, { ...line, routePoints: routePoints2 })
+		]);
 	}
 
 	async deleteLine(mapId: MapId, lineId: ID): Promise<Line> {

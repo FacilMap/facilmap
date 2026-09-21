@@ -40,13 +40,13 @@ export async function calculateORSRoute(points: Point[], decodedMode: DecodedRou
 	let currentGroup: Point[] = [];
 	const coordGroups: Point[][] = [currentGroup];
 	for(const point of points) {
-		if(calculateDistance(currentGroup.concat([point])) >= MAX_DISTANCE[decodedMode.mode]) {
+		if(calculateDistance(currentGroup.concat([point])).distance >= MAX_DISTANCE[decodedMode.mode]) {
 			if(currentGroup.length == 1)
 				throw new Error(getI18n().t("routing.too-much-distance-error"));
 
 			coordGroups.push(currentGroup = [currentGroup[currentGroup.length-1]]);
 
-			if(calculateDistance(currentGroup.concat([point])) >= MAX_DISTANCE[decodedMode.mode])
+			if(calculateDistance(currentGroup.concat([point])).distance >= MAX_DISTANCE[decodedMode.mode])
 				throw new Error(getI18n().t("routing.too-much-distance-error"));
 		}
 

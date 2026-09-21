@@ -15,7 +15,8 @@
         "unique-map-ids-read-admin-error": "Read-only and admin ID cannot be the same.",
         "unique-map-ids-write-admin-error": "Read-write and admin ID cannot be the same.",
         "map-id-taken-error": "ID '{{id}}' is already taken.",
-        "map-disappeared-error": "Map has disappeared after updating."
+        "map-disappeared-error": "Map has disappeared after updating.",
+        "split-line-error": "Cannot split line at its very start or end."
     },
     "frontend": {
         "requires-javascript": "{{appName}} requires JavaScript to work.",

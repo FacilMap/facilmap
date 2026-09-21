@@ -1,8 +1,7 @@
 <script setup lang="ts">
 	import type { LineWithTrackPoints, RouteWithTrackPoints } from "facilmap-client";
-	import { getTranslatedExtraInfoTypes, getTranslatedExtraInfoValues } from "../../utils/heightgraph";
 	import Icon from "./icon.vue";
-	import { formatAscentDescent, formatDistance } from "facilmap-utils";
+	import { formatAscentDescent, formatDistance, getTranslatedExtraInfoTypes, getTranslatedExtraInfoValues } from "facilmap-utils";
 	import { computed, ref } from "vue";
 	import Popover from "./popover.vue";
 	import vTooltip from "../../utils/tooltip";

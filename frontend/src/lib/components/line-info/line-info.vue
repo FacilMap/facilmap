@@ -8,21 +8,21 @@
 	import RouteForm from "../route-form/route-form.vue";
 	import vTooltip from "../../utils/tooltip";
 	import { formatDistance, formatFieldName, formatFieldValue, formatRouteTime, formatTypeName, normalizeLineName } from "facilmap-utils";
-	import { computed, reactive, ref, toRef } from "vue";
-	import { useToasts } from "../ui/toasts/toasts.vue";
-	import { showConfirm } from "../ui/alert.vue";
+	import { computed, ref } from "vue";
 	import ZoomToObjectButton from "../ui/zoom-to-object-button.vue";
 	import { injectContextRequired, requireClientContext, requireMapContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
 	import ExportDropdown from "../ui/export-dropdown.vue";
 	import { useI18n } from "../../utils/i18n";
 	import DropdownMenu from "../ui/dropdown-menu.vue";
 	import { vKeyboardShortcut } from "../../utils/vue";
+	import { useSplitLine } from "./split-line";
+	import { useMoveLine } from "./move-line";
+	import { useDeleteLine } from "./delete-line";
 
 	const context = injectContextRequired();
 	const client = requireClientContext(context);
 	const mapContext = requireMapContext(context);
 
-	const toasts = useToasts();
 	const i18n = useI18n();
 
 	const props = withDefaults(defineProps<{
@@ -36,114 +36,20 @@
 		back: [];
 	}>();
 
-	const routeForm = ref<InstanceType<typeof RouteForm>>();
-
 	const showEditDialog = ref(false);
-	const isDeleting = ref(false);
 	const showElevationPlot = ref(false);
-	const isMoving = ref(false);
 
 	const line = computed(() => client.value.lines[props.lineId]);
+
+	const moveLine = useMoveLine(line);
+	const splitLine = useSplitLine(line);
+	const deleteLine = useDeleteLine(line);
 
 	const typeName = computed(() => formatTypeName(client.value.types[line.value.typeId].name));
 	const showTypeName = computed(() => Object.values(client.value.types).filter((t) => t.type === 'line').length > 1);
 
-	async function deleteLine(): Promise<void> {
-		toasts.hideToast(`fm${context.id}-line-info-delete`);
-
-		if (!await showConfirm({
-			title: i18n.t("line-info.delete-line-title"),
-			message: i18n.t("line-info.delete-line-message", { name: normalizeLineName(line.value.name) }),
-			variant: "danger",
-			okLabel: i18n.t("line-info.delete-line-ok")
-		}))
-			return;
-
-		isDeleting.value = true;
-
-		try {
-			await client.value.deleteLine({ id: props.lineId });
-		} catch (err) {
-			toasts.showErrorToast(`fm${context.id}-line-info-delete`, () => i18n.t("line-info.delete-line-error"), err);
-		} finally {
-			isDeleting.value = false;
-		}
-	}
-
 	async function getExport(format: "gpx-trk" | "gpx-rte"): Promise<string> {
 		return await client.value.exportLine({ id: line.value.id, format });
-	}
-
-	async function moveLine(): Promise<void> {
-		toasts.hideToast(`fm${context.id}-line-info-move`);
-
-		mapContext.value.components.map.fire('fmInteractionStart');
-		const routeId = `l${line.value.id}`;
-
-		try {
-			await client.value.lineToRoute({ id: line.value.id, routeId });
-
-			mapContext.value.components.linesLayer.hideLine(line.value.id);
-
-			const isSaving = ref(false);
-
-			const done = async (save: boolean) => {
-				const route = client.value.routes[routeId];
-				if (save && !route)
-					return;
-
-				try {
-					if(save) {
-						isSaving.value = true;
-						await client.value.editLine({ id: line.value.id, routePoints: route.routePoints, mode: route.mode });
-					}
-
-					toasts.hideToast(`fm${context.id}-line-info-move`);
-				} catch (err) {
-					toasts.showErrorToast(`fm${context.id}-line-info-move`, () => i18n.t("line-info.save-line-error"), err);
-				} finally {
-					mapContext.value.components.map.fire('fmInteractionEnd');
-					isMoving.value = false;
-
-					// Clear route after editing line so that the server can take the trackPoints from the route
-					client.value.clearRoute({ routeId }).catch((err) => {
-						console.error("Error clearing route", err);
-					});
-
-					mapContext.value.components.linesLayer.unhideLine(line.value.id);
-				}
-			};
-
-			toasts.showToast(`fm${context.id}-line-info-move`, () => i18n.t("line-info.move-line-title"), () => i18n.t("line-info.move-line-message"), reactive({
-				noCloseButton: true,
-				actions: toRef(() => [
-					{
-						label: i18n.t("line-info.move-line-finish"),
-						variant: "primary" as const,
-						onClick: () => { void done(true); },
-						isPending: isSaving.value,
-						isDisabled: isSaving.value
-					},
-					{
-						label: i18n.t("line-info.move-line-cancel"),
-						onClick: () => { void done(false); },
-						isDisabled: isSaving.value
-					}
-				])
-			}));
-
-			isMoving.value = true;
-		} catch (err) {
-			toasts.showErrorToast(`fm${context.id}-line-info-move-error`, () => i18n.t("line-info.save-line-error"), err);
-
-			toasts.hideToast(`fm${context.id}-line-info-move`);
-			mapContext.value.components.map.fire('fmInteractionEnd');
-			isMoving.value = false;
-			client.value.clearRoute({ routeId }).catch((err) => {
-				console.error("Error clearing route", err);
-			});
-			mapContext.value.components.linesLayer.unhideLine(line.value.id);
-		}
 	}
 
 	const zoomDestination = computed(() => getZoomDestinationForLine(line.value));
@@ -161,7 +67,7 @@
 					</template>
 				</span>
 			</h2>
-			<div v-if="!isMoving" class="btn-toolbar">
+			<div v-if="!moveLine.isMoving" class="btn-toolbar">
 				<button
 					v-if="line.ascent != null"
 					type="button"
@@ -175,7 +81,7 @@
 			</div>
 		</div>
 
-		<div class="fm-search-box-collapse-point" v-if="!isMoving">
+		<div class="fm-search-box-collapse-point" v-if="!moveLine.isMoving">
 			<dl class="fm-search-box-dl">
 				<dt class="distance">{{i18n.t("line-info.distance")}}</dt>
 				<dd class="distance">{{formatDistance(line.distance)}} <span v-if="line.time != null">({{formatRouteTime(line.time, line.mode)}})</span></dd>
@@ -196,7 +102,7 @@
 			<ElevationPlot :route="line" v-if="line.ascent != null && showElevationPlot"></ElevationPlot>
 		</div>
 
-		<div v-if="!isMoving" class="btn-toolbar fm-search-box-toolbar">
+		<div v-if="!moveLine.isMoving" class="btn-toolbar fm-search-box-toolbar">
 			<ZoomToObjectButton
 				v-if="zoomDestination"
 				:label="i18n.t('line-info.zoom-to-object-label')"
@@ -217,7 +123,7 @@
 				class="btn btn-secondary btn-sm"
 				size="sm"
 				@click="showEditDialog = true"
-				:disabled="isDeleting || mapContext.interaction"
+				:disabled="deleteLine.isDeleting || mapContext.interaction"
 				v-keyboard-shortcut="'e'"
 			>{{i18n.t("line-info.edit-data")}}</button>
 
@@ -225,7 +131,7 @@
 				v-if="!client.readonly"
 				size="sm"
 				:label="i18n.t('line-info.actions')"
-				:isBusy="isDeleting"
+				:isBusy="deleteLine.isDeleting"
 				:isDisabled="mapContext.interaction"
 			>
 				<li>
@@ -233,15 +139,24 @@
 						v-if="line.mode != 'track'"
 						href="javascript:"
 						class="dropdown-item"
-						@click="moveLine()"
+						@click="moveLine.move()"
 					>{{i18n.t("line-info.edit-waypoints")}}</a>
+				</li>
+
+				<li>
+					<a
+						v-if="line.mode != 'track'"
+						href="javascript:"
+						class="dropdown-item"
+						@click="splitLine.split(($event as PointerEvent).pointerType === 'touch')"
+					>{{i18n.t("line-info.split")}}</a>
 				</li>
 
 				<li>
 					<a
 						href="javascript:"
 						class="dropdown-item"
-						@click="deleteLine()"
+						@click="deleteLine.del()"
 						v-keyboard-shortcut="['Delete', 'Backspace']"
 					>{{i18n.t("line-info.delete")}}</a>
 				</li>
@@ -249,9 +164,8 @@
 		</div>
 
 		<RouteForm
-			v-if="isMoving"
+			v-if="moveLine.isMoving"
 			active
-			ref="routeForm"
 			:routeId="`l${line.id}`"
 			:showToolbar="false"
 			noClear

@@ -2,7 +2,7 @@ import { calculateBbox, isInBbox } from "../utils/geo.js";
 import type { Bbox, BboxWithZoom, CRU, Line, Point, Route, RouteInfo, RouteMode, TrackPoint } from "facilmap-types";
 import { decodeRouteMode, calculateDistance, round, isSimpleRoute } from "facilmap-utils";
 import { calculateOSRMRoute } from "./osrm.js";
-import { calculateORSRoute, getMaximumDistanceBetweenRoutePoints } from "./ors.js";
+import { calculateORSRoute } from "./ors.js";
 import config from "../config.js";
 
 // The OpenLayers resolution for zoom level 1 is 0.7031249999891753
@@ -21,113 +21,75 @@ export async function calculateRoute(routePoints: Point[], encodedMode: RouteMod
 
 	const simple = (!config.mapboxToken && config.orsToken) ? false : isSimpleRoute(decodedMode);
 
-	let route: RawRouteInfo | undefined;
-
-	if (simple) {
-		route = await calculateOSRMRoute(routePoints, decodedMode.mode);
-	}
-
-	if(!simple) {
-		if(route) {
-			// The distances between the current route points exceed the maximum for ORS, so we pick new
-			// route points from the route calculated by OSRM
-			routePoints = _getTrackPointsFromTrack(route.trackPoints, getMaximumDistanceBetweenRoutePoints(decodedMode));
-		}
-
-		route = await calculateORSRoute(routePoints, decodedMode);
-	}
-
-	route!.distance = round(route!.distance, 2);
-	route!.time = route!.time != null ? Math.round(route!.time) : route!.time;
-	route!.ascent = route!.ascent != null ? Math.round(route!.ascent) : route!.ascent;
-	route!.descent = route!.descent != null ? Math.round(route!.descent) : route!.descent;
-
-	calculateZoomLevels(route!.trackPoints);
+	const route = (
+		simple ? await calculateOSRMRoute(routePoints, decodedMode.mode) :
+		await calculateORSRoute(routePoints, decodedMode)
+	);
 
 	return {
 		...route,
+		distance: round(route.distance, 2),
+		time: route.time != null ? Math.round(route.time) : route.time,
+		ascent: route.ascent != null ? Math.round(route.ascent) : route.ascent,
+		descent: route.descent != null ? Math.round(route.descent) : route.descent,
+		trackPoints: calculateDistance(calculateZoomLevels(route.trackPoints)).points,
 		...calculateBbox(route!.trackPoints)
-	} as RouteInfo;
+	} satisfies RouteInfo;
 }
 
 export async function calculateRouteForLine(line: Pick<Line<CRU.CREATE_VALIDATED>, 'mode' | 'routePoints' | 'trackPoints'>, trackPointsFromRoute?: Route): Promise<RouteInfo> {
-	const result: Partial<RouteInfo> = {};
+	let result: Omit<RouteInfo, keyof Bbox>;
 
 	if(trackPointsFromRoute) {
-		result.distance = trackPointsFromRoute.distance;
-		result.time = trackPointsFromRoute.time;
-		result.ascent = trackPointsFromRoute.ascent;
-		result.descent = trackPointsFromRoute.descent;
-		result.extraInfo = trackPointsFromRoute.extraInfo;
-		result.extraInfoStats = trackPointsFromRoute.extraInfoStats;
-		result.trackPoints = trackPointsFromRoute.trackPoints;
+		result = {
+			distance: trackPointsFromRoute.distance,
+			time: trackPointsFromRoute.time,
+			ascent: trackPointsFromRoute.ascent,
+			descent: trackPointsFromRoute.descent,
+			extraInfo: trackPointsFromRoute.extraInfo,
+			extraInfoStats: trackPointsFromRoute.extraInfoStats,
+			trackPoints: trackPointsFromRoute.trackPoints
+		};
 	} else if(line.mode == "track" && line.trackPoints && line.trackPoints.length >= 2) {
-		result.distance = round(calculateDistance(line.trackPoints), 2);
-		result.time = undefined;
-		result.extraInfo = undefined;
-		result.extraInfoStats = undefined;
-
-		// TODO: ascent/descent?
-
-		calculateZoomLevels(line.trackPoints);
-
-		for(let i=0; i<line.trackPoints.length; i++)
-			(line.trackPoints[i] as TrackPoint).idx = i;
-
-		result.trackPoints = line.trackPoints as TrackPoint[];
+		const distance = calculateDistance(line.trackPoints);
+		result = {
+			distance: round(distance.distance, 2),
+			time: undefined,
+			extraInfo: undefined,
+			extraInfoStats: undefined,
+			trackPoints: calculateDistance(calculateZoomLevels(line.trackPoints)).points,
+			// TODO: ascent/descent?
+		};
 	} else if(line.routePoints && line.routePoints.length >= 2 && line.mode != "track" && decodeRouteMode(line.mode).mode) {
 		const routeData = await calculateRoute(line.routePoints, line.mode);
-		result.distance = routeData.distance;
-		result.time = routeData.time;
-		result.ascent = routeData.ascent;
-		result.descent = routeData.descent;
-		result.extraInfo = routeData.extraInfo;
-		result.extraInfoStats = routeData.extraInfoStats;
-		for(let i=0; i<routeData.trackPoints.length; i++)
-			routeData.trackPoints[i].idx = i;
-
-		result.trackPoints = routeData.trackPoints;
+		result = {
+			distance: routeData.distance,
+			time: routeData.time,
+			ascent: routeData.ascent,
+			descent: routeData.descent,
+			extraInfo: routeData.extraInfo,
+			extraInfoStats: routeData.extraInfoStats,
+			trackPoints: routeData.trackPoints
+		};
 	} else {
-		result.distance = round(calculateDistance(line.routePoints), 2);
-		result.time = undefined;
-		result.extraInfo = undefined;
-		result.extraInfoStats = undefined;
-
-		result.trackPoints = [ ];
-		for(let i=0; i<line.routePoints.length; i++) {
-			result.trackPoints.push({ ...line.routePoints[i], ele: null, zoom: 1, idx: i });
-		}
+		const distance = calculateDistance(calculateZoomLevels(line.routePoints));
+		result = {
+			distance: round(distance.distance, 2),
+			time: undefined,
+			extraInfo: undefined,
+			extraInfoStats: undefined,
+			trackPoints: distance.points
+		};
 	}
 
-	Object.assign(result, calculateBbox(result.trackPoints!));
-
-	return result as RouteInfo;
-}
-
-function _getTrackPointsFromTrack(trackPoints: Point[], maxDistance: number) {
-	const result: Point[] = [ trackPoints[0] ];
-	for(let i=1; i<trackPoints.length; i++) {
-		const distance = calculateDistance([ result[result.length-1], trackPoints[i] ]);
-		if(distance >= maxDistance) {
-			if(result[result.length-1] !== trackPoints[i-1])
-				result.push(trackPoints[i-1]);
-			else // Really long distance between two track points. Maybe a ferry line.
-				result.push(_percentageOfSegment(result[result.length-1], trackPoints[i], (maxDistance-1)/distance));
-			i--;
-		}
-	}
-	result.push(trackPoints[trackPoints.length-1]);
-	return result;
-}
-
-function _percentageOfSegment(point1: Point, point2: Point, percentage: number): Point {
 	return {
-		lat: point1.lat + percentage * (point2.lat - point1.lat),
-		lon: point1.lon + percentage * (point2.lon - point1.lon)
+		...result,
+		...calculateBbox(result.trackPoints)
 	};
 }
 
-export function calculateZoomLevels(trackPoints: Array<Point & { zoom?: number }>): void {
+export function calculateZoomLevels<T extends Point>(trackPoints: T[]): Array<T & { zoom: number; idx: number }> {
+	const result = Array<T & { zoom: number; idx: number }>(trackPoints.length);
 	const segments = [ ];
 	let dist = 0;
 	for(let i=0; i<trackPoints.length; i++) {
@@ -135,7 +97,7 @@ export function calculateZoomLevels(trackPoints: Array<Point & { zoom?: number }
 			dist += distance(trackPoints[i-1], trackPoints[i]);
 		segments[i] = dist / RESOLUTION_20;
 
-		trackPoints[i].zoom = undefined as any;
+		let zoom = 1;
 
 		if(i != 0 && i != trackPoints.length-1) {
 			let lastSegments = segments[i-1];
@@ -144,15 +106,16 @@ export function calculateZoomLevels(trackPoints: Array<Point & { zoom?: number }
 				lastSegments = Math.floor(lastSegments / 2);
 				thisSegments = Math.floor(thisSegments / 2);
 				if(lastSegments == thisSegments) {
-					trackPoints[i].zoom = 20 - j;
+					zoom = 20 - j;
 					break;
 				}
 			}
 		}
 
-		if(trackPoints[i].zoom == null)
-			trackPoints[i].zoom = 1;
+		result[i] = { ...trackPoints[i], zoom, idx: i };
 	}
+
+	return result;
 }
 
 export function distance(pos1: Point, pos2: Point): number {

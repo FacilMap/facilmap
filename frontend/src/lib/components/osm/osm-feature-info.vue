@@ -142,7 +142,7 @@
 
 	const length = computed(() => (
 		analyzedRelation.value ? analyzedRelation.value.distance :
-		props.feature.type === "way" ? calculateDistance(props.feature.nodes) :
+		props.feature.type === "way" ? calculateDistance(props.feature.nodes).distance :
 		undefined
 	));
 

@@ -13,7 +13,8 @@ export type ExtraInfoStats = z.infer<typeof extraInfoStatsValidator>;
 
 export const trackPointValidator = cruValidator({
 	...pointValidator.shape,
-	ele: optionalCreate(z.number().or(z.null()), null),
+	ele: z.number().or(z.null()).optional(),
+	km: optionalCreate(z.number()),
 	idx: onlyRead(z.number()),
 	zoom: onlyRead(zoomLevelValidator)
 });

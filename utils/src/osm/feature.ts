@@ -233,7 +233,7 @@ export function analyzeOsmRelation(relation: DeepReadonly<ResolvedOsmRelation>):
 			segmentsHandled.add(getSegmentKey([segment[1], segment[0]]));
 			path.push(segment[1]);
 		}
-		sections.push({ key: sections.length, path, distance: calculateDistance(path) });
+		sections.push({ key: sections.length, path, distance: calculateDistance(path).distance });
 	}
 
 	// Detect roundabouts

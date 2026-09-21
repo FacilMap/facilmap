@@ -1,11 +1,12 @@
 import type { ID, Line, LinePointsEvent, LineTemplate, ObjectWithId, Point, Stroke, Type, Width } from "facilmap-types";
-import { FeatureGroup, latLng, type LayerOptions, type Map as LeafletMap, type LatLngBounds } from "leaflet";
+import { FeatureGroup, latLng, type LayerOptions, type Map as LeafletMap, Marker as LeafletMarker, type LatLngBounds, type LeafletMouseEvent } from "leaflet";
 import { HighlightablePolyline } from "leaflet-highlightable-layers";
-import { type BasicTrackPoints, disconnectSegmentsOutsideViewport, tooltipOptions, trackPointsToLatLngArray, fmToLeafletBbox } from "../utils/leaflet";
-import { numberKeys, quoteHtml } from "facilmap-utils";
+import { type BasicTrackPoints, disconnectSegmentsOutsideViewport, tooltipOptions, trackPointsToLatLngArray, fmToLeafletBbox, type LatLngWithIdx } from "../utils/leaflet";
+import { formatElevation, getExtraInfoAtIdx, getTranslatedExtraInfoTypes, getTranslatedExtraInfoValues, numberKeys, quoteHtml } from "facilmap-utils";
 import { addClickListener, type ClickListenerHandle } from "../click-listener/click-listener";
 import type Client from "facilmap-client";
 import { getPolylineStyles } from "../utils/styles";
+import { LineString } from "locate-on-line";
 
 export function getDashArrayForStroke(stroke: Stroke, width: Width): string | undefined {
 	if (stroke === "dashed") {
@@ -22,11 +23,21 @@ export default class LinesLayer extends FeatureGroup {
 
 	declare options: LayerOptions;
 	protected client: Client;
-	protected linesById: Record<string, InstanceType<typeof HighlightablePolyline>> = {};
+	protected linesById: Record<string, InstanceType<typeof HighlightablePolyline> & {
+		_fmTrackPoints?: LatLngWithIdx[];
+		_fmLastHoverLatLng?: L.LatLng;
+	}> = {};
 	protected highlightedLinesIds = new Set<ID>();
 	protected hiddenLinesIds = new Set<ID>();
 	protected lastMapBounds?: LatLngBounds;
 	protected filterResults = new Map<ID, boolean>();
+	protected expectingClick: {
+		id: ID;
+		lineString?: LineString<L.LatLng[][]>;
+		touchMode: boolean;
+		dragMarker?: L.Marker;
+		cancel: () => void;
+	} | undefined = undefined;
 
 	constructor(client: Client, options?: LinesLayerOptions) {
 		super([], options);
@@ -56,6 +67,8 @@ export default class LinesLayer extends FeatureGroup {
 	}
 
 	onRemove(map: LeafletMap): this {
+		this.expectingClick?.cancel();
+
 		super.onRemove(map);
 
 		this.client.removeListener("line", this.handleLine);
@@ -279,8 +292,188 @@ export default class LinesLayer extends FeatureGroup {
 		});
 	}
 
+	expectLineClick(
+		lineId: ID,
+		touchMode: boolean,
+		onFinish: (point: Point) => (void | boolean | Promise<void | boolean>),
+		onUpdate?: (point: Point | undefined) => void
+	): {
+		finish: () => void;
+		cancel: () => void;
+	} {
+		if (this.expectingClick) {
+			throw new Error("Already expecting a line click.");
+		}
+
+		const handleClick = async (e: LeafletMouseEvent) => {
+			if (e.propagatedFrom?.line?.id === lineId) {
+				await finish(e.latlng);
+			}
+		};
+
+		const handleMouseMove = !touchMode && ((e: LeafletMouseEvent) => {
+			if (e.propagatedFrom?.line?.id === lineId && this.expectingClick) {
+				const closest = this.expectingClick.lineString?.locate(e.latlng);
+				if (closest && this.expectingClick.dragMarker) {
+					this.expectingClick.dragMarker.setLatLng(closest.closest).addTo(this._map);
+					onUpdate?.({ lat: closest.closest.lat, lon: closest.closest.lng });
+				} else {
+					this.expectingClick.dragMarker?.remove();
+					onUpdate?.(undefined);
+				}
+			}
+		});
+
+		const handleMouseOut = !touchMode && ((e: LeafletMouseEvent) => {
+			if (e.propagatedFrom?.line?.id === lineId && this.expectingClick) {
+				if (this.expectingClick.dragMarker) {
+					this.expectingClick.dragMarker.remove();
+					onUpdate?.(undefined);
+				}
+			}
+		});
+
+		const handleMoveEnd = touchMode && (() => {
+			if (this.expectingClick?.dragMarker && onUpdate) {
+				const pos = this.expectingClick.dragMarker.getLatLng();
+				if (this._map.getBounds().contains(pos)) {
+					onUpdate({ lat: pos.lat, lon: pos.lng });
+				} else {
+					onUpdate(undefined);
+				}
+			}
+		});
+
+		this.addEventListener("click", handleClick);
+		if (handleMouseMove) {
+			this.addEventListener("mousemove", handleMouseMove);
+		}
+		if (handleMouseOut) {
+			this.addEventListener("mouseout", handleMouseOut);
+		}
+		if (handleMoveEnd) {
+			this._map.addEventListener("moveend", handleMoveEnd);
+			this._map.addEventListener("zoomend", handleMoveEnd);
+		}
+
+		const cancel = () => {
+			if (this.expectingClick !== expectingClick) {
+				return;
+			}
+
+			this.removeEventListener("click", handleClick);
+			if (handleMouseMove) {
+				this.removeEventListener("mousemove", handleMouseMove);
+			}
+			if (handleMouseOut) {
+				this.removeEventListener("mouseout", handleMouseOut);
+			}
+			if (handleMoveEnd) {
+				this._map.removeEventListener("moveend", handleMoveEnd);
+				this._map.removeEventListener("zoomend", handleMoveEnd);
+			}
+
+			this.expectingClick.dragMarker?.remove();
+
+			this.expectingClick = undefined;
+		};
+
+		const finish = async (latlng?: L.LatLng) => {
+			const pos = latlng ?? this.expectingClick?.dragMarker?.getLatLng();
+			if (pos) {
+				if (await onFinish({ lat: pos.lat, lon: pos.lng }) !== false) {
+					cancel();
+				}
+			}
+		};
+
+		const expectingClick = this.expectingClick = {
+			id: lineId,
+			touchMode,
+			cancel
+		};
+
+		this._updateLineClick();
+		if (handleMoveEnd) {
+			handleMoveEnd();
+		}
+
+		return {
+			cancel,
+			finish: async () => await finish()
+		};
+	}
+
+	_updateLineClick(): void {
+		if (this.expectingClick) {
+			const latlngs = this.linesById[this.expectingClick.id]?.getLatLngs() as L.LatLng[][] | undefined;
+			this.expectingClick.lineString = latlngs && LineString.hasTrackPoints(latlngs) ? new LineString(latlngs) : undefined;
+
+			// Track points appearing for the first time: Add drag marker
+			if (this.expectingClick.lineString && !this.expectingClick.dragMarker) {
+				const point = this.expectingClick.lineString.locate(this._map.getCenter());
+				this.expectingClick.dragMarker = new LeafletMarker(point.closest, {
+					interactive: this.expectingClick.touchMode,
+					draggable: this.expectingClick.touchMode,
+					pane: "fm-raised-marker"
+				}).on("drag", (e) => {
+					const closest = this.expectingClick?.lineString?.locate((e as any).latlng as L.LatLng);
+					if (closest) {
+						this.expectingClick?.dragMarker?.setLatLng(closest.closest);
+					}
+				});
+				if (this.expectingClick.touchMode) {
+					this.expectingClick.dragMarker.addTo(this._map);
+				}
+			}
+		}
+	}
+
+	protected _getLineTooltipHtml(line: Line & { trackPoints?: BasicTrackPoints }, pos: L.LatLng | undefined, highlight: boolean): string {
+		const layer = this.linesById[line.id];
+		if (!layer) {
+			return "";
+		}
+
+		const nameHtml = quoteHtml(this.client.lines[line.id].name);
+		const detailsHtml: string[] = [];
+
+		if (pos && highlight && line.trackPoints && layer._fmTrackPoints) {
+			const closest = new LineString(layer._fmTrackPoints).locate(pos);
+			const closestIdx = layer._fmTrackPoints[Math.round(closest.idx)]?.fmIdx;
+			if (closestIdx != null) {
+				const closestPoint = line.trackPoints[closestIdx];
+				if (closestPoint.ele != null) {
+					detailsHtml.push(`Elevation: ${formatElevation(closestPoint.ele)}`);
+				}
+
+				if (line.extraInfo) {
+					const extraInfo = getExtraInfoAtIdx(line.extraInfo, closestIdx);
+					const types = getTranslatedExtraInfoTypes();
+					const values = getTranslatedExtraInfoValues();
+					for (const [type, value] of Object.entries(extraInfo)) {
+						detailsHtml.push(`${quoteHtml(types[type])}: ${quoteHtml(values[type][value].text)}`);
+					}
+				}
+			}
+		}
+
+		if (detailsHtml.length > 0) {
+			return `<strong>${nameHtml}</strong>${detailsHtml.map((h) => `<br/>${h}`).join("")}`;
+		} else {
+			return nameHtml;
+		}
+	}
+
+	protected _updateLineTooltip(line: Line & { trackPoints?: BasicTrackPoints }): void {
+		this.linesById[line.id]?.setTooltipContent(this._getLineTooltipHtml(line, this.linesById[line.id]._fmLastHoverLatLng, line.id == null || this.highlightedLinesIds.has(line.id)));
+	}
+
 	protected _addLine(line: Line & { trackPoints?: BasicTrackPoints }): void {
-		const trackPoints = line.mode ? trackPointsToLatLngArray(line.trackPoints) : line.routePoints.map((p) => latLng(p.lat, p.lon));
+		const trackPoints: LatLngWithIdx[] = (
+			line.mode ? trackPointsToLatLngArray(line.trackPoints) :
+			line.routePoints.map((p, i) => Object.assign(latLng(p.lat, p.lon), { fmIdx: i }))
+		);
 
 		// Two points that are both outside of the viewport should not be connected, as the piece in between
 		// has not been received.
@@ -298,10 +491,20 @@ export default class LinesLayer extends FeatureGroup {
 				this.linesById[line.id]
 					.bindTooltip("", { ...tooltipOptions, sticky: true, offset: [ 20, 0 ] })
 					.on("tooltipopen", () => {
-						this.linesById[line.id].setTooltipContent(quoteHtml(this.client.lines[line.id].name));
+						// this.linesById[line.id].setTooltipContent(this._getLineTooltipHtml(line));
+					})
+					.on("mousemove", (e) => {
+						this.linesById[line.id]._fmLastHoverLatLng = e.latlng;
+						this._updateLineTooltip(line);
+					})
+					.on("mouseout", (e) => {
+						this.linesById[line.id]._fmLastHoverLatLng = undefined;
 					});
 			}
 		}
+
+		this.linesById[line.id]._fmTrackPoints = trackPoints;
+		this._updateLineTooltip(line);
 
 		const highlight = line.id == null || this.highlightedLinesIds.has(line.id);
 
@@ -329,6 +532,10 @@ export default class LinesLayer extends FeatureGroup {
 
 		if (!this.hasLayer(this.linesById[line.id]))
 			this.addLayer(this.linesById[line.id]);
+
+		if (this.expectingClick && this.expectingClick.id === line.id) {
+			this._updateLineClick();
+		}
 	}
 
 	protected _deleteLine(line: ObjectWithId): void {
