@@ -296,6 +296,16 @@ export class SocketConnectionV3 implements SocketConnection<SocketVersion.V3> {
 				return await this.database.lines.updateLine(this.mapId, data.id, data, undefined, fromRoute);
 			},
 
+			splitLine: async (data) => {
+				this.validatePermissions(Writable.WRITE);
+
+				if (!isMapId(this.mapId)) {
+					throw new Error(getI18n().t("socket.no-map-open-error"));
+				}
+
+				return await this.database.lines.splitLine(this.mapId, data.id, { lat: data.lat, lon: data.lon });
+			},
+
 			deleteLine: async (data) => {
 				this.validatePermissions(Writable.WRITE);
 

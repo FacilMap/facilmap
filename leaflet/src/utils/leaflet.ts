@@ -77,12 +77,14 @@ export interface BasicTrackPoints {
 	length: number;
 }
 
-export function trackPointsToLatLngArray(trackPoints: BasicTrackPoints | undefined): LatLng[] {
-	const result: LatLng[] = [];
+export type LatLngWithIdx = LatLng & { fmIdx: number };
+
+export function trackPointsToLatLngArray(trackPoints: BasicTrackPoints | undefined): LatLngWithIdx[] {
+	const result: LatLngWithIdx[] = [];
 	if (trackPoints) {
 		for (let i = 0; i < trackPoints.length; i++) {
 			if (trackPoints[i]) {
-				result.push(new LatLng(trackPoints[i]!.lat, trackPoints[i]!.lon, trackPoints[i]!.ele ?? undefined));
+				result.push(Object.assign(new LatLng(trackPoints[i]!.lat, trackPoints[i]!.lon, trackPoints[i]!.ele ?? undefined), { fmIdx: i }));
 			}
 		}
 	}

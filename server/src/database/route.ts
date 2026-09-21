@@ -17,6 +17,7 @@ interface RoutePointModel extends Model<InferAttributes<RoutePointModel>, InferC
 	pos: GeoJsonPoint;
 	zoom: number;
 	idx: number;
+	km: number;
 	ele: number | null;
 	toJSON: () => TrackPoint;
 }
@@ -41,6 +42,7 @@ export default class DatabaseRoutes {
 			pos: getPosType(),
 			zoom: { type: DataTypes.INTEGER.UNSIGNED, allowNull: false, validate: { min: 1, max: 20 } },
 			idx: { type: DataTypes.INTEGER.UNSIGNED, allowNull: false },
+			km: { type: DataTypes.FLOAT, allowNull: false },
 			ele: {
 				type: DataTypes.INTEGER,
 				allowNull: true,

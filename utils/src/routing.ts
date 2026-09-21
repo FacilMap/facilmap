@@ -1,4 +1,4 @@
-import type { DistributiveOmit, RouteMode } from "facilmap-types";
+import type { DistributiveOmit, Point, RouteMode } from "facilmap-types";
 import { getI18n } from "./i18n.js";
 import { quoteRegExp } from "./utils.js";
 
@@ -13,33 +13,42 @@ export interface DecodedRouteMode {
 export const R = 6371; // km
 
 /**
- * Returns the distance of the given path in kilometers.
+ * Returns the distance between two points in kilometers.
  */
-export function calculateDistance(posList: { readonly [idx: number]: { readonly lat: number; readonly lon: number }; readonly length: number }): number {
+export function calculateDistanceBetweenPoints(point1: Point, point2: Point): number {
+	const lat1 = point1.lat * Math.PI / 180;
+	const lon1 = point1.lon * Math.PI / 180;
+	const lat2 = point2.lat * Math.PI / 180;
+	const lon2 = point2.lon * Math.PI / 180;
+	const dLat = lat2 - lat1;
+	const dLon = lon2 - lon1;
+
+	const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+		Math.sin(dLon / 2) * Math.sin(dLon / 2) * Math.cos(lat1) * Math.cos(lat2);
+	const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+	return R * c;
+}
+
+/**
+ * Returns the distance of the given path in kilometers. Also returns a copy of the given track points with a `km` property added to each one,
+ * indicating the distance on the given path until that point.
+ */
+export function calculateDistance<L extends { readonly [idx: number]: Point; readonly length: number }>(points: L): {
+	points: L extends Array<any> ? (L & Array<L[number] & { km: number }>) : (L & Record<number, L[number] & { km: number }>);
+	distance: number;
+} {
 	// From http://stackoverflow.com/a/365853/242365
-	let ret = 0;
-	let last: { readonly lat: number; readonly lon: number } | undefined;
-	for (let i = 0; i < posList.length; i++) {
-		if (posList[i] != null) {
-			if (last != null) {
-				const lat1 = last.lat * Math.PI / 180;
-				const lon1 = last.lon * Math.PI / 180;
-				const lat2 = posList[i].lat * Math.PI / 180;
-				const lon2 = posList[i].lon * Math.PI / 180;
-				const dLat = lat2 - lat1;
-				const dLon = lon2 - lon1;
-
-				const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-					Math.sin(dLon / 2) * Math.sin(dLon / 2) * Math.cos(lat1) * Math.cos(lat2);
-				const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-				ret += R * c;
-			}
-
-			last = posList[i];
+	const result = (Array.isArray(points) ? Array(points.length) : { ...points }) as L extends Array<any> ? (L & Array<L[number] & { km: number }>) : (L & Record<number, L[number] & { km: number }>);
+	let last: (Point & { km: number }) | undefined;
+	for (let i = 0; i < points.length; i++) {
+		if (points[i] != null) {
+			result[i] = last = { ...points[i], km: last ? last.km + calculateDistanceBetweenPoints(last, points[i]) : 0 };
 		}
 	}
-
-	return ret;
+	return {
+		points: result,
+		distance: result.length > 0 ? result[result.length - 1].km : 0
+	};
 }
 
 export function encodeRouteMode(decodedMode: DecodedRouteMode): string {

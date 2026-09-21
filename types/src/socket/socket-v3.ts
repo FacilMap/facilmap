@@ -8,7 +8,7 @@ import { type View, viewValidator } from "../view.js";
 import type { MultipleEvents } from "../events.js";
 import type { SearchResult } from "../searchResult.js";
 import * as z from "zod";
-import { findMapsQueryValidator, getMapQueryValidator, type FindMapsResult, type PagedResults, type FindOnMapResult, lineTemplateRequestValidator, lineExportRequestValidator, findQueryValidator, findOnMapQueryValidator, routeExportRequestValidator, type LinePointsEvent, type RoutePointsEvent, nullOrUndefinedValidator, type LineTemplate, setLanguageRequestValidator } from "./socket-common.js";
+import { findMapsQueryValidator, getMapQueryValidator, type FindMapsResult, type PagedResults, type FindOnMapResult, lineTemplateRequestValidator, lineExportRequestValidator, findQueryValidator, findOnMapQueryValidator, routeExportRequestValidator, type LinePointsEvent, type RoutePointsEvent, nullOrUndefinedValidator, type LineTemplate, setLanguageRequestValidator, splitLineRequestValidator } from "./socket-common.js";
 import type { HistoryEntry } from "../historyEntry.js";
 
 export const requestDataValidatorsV3 = {
@@ -28,6 +28,7 @@ export const requestDataValidatorsV3 = {
 	getLineTemplate: lineTemplateRequestValidator,
 	addLine: lineValidator.create,
 	editLine: lineValidator.update.extend({ id: idValidator }),
+	splitLine: splitLineRequestValidator,
 	deleteLine: objectWithIdValidator,
 	exportLine: lineExportRequestValidator,
 	find: findQueryValidator,
@@ -65,6 +66,7 @@ export interface ResponseDataMapV3 {
 	getLineTemplate: LineTemplate;
 	addLine: Line;
 	editLine: Line;
+	splitLine: Line[];
 	deleteLine: Line;
 	exportLine: string;
 	find: string | SearchResult[];
