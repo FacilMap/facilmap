@@ -323,7 +323,6 @@ export default class DatabaseLines {
 	async* getLinePointsForMap(mapId: MapId, bboxWithZoom: BboxWithZoom & BboxWithExcept): AsyncIterable<{ id: ID; trackPoints: TrackPoint[] }> {
 		const lines = await this.LineModel.findAll({ attributes: ["id"], where: { mapId } });
 		const chunks = chunk(lines.map((line) => line.id), 50000);
-		console.log(chunks);
 		for (const lineIds of chunks) {
 			const linePoints = await this.LinePointModel.findAll({
 				where: {
@@ -335,7 +334,7 @@ export default class DatabaseLines {
 						this._db.helpers.makeBboxCondition(bboxWithZoom)
 					]
 				},
-				attributes: ["pos", "lat", "lon", "ele", "zoom", "idx", "lineId"]
+				attributes: ["pos", "lat", "lon", "ele", "km", "zoom", "idx", "lineId"]
 			});
 
 			for (const [key, val] of Object.entries(groupBy(linePoints, "lineId"))) {
@@ -349,7 +348,7 @@ export default class DatabaseLines {
 
 	async* getAllLinePoints(lineId: ID): AsyncIterable<TrackPoint> {
 		const points = await this.LineModel.build({ id: lineId } satisfies Partial<CreationAttributes<LineModel>> as any).getLinePoints({
-			attributes: [ "pos", "lat", "lon", "ele", "zoom", "idx" ],
+			attributes: [ "pos", "lat", "lon", "ele", "km", "zoom", "idx" ],
 			order: [["idx", "ASC"]]
 		});
 		for (const point of points) {

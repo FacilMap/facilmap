@@ -4227,7 +4227,7 @@ __metadata:
     leaflet-freie-tonne: ^2.1.2
     leaflet-highlightable-layers: ^4.0.4
     leaflet.markercluster: ^1.5.3
-    locate-on-line: ^1.1.0
+    locate-on-line: ^2.0.0
     lodash-es: ^4.17.21
     node-fetch: ^3.3.2
     osm-api: ^2.4.0
@@ -4296,7 +4296,7 @@ __metadata:
     find-cache-dir: ^5.0.0
     i18next: ^24.2.2
     i18next-http-middleware: ^3.7.1
-    locate-on-line: ^1.1.0
+    locate-on-line: ^2.0.0
     lodash-es: ^4.17.21
     maxmind: ^4.3.24
     md5-file: ^5.0.0
@@ -5881,10 +5881,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"locate-on-line@npm:^1.1.0":
-  version: 1.1.0
-  resolution: "locate-on-line@npm:1.1.0"
-  checksum: ff9c269ccf40487cfb72f9c169280f72f28efc8b53851f38b68dae8a826aaf4d65fab0bc7716d8e4ddf34face926983bab668bed8069965e521cb57da5bbe16e
+"locate-on-line@npm:^2.0.0":
+  version: 2.0.0
+  resolution: "locate-on-line@npm:2.0.0"
+  checksum: 4aac821f5f4a1f87b65a65867a055f472138a71085d4d9b8f08099b9584af6b13b8d14d0e03db4377b5d6a3e106169283ca4ec9f9f138f694b2126df4184c31e
   languageName: node
   linkType: hard
 

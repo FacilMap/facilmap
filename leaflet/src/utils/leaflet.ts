@@ -31,8 +31,8 @@ export function fmToLeafletBbox(bbox: Bbox): LatLngBounds {
  * @param bounds {L.LatLngBounds}
  * @return {Array<Array<L.LatLng>>}
  */
-export function disconnectSegmentsOutsideViewport(trackPoints: LatLng[], bounds: LatLngBounds): LatLng[][] {
-	const ret: LatLng[][] = [[]];
+export function disconnectSegmentsOutsideViewport<T extends LatLng>(trackPoints: T[], bounds: LatLngBounds): T[][] {
+	const ret: T[][] = [[]];
 	let lastOneIn = true;
 	let currentIdx = 0;
 
@@ -73,7 +73,7 @@ export function pointsEqual(latLng1: LatLng, latLng2: LatLng, map: Map, zoom?: n
 }
 
 export interface BasicTrackPoints {
-	[idx: number]: Point & { ele?: number | null };
+	[idx: number]: Point & { ele?: number | null; km?: number | null };
 	length: number;
 }
 

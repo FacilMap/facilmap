@@ -21,7 +21,7 @@ export interface MetaProperties {
 	historyPadMigrationCompleted: "1";
 	hasExtraInfoStats: "1";
 	formulaObjectMigrationCompleted: "1";
-
+	hasTrackPointsKm: "1";
 }
 
 export default class DatabaseMeta {
