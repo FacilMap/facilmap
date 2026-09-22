@@ -212,6 +212,7 @@
     },
     "lines-layer": {
         "detail": "{{name}}: {{value}}",
+        "distance": "Distance",
         "elevation": "Elevation",
         "steepness": "Steepness"
     }

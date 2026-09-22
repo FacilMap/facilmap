@@ -1,14 +1,13 @@
 import type { ID, Point } from "facilmap-types";
 import { Icon, Marker as LeafletMarker, setOptions, type LeafletMouseEvent } from "leaflet";
-import { LineString } from "locate-on-line";
+import { type PointLocation } from "locate-on-line";
 import type LinesLayer from "./lines-layer";
-import { tooltipOptions } from "../utils/leaflet";
 
 export default class LinesLayerClick {
 	protected expectingClick: {
 		lineId: ID;
-		lineString?: LineString<L.LatLng[][]> & { latlngs: L.LatLng[][] };
 		touchMode: boolean;
+		position?: PointLocation<L.LatLng[][]>;
 		dragMarker?: L.Marker;
 		cancel: () => void;
 		onUpdate?: (point: Point | undefined) => void;
@@ -139,12 +138,12 @@ export default class LinesLayerClick {
 
 	_handleTrackPointsChange(): void {
 		if (this.expectingClick) {
-			const latlngs = this.linesLayer["linesById"][this.expectingClick.lineId]?.getLatLngs() as L.LatLng[][] | undefined;
-			this.expectingClick.lineString = latlngs && LineString.hasTrackPoints(latlngs) ? Object.assign(new LineString(latlngs), { latlngs }) : undefined;
+			const lineId = this.expectingClick.lineId;
+			const layer = this.linesLayer["linesById"][lineId];
 
 			// Track points appearing for the first time: Add drag marker
-			if (this.expectingClick.lineString && !this.expectingClick.dragMarker) {
-				this.expectingClick.dragMarker = new LeafletMarker([0, 0], {
+			if (layer?._fmLineString && !this.expectingClick.dragMarker) {
+				const dragMarker = this.expectingClick.dragMarker = new LeafletMarker([0, 0], {
 					interactive: this.expectingClick.touchMode,
 					draggable: this.expectingClick.touchMode,
 					pane: "fm-raised-marker",
@@ -154,12 +153,21 @@ export default class LinesLayerClick {
 				});
 
 				if (this.expectingClick.touchMode) {
-					this.expectingClick.dragMarker.bindTooltip("", { ...tooltipOptions, permanent: true });
-				}
-
-				if (this.expectingClick.touchMode) {
 					this._setMarkerPos(this.linesLayer["_map"].getCenter());
-					this.expectingClick.dragMarker.addTo(this.linesLayer["_map"]);
+					dragMarker.addTo(this.linesLayer["_map"]);
+
+					Object.defineProperty(dragMarker, "_fmLineString", {
+						get: () => this.linesLayer["linesById"][lineId]?._fmLineString,
+						enumerable: true,
+						configurable: true
+					});
+
+					this.linesLayer["tooltip"].registerLineTooltip(dragMarker, {
+						getLine: () => this.linesLayer["client"].lines[lineId],
+						getOptions: () => ({ name: false, details: true }),
+						getHoverPos: () => this.expectingClick?.position,
+						fixed: true
+					});
 				}
 			}
 		}
@@ -167,14 +175,16 @@ export default class LinesLayerClick {
 
 	_setMarkerPos(pos: L.LatLng): void {
 		if (this.expectingClick) {
-			const closest = this.expectingClick.lineString?.locate(pos);
-			if (closest && this.expectingClick.dragMarker) {
+			const layer = this.linesLayer["linesById"][this.expectingClick.lineId];
+			const lineString = layer?._fmLineString;
+			const closest = this.expectingClick.position = lineString?.locate(pos);
+			if (lineString && closest && this.expectingClick.dragMarker) {
 				let idxBefore = Math.floor(closest.idx[1]);
-				if (idxBefore >= this.expectingClick.lineString!.latlngs[closest.idx[0]].length - 1) {
+				if (idxBefore >= lineString._fmTrackPoints[closest.idx[0]].length - 1) {
 					idxBefore--;
 				}
-				const pointBefore = this.expectingClick.lineString!.latlngs[closest.idx[0]][idxBefore];
-				const pointAfter = this.expectingClick.lineString!.latlngs[closest.idx[0]][idxBefore + 1];
+				const pointBefore = lineString._fmTrackPoints[closest.idx[0]][idxBefore];
+				const pointAfter = lineString._fmTrackPoints[closest.idx[0]][idxBefore + 1];
 
 				const icon = this._getLineClickIcon(
 					this.expectingClick.touchMode,
@@ -188,16 +198,13 @@ export default class LinesLayerClick {
 					(this.expectingClick.dragMarker._icon as HTMLImageElement).src = icon.options.iconUrl;
 				}
 
-				this.expectingClick.dragMarker.setLatLng(closest.closest).addTo(this.linesLayer["_map"]);
+				this.expectingClick.dragMarker.setLatLng(closest.latlng).addTo(this.linesLayer["_map"]);
 
 				if (this.expectingClick.touchMode) {
-					const line = this.linesLayer["client"].lines[this.expectingClick.lineId];
-					if (line) {
-						this.expectingClick.dragMarker.setTooltipContent(this.linesLayer["_getLineTooltipHtml"](line, pos, { name: false, details: true }));
-					}
+					this.linesLayer["tooltip"].updateLineTooltip(this.expectingClick.dragMarker);
 				}
 
-				this.expectingClick.onUpdate?.({ lat: closest.closest.lat, lon: closest.closest.lng });
+				this.expectingClick.onUpdate?.({ lat: closest.latlng.lat, lon: closest.latlng.lng });
 			} else {
 				this.expectingClick.onUpdate?.(undefined);
 			}

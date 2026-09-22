@@ -81,7 +81,7 @@ export default class DatabaseRoutes {
 
 		return (await this.RoutePointModel.findAll({
 			where: cond,
-			attributes: [ "pos", "lat", "lon", "idx", "ele"],
+			attributes: [ "pos", "lat", "lon", "idx", "ele", "km"],
 			order: [[ "idx", "ASC" ]]
 		})).map((point) => omit(point.toJSON(), ["pos"]) as TrackPoint);
 	}
@@ -166,6 +166,7 @@ export default class DatabaseRoutes {
 					lat: linePoint.lat,
 					lon: linePoint.lon,
 					ele: linePoint.ele,
+					km: linePoint.km,
 					zoom: linePoint.zoom,
 					idx: linePoint.idx
 				};

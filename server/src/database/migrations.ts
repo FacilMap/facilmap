@@ -4,7 +4,7 @@ import { cloneDeep, isEqual } from "lodash-es";
 import Database from "./database.js";
 import type { MapModel } from "./map.js";
 import type { LinePointModel } from "./line.js";
-import { createExtraInfoStats, getElevationForPoint } from "facilmap-utils";
+import { calculateDistance, createExtraInfoStats, getElevationForPoint } from "facilmap-utils";
 import type { MarkerModel } from "./marker.js";
 import { ReadableStream } from "stream/web";
 import type { MapId } from "facilmap-types";
@@ -39,6 +39,7 @@ export default class DatabaseMigrations {
 		await this._historyPadMigration();
 		await this._extraInfoStatsMigration();
 		await this._formulaObjectMigration();
+		await this._trackPointsKmMigration();
 
 		(async () => {
 			await this._elevationMigration();
@@ -394,7 +395,7 @@ export default class DatabaseMigrations {
 			['Marker', 'pos'], ['LinePoint', 'pos'], ['RoutePoint', 'pos']
 		];
 
-		for (const table of [ 'Map', 'Marker', 'Type', 'View', 'Line', 'LinePoint' ]) {
+		for (const table of [ 'Map', 'Marker', 'Type', 'View', 'Line', 'LinePoint', 'RoutePoint' ]) {
 			const model = this._db._conn.model(table);
 			const attributes = await queryInterface.describeTable(model.getTableName());
 			const rawAttributes = model.getAttributes();
@@ -842,6 +843,28 @@ export default class DatabaseMigrations {
 		}
 
 		await this._db.meta.setMeta("formulaObjectMigrationCompleted", "1");
+	}
+
+
+	/**
+	 * Calculate the km field for all line track points.
+	 */
+	async _trackPointsKmMigration(): Promise<void> {
+		if (await this._db.meta.getMeta("hasTrackPointsKm") === "1") {
+			return;
+		}
+
+		console.log("DB migration: Calculate track point km");
+
+		const lines = await this._db.lines.LineModel.findAll({ where: { extraInfo: { [Op.ne]: null }, extraInfoStats: null } });
+
+		for (const line of lines) {
+			const trackPoints = await asyncIteratorToArray(this._db.lines.getAllLinePoints(line.id));
+			if (trackPoints.some((t) => t.km == null)) {
+				const dist = calculateDistance(trackPoints);
+				await this._db.lines._setLinePoints(line.mapId, line.id, dist.points, true);
+			}
+		}
 	}
 
 }

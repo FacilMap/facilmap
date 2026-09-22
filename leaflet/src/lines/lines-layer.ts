@@ -1,14 +1,14 @@
 import type { ID, Line, LinePointsEvent, ObjectWithId, Stroke, Type, Width } from "facilmap-types";
 import { FeatureGroup, latLng, type LayerOptions, type Map as LeafletMap, type LatLngBounds } from "leaflet";
 import { HighlightablePolyline } from "leaflet-highlightable-layers";
-import { type BasicTrackPoints, disconnectSegmentsOutsideViewport, tooltipOptions, trackPointsToLatLngArray, fmToLeafletBbox, type LatLngWithIdx } from "../utils/leaflet";
-import { formatElevation, formatSteepness, getExtraInfoAfterIdx, getSteepnessAtIdx, getTranslatedExtraInfoTypes, getTranslatedExtraInfoValues, numberKeys, quoteHtml } from "facilmap-utils";
+import { type BasicTrackPoints, disconnectSegmentsOutsideViewport, trackPointsToLatLngArray, fmToLeafletBbox, type LatLngWithIdx } from "../utils/leaflet";
+import { numberKeys } from "facilmap-utils";
 import type Client from "facilmap-client";
 import { getPolylineStyles } from "../utils/styles";
-import { LineString } from "locate-on-line";
 import LinesLayerClick from "./lines-layer-click";
 import LinesLayerDraw from "./lines-layer-draw";
-import { getI18n } from "../utils/i18n";
+import LinesLayerTooltip from "./lines-layer-tooltip";
+import { LineString } from "locate-on-line";
 
 export function getDashArrayForStroke(stroke: Stroke, width: Width): string | undefined {
 	if (stroke === "dashed") {
@@ -25,22 +25,21 @@ export default class LinesLayer extends FeatureGroup {
 
 	declare options: LayerOptions;
 	protected client: Client;
-	protected linesById: Record<string, InstanceType<typeof HighlightablePolyline> & {
-		_fmTrackPoints?: LatLngWithIdx[];
-		_fmLastHoverLatLng?: L.LatLng;
-	}> = {};
+	protected linesById: Record<string, InstanceType<typeof HighlightablePolyline>> = {};
 	protected highlightedLinesIds = new Set<ID>();
 	protected hiddenLinesIds = new Set<ID>();
 	protected lastMapBounds?: LatLngBounds;
 	protected filterResults = new Map<ID, boolean>();
 	protected click: LinesLayerClick;
 	protected draw: LinesLayerDraw;
+	protected tooltip: LinesLayerTooltip;
 
 	constructor(client: Client, options?: LinesLayerOptions) {
 		super([], options);
 		this.client = client;
 		this.click = new LinesLayerClick(this);
 		this.draw = new LinesLayerDraw(this);
+		this.tooltip = new LinesLayerTooltip();
 	}
 
 	onAdd(map: LeafletMap): this {
@@ -204,85 +203,6 @@ export default class LinesLayer extends FeatureGroup {
 		return this.click.expectLineClick(...args);
 	}
 
-	protected _getLineTooltipHtml(line: Line & { trackPoints?: BasicTrackPoints }, pos: L.LatLng | undefined, options: { name: boolean; details: boolean }): string {
-		const layer = this.linesById[line.id];
-		if (!layer) {
-			return "";
-		}
-
-		const i18n = getI18n();
-		const details: Array<{ name: string; value: string }> = [];
-
-		if (pos && options.details && line.trackPoints && layer._fmTrackPoints) {
-			const closest = new LineString(layer._fmTrackPoints).locate(pos);
-			const roundedIdx = Math.round(closest.idx);
-			const closestIdx = layer._fmTrackPoints[roundedIdx]?.fmIdx;
-			if (closestIdx != null) {
-
-				const idxBefore = Math.floor(closest.idx);
-				const idxAfter = Math.ceil(closest.idx);
-				const pointBefore = line.trackPoints[layer._fmTrackPoints[idxBefore].fmIdx];
-				const pointAfter = line.trackPoints[layer._fmTrackPoints[idxAfter].fmIdx];
-				if (pointBefore?.ele != null && pointAfter?.ele != null) {
-					const ele = idxBefore === idxAfter ? pointBefore.ele : ((idxAfter - closest.idx) * pointBefore.ele + (closest.idx - idxBefore) * pointAfter.ele);
-					details.push({
-						name: i18n.t("lines-layer.elevation"),
-						value: formatElevation(ele)
-					});
-				}
-
-				const idx = layer._fmTrackPoints[idxBefore].fmIdx + closest.idx - Math.floor(closest.idx);
-				const steepness = getSteepnessAtIdx(line.trackPoints, idx);
-				if (steepness != null) {
-					details.push({
-						name: i18n.t("lines-layer.steepness"),
-						value: formatSteepness(steepness)
-					});
-				}
-
-				if (line.extraInfo) {
-					const extraInfo = getExtraInfoAfterIdx(line.extraInfo, closestIdx - (roundedIdx > closest.idx || closest.idx === layer._fmTrackPoints.length - 1 ? 1 : 0));
-					const types = getTranslatedExtraInfoTypes();
-					const values = getTranslatedExtraInfoValues();
-					for (const [type, value] of Object.entries(extraInfo)) {
-						if (type !== "steepness") {
-							details.push({
-								name: types[type],
-								value: values[type][value].text
-							});
-						}
-					}
-				}
-			}
-		}
-
-		const itemsHtml = details.map(({ name, value }) => i18n.t("lines-layer.detail", { name, value }));
-
-		if (options.name && this.client.lines[line.id].name) {
-			const nameHtml = quoteHtml(this.client.lines[line.id].name);
-			if (itemsHtml.length > 0) {
-				itemsHtml.unshift(`<strong>${nameHtml}</strong>`);
-			} else {
-				itemsHtml.unshift(nameHtml);
-			}
-		}
-
-		return itemsHtml.join("<br/>");
-	}
-
-	protected _updateLineTooltip(line: Line & { trackPoints?: BasicTrackPoints }): void {
-		// line.id == null: We are currently drawing the line, don't render a tooltip
-
-		const tooltipHtml = line.id != null && this._getLineTooltipHtml(line, this.linesById[line.id]._fmLastHoverLatLng, { name: true, details: this.highlightedLinesIds.has(line.id) });
-		if (!tooltipHtml) {
-			this.linesById[line.id].unbindTooltip();
-		} else if (!this.linesById[line.id]._tooltip) {
-			this.linesById[line.id].bindTooltip(tooltipHtml, { ...tooltipOptions, sticky: true, offset: [ 20, 0 ] });
-		} else if (this.linesById[line.id]._tooltip!.getContent() !== tooltipHtml) {
-			this.linesById[line.id].setTooltipContent(tooltipHtml);
-		}
-	}
-
 	protected _addLine(line: Line & { trackPoints?: BasicTrackPoints }): void {
 		const trackPoints: LatLngWithIdx[] = (
 			line.mode ? trackPointsToLatLngArray(line.trackPoints) :
@@ -301,19 +221,14 @@ export default class LinesLayer extends FeatureGroup {
 		if(!this.linesById[line.id]) {
 			this.linesById[line.id] = new HighlightablePolyline([ ]);
 
-			if(line.id != null) {
-				this.linesById[line.id]
-					.on("mousemove", (e) => {
-						this.linesById[line.id]._fmLastHoverLatLng = e.latlng;
-						this._updateLineTooltip(line);
-					})
-					.on("mouseout", (e) => {
-						this.linesById[line.id]._fmLastHoverLatLng = undefined;
-					});
+			if(line.id > 0) {
+				this.tooltip.registerLineTooltip(this.linesById[line.id], {
+					getLine: () => this.client.lines[line.id],
+					getOptions: () => ({ name: true, details: this.highlightedLinesIds.has(line.id) }),
+					offset: [20, 0]
+				});
 			}
 		}
-
-		this.linesById[line.id]._fmTrackPoints = trackPoints;
 
 		const highlight = line.id == null || this.highlightedLinesIds.has(line.id);
 
@@ -327,11 +242,12 @@ export default class LinesLayer extends FeatureGroup {
 		}
 
 		this.linesById[line.id].setLatLngs(splitLatLngs);
+		this.linesById[line.id]._fmLineString = Object.assign(new LineString(splitLatLngs), { _fmTrackPoints: splitLatLngs });
 
 		if (!this.hasLayer(this.linesById[line.id]))
 			this.addLayer(this.linesById[line.id]);
 
-		this._updateLineTooltip(line);
+		this.tooltip.updateLineTooltip(this.linesById[line.id]);
 
 		this.click.handleLineUpdate(line.id);
 	}
