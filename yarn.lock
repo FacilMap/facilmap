@@ -4146,7 +4146,7 @@ __metadata:
     leaflet: ^1.9.4
     leaflet-doubletapdrag: ^0.1.2
     leaflet-doubletapdragzoom: ^0.3.2
-    leaflet-draggable-lines: ^3.2.1
+    leaflet-draggable-lines: ^3.4.0
     leaflet-freie-tonne: ^2.1.2
     leaflet-mouse-position: ^1.2.0
     leaflet.heightgraph: ^1.4.0
@@ -4223,9 +4223,9 @@ __metadata:
     filtrex: ^2.2.3
     happy-dom: ^17.1.8
     leaflet-auto-graticule: ^2.0.0
-    leaflet-draggable-lines: ^3.2.1
+    leaflet-draggable-lines: ^3.4.0
     leaflet-freie-tonne: ^2.1.2
-    leaflet-highlightable-layers: ^4.0.4
+    leaflet-highlightable-layers: ^4.1.0
     leaflet.markercluster: ^1.5.3
     locate-on-line: ^2.0.0
     lodash-es: ^4.17.21
@@ -5779,12 +5779,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"leaflet-draggable-lines@npm:^3.2.1":
-  version: 3.2.1
-  resolution: "leaflet-draggable-lines@npm:3.2.1"
+"leaflet-draggable-lines@npm:^3.4.0":
+  version: 3.4.0
+  resolution: "leaflet-draggable-lines@npm:3.4.0"
+  dependencies:
+    typescript: 5.9.3
   peerDependencies:
     leaflet: x
-  checksum: b298a7bf459e780a4f5a42ea6a55b5ab8b42f6b426b0a7918a4a5f0c680bb374272d028cfe4ea8b81688fb6069930000aecdc2681054129b326b56a054f686a2
+  checksum: f2a57da6a93c3547be3100f306f289e4d7081fa964fbbb60382e07adebc00e312a9e24fa5a2b2349be523960ef6543df1aa367df62f134b6a110ae427723badc
   languageName: node
   linkType: hard
 
@@ -5797,12 +5799,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"leaflet-highlightable-layers@npm:^4.0.4":
-  version: 4.0.4
-  resolution: "leaflet-highlightable-layers@npm:4.0.4"
+"leaflet-highlightable-layers@npm:^4.1.0":
+  version: 4.1.0
+  resolution: "leaflet-highlightable-layers@npm:4.1.0"
   peerDependencies:
     leaflet: x
-  checksum: 87ece22edaa15a1d318cf2472826d30d8515e073618cf6af9b1204a7bb223cfa06516b08201b742f5f562f921a3cc47ae1530c1485608f04a4e6976035df09a8
+  checksum: 601efffbea010b2ccc9c5ea735b9ce10f8261d3fab15105be92e835d2eed2792ac0b565831e919af4aaf2c7f13425d8c422d89ec70ce100a50b38c778d2d651c
   languageName: node
   linkType: hard
 
@@ -8642,6 +8644,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"typescript@npm:5.9.3":
+  version: 5.9.3
+  resolution: "typescript@npm:5.9.3"
+  bin:
+    tsc: bin/tsc
+    tsserver: bin/tsserver
+  checksum: 0d0ffb84f2cd072c3e164c79a2e5a1a1f4f168e84cb2882ff8967b92afe1def6c2a91f6838fb58b168428f9458c57a2ba06a6737711fdd87a256bbe83e9a217f
+  languageName: node
+  linkType: hard
+
 "typescript@npm:^5.7.3":
   version: 5.7.3
   resolution: "typescript@npm:5.7.3"
@@ -8659,6 +8671,16 @@ __metadata:
     tsc: bin/tsc
     tsserver: bin/tsserver
   checksum: c1b669146bca5529873aae60870e243fa8140c85f57ca32c42f898f586d73ce4a6b4f6bb02ae312729e214d7f5859a0c70da3e527a116fdf5ad00c9fc733ecc6
+  languageName: node
+  linkType: hard
+
+"typescript@patch:typescript@5.9.3#~builtin<compat/typescript>":
+  version: 5.9.3
+  resolution: "typescript@patch:typescript@npm%3A5.9.3#~builtin<compat/typescript>::version=5.9.3&hash=f3b441"
+  bin:
+    tsc: bin/tsc
+    tsserver: bin/tsserver
+  checksum: 8bb8d86819ac86a498eada254cad7fb69c5f74778506c700c2a712daeaff21d3a6f51fd0d534fe16903cb010d1b74f89437a3d02d4d0ff5ca2ba9a4660de8497
   languageName: node
   linkType: hard
 

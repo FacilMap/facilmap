@@ -6,6 +6,8 @@ import { trackPointsToLatLngArray } from "../utils/leaflet";
 import "leaflet-draggable-lines";
 import type { RouteClear, RoutePointsEvent } from "facilmap-types";
 import { getPolylineStyles } from "../utils/styles";
+import { type LineStringWithTrackPoints } from "../lines/lines-layer-tooltip";
+import { LineString } from "locate-on-line";
 
 interface RouteLayerOptions extends HighlightableLayerOptions<PolylineOptions> {
 	highlight?: boolean;
@@ -16,6 +18,7 @@ export default class RouteLayer extends HighlightablePolyline {
 	declare realOptions: RouteLayerOptions;
 	client: Client;
 	routeId: string | undefined;
+	_fmLineString?: LineStringWithTrackPoints;
 
 	constructor(client: Client, routeId?: string, options?: RouteLayerOptions) {
 		super([], {
@@ -78,9 +81,11 @@ export default class RouteLayer extends HighlightablePolyline {
 
 			const trackPoints = trackPointsToLatLngArray(route.trackPoints);
 			this.setLatLngs(trackPoints);
+			this._fmLineString = Object.assign(new LineString([trackPoints]), { _fmTrackPoints: [trackPoints] });
 		} else {
 			this.setLatLngs([]);
 			this.setDraggableLinesRoutePoints([]);
+			delete this._fmLineString;
 		}
 	}
 

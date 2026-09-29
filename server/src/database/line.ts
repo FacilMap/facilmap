@@ -275,7 +275,7 @@ export default class DatabaseLines {
 		}
 	}
 
-	async _setLinePoints(mapId: MapId, lineId: ID, trackPoints: Point[], _noEvent?: boolean): Promise<void> {
+	async _setLinePoints(mapId: MapId, lineId: ID, trackPoints: TrackPoint[], _noEvent?: boolean): Promise<void> {
 		await this.LinePointModel.destroy({ where: { lineId: lineId } });
 
 		const create = [ ];
@@ -294,7 +294,7 @@ export default class DatabaseLines {
 		const trackPoints = await asyncIteratorToArray(this.getAllLinePoints(line.id));
 		const [closest, ...routePointsClosest] = new LineString(trackPoints.map((t) => ({ lat: t.lat, lng: t.lon })))
 			.locate([point, ...line.routePoints].map((p) => ({ lat: p.lat, lng: p.lon })))
-			.map((p) => ({ idx: p.idx, closest: { lat: p.closest.lat, lon: p.closest.lng } }));
+			.map((p) => ({ idx: p.idx, closest: { lat: p.latlng.lat, lon: p.latlng.lng } }));
 
 		const routePoints1 = line.routePoints.filter((p, i) => routePointsClosest[i].idx <= closest.idx);
 		const routePoints2 = line.routePoints.filter((p, i) => routePointsClosest[i].idx >= closest.idx);
