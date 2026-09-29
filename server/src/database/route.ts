@@ -213,7 +213,7 @@ export default class DatabaseRoutes {
 	async getRoutePointsByIdx(routeId: string, indexes: number[]): Promise<TrackPoint[]> {
 		const data = await this.RoutePointModel.findAll({
 			where: { routeId, idx: indexes },
-			attributes: [ "pos", "lat", "lon", "idx", "ele" ],
+			attributes: [ "pos", "lat", "lon", "idx", "ele", "km", "zoom" ],
 			order: [[ "idx", "ASC" ]]
 		});
 		return data.map((d) => omit(d.toJSON(), ["pos"]) as TrackPoint);
@@ -222,7 +222,7 @@ export default class DatabaseRoutes {
 	async* getAllRoutePoints(routeId: string): AsyncIterable<TrackPoint> {
 		const points = await this.RoutePointModel.findAll({
 			where: { routeId },
-			attributes: [ "pos", "lat", "lon", "idx", "ele", "zoom"]
+			attributes: [ "pos", "lat", "lon", "idx", "ele", "km", "zoom"]
 		});
 		for (const point of points) {
 			yield omit(point.toJSON(), ["pos"]) as TrackPoint;
