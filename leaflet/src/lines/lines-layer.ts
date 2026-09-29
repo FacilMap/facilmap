@@ -7,7 +7,7 @@ import type Client from "facilmap-client";
 import { getPolylineStyles } from "../utils/styles";
 import LinesLayerClick from "./lines-layer-click";
 import LinesLayerDraw from "./lines-layer-draw";
-import LinesLayerTooltip from "./lines-layer-tooltip";
+import LinesLayerTooltip, { type LineStringWithTrackPoints } from "./lines-layer-tooltip";
 import { LineString } from "locate-on-line";
 
 export function getDashArrayForStroke(stroke: Stroke, width: Width): string | undefined {
@@ -25,7 +25,9 @@ export default class LinesLayer extends FeatureGroup {
 
 	declare options: LayerOptions;
 	protected client: Client;
-	protected linesById: Record<string, InstanceType<typeof HighlightablePolyline>> = {};
+	protected linesById: Record<string, InstanceType<typeof HighlightablePolyline> & {
+		_fmLineString?: LineStringWithTrackPoints;
+	}> = {};
 	protected highlightedLinesIds = new Set<ID>();
 	protected hiddenLinesIds = new Set<ID>();
 	protected lastMapBounds?: LatLngBounds;
@@ -224,6 +226,7 @@ export default class LinesLayer extends FeatureGroup {
 			if(line.id > 0) {
 				this.tooltip.registerLineTooltip(this.linesById[line.id], {
 					getLine: () => this.client.lines[line.id],
+					getLineString: () => this.linesById[line.id]._fmLineString,
 					getOptions: () => ({ name: true, details: this.highlightedLinesIds.has(line.id) }),
 					offset: [20, 0]
 				});

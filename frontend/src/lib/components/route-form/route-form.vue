@@ -25,6 +25,7 @@
 	import { useI18n } from "../../utils/i18n";
 	import { mapRef } from "../../utils/vue";
 	import { useMapHandler, useMapLayer } from "../../utils/leaflet";
+	import LinesLayerTooltip from "facilmap-leaflet/src/lines/lines-layer-tooltip.js";
 
 	type SearchSuggestion = SearchResult;
 	type MapSuggestion = FindOnMapResult & { kind: "marker" };
@@ -138,6 +139,8 @@
 		return layer;
 	});
 
+	const tooltip = new LinesLayerTooltip();
+
 	const draggable = computed(() => {
 		const draggable = markRaw(new DraggableLines(mapContext.value.components.map, {
 			enableForLayer: false,
@@ -156,51 +159,62 @@
 		}));
 
 		draggable.on({
-			insert: (e: any) => {
-				destinations.value.splice(e.idx, 0, makeCoordDestination(e.latlng));
+			insert: (e) => {
+				destinations.value.splice(e.idx as number, 0, makeCoordDestination(e.latlng));
 				void reroute(false);
 			},
-			dragstart: (e: any) => {
-				hoverDestinationIdx.value = e.idx;
+			dragstart: (e) => {
+				hoverDestinationIdx.value = e.idx as number;
 				hoverInsertIdx.value = undefined;
 				if (e.isNew)
-					destinations.value.splice(e.idx, 0, makeCoordDestination(e.to));
+					destinations.value.splice(e.idx as number, 0, makeCoordDestination(e.to));
 			},
-			drag: throttle((e: any) => {
+			drag: throttle((e) => {
 				destinations.value[e.idx] = makeCoordDestination(e.to);
 			}, 300),
-			dragend: (e: any) => {
-				destinations.value[e.idx] = makeCoordDestination(e.to);
+			dragend: (e) => {
+				destinations.value[e.idx as number] = makeCoordDestination(e.to);
 				void reroute(false);
 			},
-			remove: (e: any) => {
+			remove: (e) => {
 				hoverDestinationIdx.value = undefined;
-				destinations.value.splice(e.idx, 1);
+				destinations.value.splice(e.idx as number, 1);
 				void reroute(false);
 			},
-			dragmouseover: (e: any) => {
-				destinationMouseOver(e.idx);
+			dragmouseover: (e) => {
+				destinationMouseOver(e.idx as number);
 			},
-			dragmouseout: (e: any) => {
-				destinationMouseOut(e.idx);
+			dragmouseout: (e) => {
+				destinationMouseOut(e.idx as number);
 			},
-			plusmouseover: (e: any) => {
-				hoverInsertIdx.value = e.idx;
+			plusmouseover: (e) => {
+				hoverInsertIdx.value = e.idx as number;
 			},
-			plusmouseout: (e: any) => {
+			plusmouseout: (e) => {
 				hoverInsertIdx.value = undefined;
 			},
-			tempmouseover: (e: any) => {
-				hoverInsertIdx.value = e.idx;
+			tempmouseover: (e) => {
+				hoverInsertIdx.value = e.idx as number;
+
+				tooltip.registerLineTooltip(e.marker, {
+					getLine: () => routeObj.value && { ...routeObj.value, extraInfo: routeObj.value.extraInfo ?? null, name: "" },
+					getLineString: () => routeLayer.value._fmLineString,
+					getOptions: () => ({ name: false, details: true }),
+					getHoverPos: () => routeLayer.value._fmLineString?.locate(e.marker.getLatLng()),
+					fixed: true
+				});
 			},
-			tempmousemove: (e: any) => {
-				if (e.idx != hoverInsertIdx.value)
-					hoverInsertIdx.value = e.idx;
+			tempmousemove: (e) => {
+				if (e.idx != hoverInsertIdx.value) {
+					hoverInsertIdx.value = e.idx as number;
+				}
+
+				tooltip.updateLineTooltip(e.marker);
 			},
-			tempmouseout: (e: any) => {
+			tempmouseout: (e) => {
 				hoverInsertIdx.value = undefined;
 			}
-		} as any);
+		});
 
 		return draggable;
 	});

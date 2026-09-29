@@ -7,9 +7,9 @@ import { getI18n } from "../utils/i18n";
 
 declare module "leaflet" {
 	interface Layer {
-		_fmLineString?: LineString<LatLng[][]> & { _fmTrackPoints: LatLngWithIdx[][] };
 		_fmLineTooltip?: {
-			getLine: () => SimpleLine;
+			getLine: () => SimpleLine | undefined;
+			getLineString: () => LineStringWithTrackPoints | undefined;
 			getOptions: () => LineTooltipOptions;
 			getHoverPos: () => PointLocation<LatLng[][]> | undefined;
 			fixed?: boolean;
@@ -18,18 +18,19 @@ declare module "leaflet" {
 	}
 }
 
-type SimpleLine = Pick<Line, "id" | "distance" | "name" | "extraInfo"> & { trackPoints?: BasicTrackPoints };
+type SimpleLine = Pick<Line, "distance" | "name" | "extraInfo"> & { trackPoints?: BasicTrackPoints };
 type SimpleLayer = Layer;
 export type LineTooltipOptions = { name: boolean; details: boolean };
+export type LineStringWithTrackPoints = LineString<LatLng[][]> & { _fmTrackPoints: LatLngWithIdx[][] };
 
 export default class LinesLayerTooltip {
 
-	getLineTooltipHtml(layer: SimpleLayer, line: SimpleLine, location: PointLocation<LatLng[][]> | undefined, options: LineTooltipOptions): string {
+	getLineTooltipHtml(line: SimpleLine, lineString: LineStringWithTrackPoints, location: PointLocation<LatLng[][]> | undefined, options: LineTooltipOptions): string {
 		const i18n = getI18n();
 		const details: Array<{ name?: string; value: string }> = [];
 
-		if (location && options.details && line.trackPoints && layer._fmLineString) {
-			const trackPointSection = layer._fmLineString._fmTrackPoints[location.idx[0]];
+		if (location && options.details && line.trackPoints) {
+			const trackPointSection = lineString._fmTrackPoints[location.idx[0]];
 			const i1 = location.idx[1];
 			const i1Rounded = Math.round(i1);
 			const i1Before = Math.floor(i1);
@@ -97,8 +98,10 @@ export default class LinesLayerTooltip {
 
 	updateLineTooltip(layer: SimpleLayer): void {
 		const closest = layer._fmLineTooltip?.getHoverPos();
-		if (layer._fmLineTooltip && closest && layer._fmLineString) {
-			const tooltipHtml = this.getLineTooltipHtml(layer, layer._fmLineTooltip.getLine(), closest, layer._fmLineTooltip.getOptions());
+		const line = layer._fmLineTooltip?.getLine();
+		const lineString = layer._fmLineTooltip?.getLineString();
+		if (layer._fmLineTooltip && closest && line && lineString) {
+			const tooltipHtml = this.getLineTooltipHtml(line, lineString, closest, layer._fmLineTooltip.getOptions());
 			if (tooltipHtml) {
 				if (!layer._tooltip) {
 					layer.bindTooltip(tooltipHtml, { ...tooltipOptions, permanent: true, ...layer._fmLineTooltip.offset ? { offset: layer._fmLineTooltip.offset } : {} });
@@ -114,15 +117,17 @@ export default class LinesLayerTooltip {
 		layer.unbindTooltip();
 	}
 
-	registerLineTooltip(layer: SimpleLayer, { getLine, getOptions, getHoverPos, fixed, offset }: {
-		getLine: () => SimpleLine;
+	registerLineTooltip(layer: SimpleLayer, { getLine, getLineString, getOptions, getHoverPos, fixed, offset }: {
+		getLine: () => SimpleLine | undefined;
+		getLineString: () => LineString<LatLng[][]> & { _fmTrackPoints: LatLngWithIdx[][] } | undefined;
 		getOptions: () => LineTooltipOptions;
 		getHoverPos?: () => PointLocation<LatLng[][]> | undefined;
+		/** If true, the tooltip should stay at a fixed position in relation to the layer. If false, it will be positioned at the hover pos. */
 		fixed?: boolean;
 		offset?: PointExpression;
 	}): void {
 		let hoverPos: PointLocation<LatLng[][]> | undefined;
-		layer._fmLineTooltip = { getLine, getOptions, getHoverPos: getHoverPos ?? (() => hoverPos), fixed, offset };
+		layer._fmLineTooltip = { getLine, getLineString, getOptions, getHoverPos: getHoverPos ?? (() => hoverPos), fixed, offset };
 
 		if (getHoverPos) {
 			this.updateLineTooltip(layer);
@@ -130,7 +135,7 @@ export default class LinesLayerTooltip {
 			const over = (e: Event) => {
 				if ((e as PointerEvent).pointerType !== "touch") {
 					const latlng = layer["_map"].mouseEventToLatLng(e as any);
-					hoverPos = layer._fmLineString?.locate(latlng);
+					hoverPos = getLineString()?.locate(latlng);
 					this.updateLineTooltip(layer);
 				}
 			};
