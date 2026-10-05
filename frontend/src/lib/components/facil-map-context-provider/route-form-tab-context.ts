@@ -4,7 +4,7 @@ import type { DeepReadonly } from "vue";
 export interface RouteDestination {
 	query: string;
 	searchSuggestions?: DeepReadonly<SearchResult[]>;
-	mapSuggestions?: FindOnMapResult[];
+	mapSuggestions?: DeepReadonly<FindOnMapResult[]>;
 	selectedSuggestion?: DeepReadonly<SearchResult | FindOnMapResult>;
 }
 

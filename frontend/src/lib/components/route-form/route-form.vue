@@ -1,82 +1,25 @@
 <script setup lang="ts">
-	import { computed, markRaw, nextTick, reactive, ref, toRaw, watch, type DeepReadonly } from "vue";
+	import { type ComponentInstance, computed, nextTick, ref, toRaw, watch } from "vue";
 	import Icon from "../ui/icon.vue";
-	import { compileFormulaExpression, decodeRouteQuery, encodeRouteQuery, formatCoordinates, formatDistance, formatRouteMode, formatRouteTime, formatTypeName, isSearchId, markdownInline, normalizeMarkerName, type StrippedTypeForFormula } from "facilmap-utils";
+	import { compileFormulaExpression, decodeRouteQuery, encodeRouteQuery, formatDistance, formatRouteMode, formatRouteTime, markdownInline, type StrippedTypeForFormula } from "facilmap-utils";
 	import { useToasts } from "../ui/toasts/toasts.vue";
-	import type { FindOnMapResult, SearchResult } from "facilmap-types";
-	import { getMarkerIcon, type HashQuery, MarkerLayer, RouteLayer } from "facilmap-leaflet";
+	import { type HashQuery } from "facilmap-leaflet";
 	import { getZoomDestinationForRoute, flyTo, normalizeZoomDestination } from "../../utils/zoom";
-	import { latLng, type LatLng } from "leaflet";
-	import Draggable from "vuedraggable";
 	import RouteMode from "../ui/route-mode.vue";
-	import DraggableLines from "leaflet-draggable-lines";
-	import { cloneDeep, throttle } from "lodash-es";
+	import { cloneDeep } from "lodash-es";
 	import ElevationStats from "../ui/elevation-stats.vue";
 	import ElevationPlot from "../ui/elevation-plot.vue";
-	import { isMapResult } from "../../utils/search";
 	import type { LineWithTags } from "../../utils/add";
 	import vTooltip from "../../utils/tooltip";
-	import DropdownMenu from "../ui/dropdown-menu.vue";
 	import ZoomToObjectButton from "../ui/zoom-to-object-button.vue";
-	import { UseAsType, type RouteDestination } from "../facil-map-context-provider/route-form-tab-context";
+	import { UseAsType } from "../facil-map-context-provider/route-form-tab-context";
 	import { injectContextRequired, requireClientContext, requireMapContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
 	import AddToMapDropdown from "../ui/add-to-map-dropdown.vue";
 	import ExportDropdown from "../ui/export-dropdown.vue";
 	import { useI18n } from "../../utils/i18n";
-	import { mapRef } from "../../utils/vue";
-	import { useMapHandler, useMapLayer } from "../../utils/leaflet";
-	import LinesLayerTooltip from "facilmap-leaflet/src/lines/lines-layer-tooltip.js";
-
-	type SearchSuggestion = SearchResult;
-	type MapSuggestion = FindOnMapResult & { kind: "marker" };
-	type Suggestion = SearchSuggestion | MapSuggestion;
-
-	interface Destination extends RouteDestination {
-		query: string;
-		loadingQuery?: string;
-		loadingPromise?: Promise<void>;
-		loadedQuery?: string;
-		searchSuggestions?: DeepReadonly<SearchSuggestion[]>;
-		mapSuggestions?: MapSuggestion[];
-		selectedSuggestion?: DeepReadonly<Suggestion>;
-	}
-
-	function makeCoordDestination(latlng: LatLng) {
-		const disp = formatCoordinates({ lat: latlng.lat, lon: latlng.lng });
-		let suggestion = {
-			lat: latlng.lat,
-			lon: latlng.lng,
-			display_name: disp,
-			short_name: disp,
-			type: "coordinates",
-			id: disp
-		};
-		return {
-			query: disp,
-			loadingQuery: disp,
-			loadedQuery: disp,
-			selectedSuggestion: suggestion,
-			searchSuggestions: [ suggestion ]
-		};
-	}
-
-	function makeDestination({ query, searchSuggestions, mapSuggestions, selectedSuggestion }: DeepReadonly<{ query: string; searchSuggestions?: SearchResult[]; mapSuggestions?: FindOnMapResult[]; selectedSuggestion?: SearchResult | FindOnMapResult }>): Destination {
-		return {
-			query,
-			loadedQuery: searchSuggestions || mapSuggestions ? query : undefined,
-			searchSuggestions,
-			mapSuggestions: mapSuggestions?.filter((result) => result.kind == "marker") as MapSuggestion[],
-			selectedSuggestion: selectedSuggestion as MapSuggestion
-		};
-	}
-
-	const startMarkerColour = "00ff00";
-	const dragMarkerColour = "ffd700";
-	const endMarkerColour = "ff0000";
-
-	function getIcon(i: number, length: number, highlight = false) {
-		return getMarkerIcon(i == 0 ? `#${startMarkerColour}` : i == length - 1 ? `#${endMarkerColour}` : `#${dragMarkerColour}`, 35, undefined, undefined, highlight);
-	}
+	import RouteFormDestinations from "./route-form-destinations.vue";
+	import { getInitialDestinations, getSelectedSuggestion, getSelectedSuggestionId, getSelectedSuggestionName, useDestinationAs, makeDestination, type RouteFormDestination } from "./route-form-utils.js";
+import { useMapLayer } from "../../utils/leaflet.js";
 
 	const context = injectContextRequired();
 	const client = requireClientContext(context);
@@ -85,7 +28,6 @@
 	const toasts = useToasts();
 	const i18n = useI18n();
 
-	const inputRefs = reactive(new Map<number, HTMLInputElement>());
 	const submitButton = ref<HTMLButtonElement>();
 
 	const props = withDefaults(defineProps<{
@@ -118,16 +60,13 @@
 	}) : []);
 
 	const routeMode = ref(routeObj.value?.mode ?? "car");
-	const destinations = ref<Destination[]>(routeObj.value ? (
-		routeObj.value.routePoints.map((point) => makeCoordDestination(latLng(point.lat, point.lon)))
-	) : (
-		[{ query: "" }, { query: "" }]
-	));
-	const submittedQuery = ref<{ destinations: Destination[]; mode: string }>();
+	const destinations = ref<RouteFormDestination[]>(getInitialDestinations(routeObj.value));
+	const submittedQuery = ref<{ destinations: RouteFormDestination[]; mode: string }>();
 	const routeError = ref<string>();
-	const hoverDestinationIdx = ref<number>();
-	const hoverInsertIdx = ref<number>();
-	const suggestionMarker = ref<MarkerLayer>();
+
+	const destinationsRef = ref<ComponentInstance<typeof RouteFormDestinations>>();
+
+	const zoomDestination = computed(() => routeObj.value && getZoomDestinationForRoute(routeObj.value));
 
 	const routeLayer = computed(() => {
 		const layer = markRaw(new RouteLayer(client.value, props.routeId, { highlight: true }));
@@ -139,102 +78,7 @@
 		return layer;
 	});
 
-	const tooltip = new LinesLayerTooltip();
-
-	const draggable = computed(() => {
-		const draggable = markRaw(new DraggableLines(mapContext.value.components.map, {
-			enableForLayer: false,
-			tempMarkerOptions: () => ({
-				icon: getMarkerIcon(`#${dragMarkerColour}`, 35),
-				pane: "fm-raised-marker"
-			}),
-			plusTempMarkerOptions: () => ({
-				icon: getMarkerIcon(`#${dragMarkerColour}`, 35),
-				pane: "fm-raised-marker"
-			}),
-			dragMarkerOptions: (layer, i, length) => ({
-				icon: getIcon(i, length),
-				pane: "fm-raised-marker"
-			})
-		}));
-
-		draggable.on({
-			insert: (e) => {
-				destinations.value.splice(e.idx as number, 0, makeCoordDestination(e.latlng));
-				void reroute(false);
-			},
-			dragstart: (e) => {
-				hoverDestinationIdx.value = e.idx as number;
-				hoverInsertIdx.value = undefined;
-				if (e.isNew)
-					destinations.value.splice(e.idx as number, 0, makeCoordDestination(e.to));
-			},
-			drag: throttle((e) => {
-				destinations.value[e.idx] = makeCoordDestination(e.to);
-			}, 300),
-			dragend: (e) => {
-				destinations.value[e.idx as number] = makeCoordDestination(e.to);
-				void reroute(false);
-			},
-			remove: (e) => {
-				hoverDestinationIdx.value = undefined;
-				destinations.value.splice(e.idx as number, 1);
-				void reroute(false);
-			},
-			dragmouseover: (e) => {
-				destinationMouseOver(e.idx as number);
-			},
-			dragmouseout: (e) => {
-				destinationMouseOut(e.idx as number);
-			},
-			plusmouseover: (e) => {
-				hoverInsertIdx.value = e.idx as number;
-			},
-			plusmouseout: (e) => {
-				hoverInsertIdx.value = undefined;
-			},
-			tempmouseover: (e) => {
-				hoverInsertIdx.value = e.idx as number;
-
-				tooltip.registerLineTooltip(e.marker, {
-					getLine: () => routeObj.value && { ...routeObj.value, extraInfo: routeObj.value.extraInfo ?? null, name: "" },
-					getLineString: () => routeLayer.value._fmLineString,
-					getOptions: () => ({ name: false, details: true }),
-					getHoverPos: () => routeLayer.value._fmLineString?.locate(e.marker.getLatLng()),
-					fixed: true
-				});
-			},
-			tempmousemove: (e) => {
-				if (e.idx != hoverInsertIdx.value) {
-					hoverInsertIdx.value = e.idx as number;
-				}
-
-				tooltip.updateLineTooltip(e.marker);
-			},
-			tempmouseout: (e) => {
-				hoverInsertIdx.value = undefined;
-			}
-		});
-
-		return draggable;
-	});
-
-	useMapHandler(draggable);
 	useMapLayer(routeLayer);
-
-	watch([hasRoute, () => props.active, draggable, routeLayer], () => {
-		if (hasRoute.value)
-			routeLayer.value.setStyle({ opacity: props.active ? 1 : 0.35, raised: props.active });
-
-		// Enable dragging after updating the style, since that might re-add the layer to the map
-		if (props.active) {
-			draggable.value.enableForLayer(routeLayer.value);
-		} else {
-			draggable.value.disableForLayer(routeLayer.value);
-		}
-	}, { immediate: true });
-
-	const zoomDestination = computed(() => routeObj.value && getZoomDestinationForRoute(routeObj.value));
 
 	const hashQuery = computed(() => {
 		if (submittedQuery.value) {
@@ -255,10 +99,6 @@
 			return undefined;
 	});
 
-	const destinationsMeta = computed(() => destinations.value.map((destination) => ({
-		isInvalid: getValidationState(destination) === false
-	})));
-
 	watch(hashQuery, (hashQuery) => {
 		emit("hash-query-change", hashQuery);
 	});
@@ -266,181 +106,6 @@
 	watch(routeMode, () => {
 		void reroute(false);
 	});
-
-	function addDestination(): void {
-		destinations.value.push({
-			query: ""
-		});
-	}
-
-	function removeDestination(idx: number): void {
-		if (destinations.value.length > 2)
-			destinations.value.splice(idx, 1);
-	}
-
-	function getSelectedSuggestion(dest: Destination): DeepReadonly<Suggestion> | undefined {
-		if(dest.selectedSuggestion && [...(dest.searchSuggestions || []), ...(dest.mapSuggestions || [])].includes(dest.selectedSuggestion))
-			return dest.selectedSuggestion;
-		else if(dest.mapSuggestions && dest.mapSuggestions.length > 0 && (dest.mapSuggestions[0].similarity == 1 || (dest.searchSuggestions || []).length == 0))
-			return dest.mapSuggestions[0];
-		else if((dest.searchSuggestions || []).length > 0)
-			return dest.searchSuggestions![0];
-		else
-			return undefined;
-	}
-
-	function getSelectedSuggestionId(dest: Destination): string | undefined {
-		const sugg = getSelectedSuggestion(dest);
-		if (!sugg)
-			return undefined;
-
-		if (isMapResult(sugg))
-			return (sugg.kind == "marker" ? "m" : "l") + sugg.id;
-		else
-			return sugg.id;
-	}
-
-	function getSelectedSuggestionName(dest: Destination): string | undefined {
-		const sugg = getSelectedSuggestion(dest);
-		if (!sugg)
-			return undefined;
-
-		if (isMapResult(sugg))
-			return sugg.name;
-		else
-			return sugg.short_name;
-	}
-
-	async function loadSuggestions(dest: Destination): Promise<void> {
-		if (dest.loadingQuery == dest.query.trim()) {
-			await dest.loadingPromise;
-			return;
-		} else if (dest.loadedQuery == dest.query.trim())
-			return;
-
-		const idx = destinations.value.indexOf(dest);
-		toasts.hideToast(`fm${context.id}-route-form-suggestion-error-${idx}`);
-		dest.searchSuggestions = undefined;
-		dest.mapSuggestions = undefined;
-		dest.selectedSuggestion = undefined;
-		dest.loadingQuery = undefined;
-		dest.loadingPromise = undefined;
-		dest.loadedQuery = undefined;
-
-		const query = dest.query.trim();
-
-		if(query != "") {
-			dest.loadingQuery = query;
-			let resolveLoadingPromise = (): void => undefined;
-			dest.loadingPromise = new Promise((resolve) => { resolveLoadingPromise = resolve; });
-
-			try {
-				const [searchResults, mapResults] = await Promise.all([
-					client.value.find({ query: query }),
-					(async () => {
-						if (client.value.mapData) {
-							const m = query.match(/^m(\d+)$/);
-							if (m) {
-								const marker = await client.value.getMarker({ id: Number(m[1]) });
-								return marker ? [{ kind: "marker" as const, similarity: 1, ...marker }] : [];
-							} else
-								return (await client.value.findOnMap({ query })).filter((res) => res.kind == "marker") as MapSuggestion[];
-						}
-					})()
-				])
-
-				if(query != dest.loadingQuery)
-					return; // The destination has changed in the meantime
-
-				dest.loadingQuery = undefined;
-				dest.loadedQuery = query;
-				dest.searchSuggestions = searchResults;
-				dest.mapSuggestions = mapResults;
-
-				if(isSearchId(query) && searchResults.length > 0 && searchResults[0].display_name) {
-					if (dest.query == query)
-						dest.query = searchResults[0].display_name;
-					dest.loadedQuery = searchResults[0].display_name;
-					dest.selectedSuggestion = searchResults[0];
-				}
-
-				if(mapResults) {
-					const referencedMapResult = mapResults.find((res) => query == `m${res.id}`);
-					if(referencedMapResult) {
-						if (dest.query == query)
-							dest.query = normalizeMarkerName(referencedMapResult.name);
-						dest.loadedQuery = normalizeMarkerName(referencedMapResult.name);
-						dest.selectedSuggestion = referencedMapResult;
-					}
-				}
-
-				if(dest.selectedSuggestion == null)
-					dest.selectedSuggestion = getSelectedSuggestion(dest);
-			} catch (err: any) {
-				if(query != dest.loadingQuery)
-					return; // The destination has changed in the meantime
-
-				console.warn(err.stack || err);
-				toasts.showErrorToast(`fm${context.id}-route-form-suggestion-error-${idx}`, () => i18n.t("route-form.find-destination-error", { query }), err);
-			} finally {
-				resolveLoadingPromise();
-			}
-		}
-	}
-
-	function suggestionMouseOver(suggestion: Suggestion): void {
-		suggestionMarker.value = markRaw((new MarkerLayer([ suggestion.lat!, suggestion.lon! ], {
-			highlight: true,
-			marker: {
-				colour: dragMarkerColour,
-				size: 35,
-				icon: "",
-				shape: "drop"
-			}
-		})).addTo(mapContext.value.components.map));
-	}
-
-	function suggestionMouseOut(): void {
-		if(suggestionMarker.value) {
-			suggestionMarker.value.remove();
-			suggestionMarker.value = undefined;
-		}
-	}
-
-	function suggestionZoom(suggestion: Suggestion): void {
-		mapContext.value.components.map.flyTo([suggestion.lat!, suggestion.lon!]);
-	}
-
-	function destinationMouseOver(idx: number): void {
-		const marker = routeLayer.value._draggableLines?.dragMarkers[idx];
-
-		if (marker) {
-			hoverDestinationIdx.value = idx;
-			marker.setIcon(getIcon(idx, routeLayer.value._draggableLines!.dragMarkers.length, true));
-		}
-	}
-
-	function destinationMouseOut(idx: number): void {
-		hoverDestinationIdx.value = undefined;
-
-		const marker = routeLayer.value._draggableLines?.dragMarkers[idx];
-		if (marker) {
-			void Promise.resolve().then(() => {
-				// If mouseout event is directly followed by a dragend event, the marker will be removed. Only update the icon if the marker is not removed.
-				if (marker["_map"])
-					marker.setIcon(getIcon(idx, routeLayer.value._draggableLines!.dragMarkers.length));
-			});
-		}
-	}
-
-	function getValidationState(destination: Destination): boolean | null {
-		if (routeError.value && destination.query.trim() == '')
-			return false;
-		else if (destination.loadedQuery && destination.query == destination.loadedQuery && getSelectedSuggestion(destination) == null)
-			return false;
-		else
-			return null;
-	}
 
 	async function route(zoom: boolean, smooth = true): Promise<void> {
 		reset();
@@ -450,7 +115,7 @@
 
 			submittedQuery.value = { destinations: cloneDeep(toRaw(destinations.value)), mode };
 
-			await Promise.all(destinations.value.map((dest) => loadSuggestions(dest)));
+			await destinationsRef.value?.loadAllSuggestions();
 			const points = destinations.value.map((dest) => getSelectedSuggestion(dest));
 
 			submittedQuery.value = { destinations: cloneDeep(toRaw(destinations.value)), mode };
@@ -475,7 +140,7 @@
 
 	async function reroute(zoom: boolean, smooth = true): Promise<void> {
 		if(hasRoute.value) {
-			await Promise.all(destinations.value.map((dest) => loadSuggestions(dest)));
+			await destinationsRef.value?.loadAllSuggestions();
 			const points = destinations.value.map((dest) => getSelectedSuggestion(dest));
 
 			if(!points.some((point) => point == null))
@@ -487,12 +152,7 @@
 		toasts.hideToast(`fm${context.id}-route-form-error`);
 		submittedQuery.value = undefined;
 		routeError.value = undefined;
-
-		if(suggestionMarker.value) {
-			suggestionMarker.value.remove();
-			suggestionMarker.value = undefined;
-		}
-
+		destinationsRef.value?.reset();
 		client.value.clearRoute({ routeId: props.routeId });
 	}
 
@@ -530,49 +190,15 @@
 	}
 
 	function useAs(data: Parameters<typeof makeDestination>[0], as: UseAsType): void {
-		let focusIdx: number;
-		const dest = makeDestination(data);
+		const result = useDestinationAs(destinations.value, makeDestination(data), as);
+		destinations.value = result.destinations;
+		void reroute(true);
 
-		switch (as) {
-			case UseAsType.BEFORE_FROM:
-				destinations.value.unshift(dest);
-				focusIdx = 0;
-				break;
-
-			case UseAsType.AS_FROM:
-				destinations.value[0] = dest;
-				focusIdx = 0;
-				break;
-
-			case UseAsType.AFTER_FROM:
-				destinations.value.splice(1, 0, dest);
-				focusIdx = 1;
-				break;
-
-			case UseAsType.BEFORE_TO:
-				destinations.value.splice(destinations.value.length - 1, 0, dest);
-				focusIdx = destinations.value.length - 1;
-				break;
-
-			case UseAsType.AS_TO:
-				destinations.value[destinations.value.length - 1] = dest;
-				focusIdx = destinations.value.length - 1;
-				break;
-
-			case UseAsType.AFTER_TO:
-				destinations.value.push(dest);
-				focusIdx = destinations.value.length - 1;
-				break;
-		}
-
-		if (focusIdx != null) {
-			void nextTick(() => { // New destinations are rendered
-				void nextTick(() => { // New destinations have been rendered, refs are available
-					inputRefs.get(focusIdx)?.focus();
-				});
+		void nextTick(() => { // New destinations are rendered
+			void nextTick(() => { // New destinations have been rendered, refs are available
+				destinationsRef.value?.focusDestination(result.idx);
 			});
-			void reroute(true);
-		}
+		});
 	}
 
 	defineExpose({
@@ -587,112 +213,20 @@
 <template>
 	<div class="fm-route-form">
 		<form action="javascript:" @submit.prevent="handleSubmit">
-			<Draggable
-				v-model="destinations"
-				handle=".fm-drag-handle"
-				@end="reroute(true)"
-				:itemKey="(destination: any) => destinations.indexOf(destination)"
-			>
-				<template #item="{ element: destination, index: idx }">
-					<div class="destination" :class="{ active: hoverDestinationIdx == idx }">
-						<hr class="fm-route-form-hover-insert" :class="{ active: hoverInsertIdx === idx }"/>
-						<div
-							class="input-group"
-							@mouseenter="destinationMouseOver(idx)"
-							@mouseleave="destinationMouseOut(idx)"
-						>
-							<span class="input-group-text px-2">
-								<a href="javascript:" class="fm-drag-handle" @contextmenu.prevent>
-									<Icon icon="resize-vertical" :alt="i18n.t('route-form.reorder-alt')"></Icon>
-								</a>
-							</span>
-							<input
-								class="form-control"
-								v-model="destination.query"
-								:placeholder="idx == 0 ? i18n.t('route-form.from-placeholder') : idx == destinations.length-1 ? i18n.t('route-form.to-placeholder') : i18n.t('route-form.via-placeholder')"
-								:tabindex="idx+1"
-								:class="{
-									'is-invalid': destinationsMeta[idx].isInvalid,
-									'fm-autofocus': idx === 0
-								}"
-								@blur="loadSuggestions(destination)"
-								:ref="mapRef(inputRefs, idx)"
-							/>
-							<template v-if="destination.query.trim() != ''">
-								<DropdownMenu
-									menuClass="fm-route-form-suggestions"
-									noWrapper
-									@update:isOpen="$event && loadSuggestions(destination)"
-									:isLoading="!destination.searchSuggestions && !destination.mapSuggestions"
-								>
-									<template v-for="suggestion in destination.mapSuggestions" :key="suggestion.id">
-										<li
-											@mouseenter="suggestionMouseOver(suggestion)"
-											@mouseleave="suggestionMouseOut()"
-										>
-											<a
-												href="javascript:"
-												class="dropdown-item fm-route-form-suggestions-zoom"
-												:class="{ active: suggestion === getSelectedSuggestion(destination) }"
-												@click.capture.stop.prevent="suggestionZoom(suggestion)"
-											><Icon icon="zoom-in" :alt="i18n.t('route-form.zoom-alt')"></Icon></a>
-
-											<a
-												href="javascript:"
-												class="dropdown-item"
-												:class="{ active: suggestion === getSelectedSuggestion(destination) }"
-												@click="destination.selectedSuggestion = suggestion; reroute(true)"
-											>{{suggestion.name}} ({{formatTypeName(client.types[suggestion.typeId].name)}})</a>
-										</li>
-									</template>
-
-									<li v-if="(destination.searchSuggestions || []).length > 0 && (destination.mapSuggestions || []).length > 0">
-										<hr class="dropdown-divider fm-route-form-suggestions-divider">
-									</li>
-
-									<template v-for="suggestion in destination.searchSuggestions" :key="suggestion.id">
-										<li
-											@mouseenter="suggestionMouseOver(suggestion)"
-											@mouseleave="suggestionMouseOut()"
-										>
-											<a
-												href="javascript:"
-												class="dropdown-item fm-route-form-suggestions-zoom"
-												:class="{ active: suggestion === getSelectedSuggestion(destination) }"
-												@click.capture.stop.prevent="suggestionZoom(suggestion)"
-											><Icon icon="zoom-in" :alt="i18n.t('route-form.zoom-alt')"></Icon></a>
-											<a
-												href="javascript:"
-												class="dropdown-item"
-												:class="{ active: suggestion === getSelectedSuggestion(destination) }"
-												@click="destination.selectedSuggestion = suggestion; reroute(true)"
-											>{{suggestion.display_name}}<span v-if="suggestion.type"> ({{suggestion.type}})</span></a>
-										</li>
-									</template>
-								</DropdownMenu>
-							</template>
-							<button
-								v-if="destinations.length > 2"
-								type="button"
-								class="btn btn-secondary"
-								@click="removeDestination(idx); reroute(false)"
-								v-tooltip.right="i18n.t('route-form.remove-destination-tooltip')"
-							>
-								<Icon icon="minus" :alt="i18n.t('route-form.remove-destination-alt')" size="1.0em"></Icon>
-							</button>
-						</div>
-					</div>
-				</template>
-				<template #footer>
-					<hr class="fm-route-form-hover-insert" :class="{ active: hoverInsertIdx === destinations.length }"/>
-				</template>
-			</draggable>
+			<RouteFormDestinations
+				ref="destinationsRef"
+				:routeId="props.routeId"
+				:active="props.active"
+				:hasRouteError="!!routeError"
+				v-model:destinations="destinations"
+				@reroute="(zoom) => { reroute(zoom); }"
+			></RouteFormDestinations>
 
 			<div class="btn-toolbar">
 				<button
 					type="button"
 					class="btn btn-secondary"
-					@click="addDestination()"
+					@click="destinationsRef?.addDestination()"
 					v-tooltip.bottom="i18n.t('route-form.add-destination-tooltip')"
 					:tabindex="destinations.length+1"
 				>
