@@ -1,4 +1,4 @@
-import type { ExtraInfo, ExtraInfoStats, Point } from "facilmap-types";
+import type { DeepReadonly, ExtraInfo, ExtraInfoStats, Point } from "facilmap-types";
 import { RetryError, throttledBatch } from "./utils.js";
 import { fetchAdapter, getConfig } from "./config.js";
 import { getI18n } from "./i18n.js";
@@ -125,7 +125,7 @@ export function createExtraInfoStats(extraInfo: ExtraInfo, trackPoints: BasicTra
 	}));
 }
 
-export function getExtraInfoAfterIdx(extraInfo: ExtraInfo, idx: number): Record<string, number> {
+export function getExtraInfoAfterIdx(extraInfo: DeepReadonly<ExtraInfo>, idx: number): Record<string, number> {
 	return Object.fromEntries(Object.entries(extraInfo).flatMap(([key, info]) => {
 		const segment = info.find((i) => idx >= i[0] && idx < i[1]);
 		return segment ? [[key, segment[2]]] : [];

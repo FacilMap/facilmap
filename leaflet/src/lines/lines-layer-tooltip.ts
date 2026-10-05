@@ -1,4 +1,4 @@
-import type { Line } from "facilmap-types";
+import type { DeepReadonly, Line } from "facilmap-types";
 import { LatLng, Layer, Path, type PointExpression } from "leaflet";
 import { type BasicTrackPoints, tooltipOptions, type LatLngWithIdx } from "../utils/leaflet";
 import { formatDistance, formatElevation, formatSteepness, getExtraInfoAfterIdx, getSteepnessAtIdx, getTranslatedExtraInfoTypes, getTranslatedExtraInfoValues, quoteHtml } from "facilmap-utils";
@@ -8,8 +8,8 @@ import { getI18n } from "../utils/i18n";
 declare module "leaflet" {
 	interface Layer {
 		_fmLineTooltip?: {
-			getLine: () => SimpleLine | undefined;
-			getLineString: () => LineStringWithTrackPoints | undefined;
+			getLine: () => DeepReadonly<SimpleLine> | undefined;
+			getLineString: () => DeepReadonly<LineStringWithTrackPoints> | undefined;
 			getOptions: () => LineTooltipOptions;
 			getHoverPos: () => PointLocation<LatLng[][]> | undefined;
 			fixed?: boolean;
@@ -25,7 +25,7 @@ export type LineStringWithTrackPoints = LineString<LatLng[][]> & { _fmTrackPoint
 
 export default class LinesLayerTooltip {
 
-	getLineTooltipHtml(line: SimpleLine, lineString: LineStringWithTrackPoints, location: PointLocation<LatLng[][]> | undefined, options: LineTooltipOptions): string {
+	getLineTooltipHtml(line: DeepReadonly<SimpleLine>, lineString: DeepReadonly<LineStringWithTrackPoints>, location: PointLocation<LatLng[][]> | undefined, options: LineTooltipOptions): string {
 		const i18n = getI18n();
 		const details: Array<{ name?: string; value: string }> = [];
 
@@ -118,8 +118,8 @@ export default class LinesLayerTooltip {
 	}
 
 	registerLineTooltip(layer: SimpleLayer, { getLine, getLineString, getOptions, getHoverPos, fixed, offset }: {
-		getLine: () => SimpleLine | undefined;
-		getLineString: () => LineString<LatLng[][]> & { _fmTrackPoints: LatLngWithIdx[][] } | undefined;
+		getLine: () => DeepReadonly<SimpleLine> | undefined;
+		getLineString: () => DeepReadonly<LineString<LatLng[][]> & { _fmTrackPoints: LatLngWithIdx[][] }> | undefined;
 		getOptions: () => LineTooltipOptions;
 		getHoverPos?: () => PointLocation<LatLng[][]> | undefined;
 		/** If true, the tooltip should stay at a fixed position in relation to the layer. If false, it will be positioned at the hover pos. */
