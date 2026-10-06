@@ -1,4 +1,4 @@
-import { computed, type Ref } from "vue";
+import { computed, ref, type Ref } from "vue";
 import maxSize from "popper-max-size-modifier";
 import type { Modifier, ModifierArguments } from "@popperjs/core";
 import { getReactiveMediaQuery } from "./vue";
