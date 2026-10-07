@@ -1,5 +1,11 @@
 # Changelog
 
+<!--
+	The contents of this changelog are also shown under “What’s new” in the “About FacilMap” dialog.
+	The items in this changelog MUST appear in ascending order and each item MUST have a h2 heading with the format "YYYY-MM-DD: <summary>".
+	After making changes to the changelog, run `yarn generate-news` to regenerate the “What’s new” section.
+-->
+
 ## 2026-03-30: Route statistics
 
 When you calculate a route/line and have the “Load route details” option activated, you can now see statistics about the route (how much of it is what road type, what surface etc.) by clicking on the info button next to the climb/drop info.
@@ -55,3 +61,7 @@ Formula fields can now reference the generated values of other formula fields.
 ## 2026-08-19: Custom functions and route formulas
 
 In the map settings, there is now a “Formulas” tab. _Custom functions_ can be defined there to be used in any filter or formula expression on your map. A custom function can also return a simple value to act as a constant. _Route formulas_ allow displaying calculated values when calculating a route while having the map open, without having to save that route as a line.
+
+## 2026-10-08: “About FacilMap” dialog
+
+The new “About FacilMap” dialog welcomes new users to the app and informs returning users about the latest changes.
