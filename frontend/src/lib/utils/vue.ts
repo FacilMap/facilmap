@@ -1,5 +1,5 @@
 import { cloneDeep, isEqual, sortBy } from "lodash-es";
-import { type ComponentPublicInstance, type DeepReadonly, type Directive, type Ref, computed, onScopeDispose, readonly, ref, shallowReadonly, shallowRef, watch, type ComputedGetter, type Component, type VNodeProps, type AllowedComponentProps, onBeforeUnmount, onMounted, toRaw, type FunctionDirective, effectScope, toRef } from "vue";
+import { type ComponentPublicInstance, type DeepReadonly, type Directive, type Ref, computed, onScopeDispose, readonly, ref, shallowReadonly, shallowRef, watch, type ComputedGetter, type Component, type VNodeProps, type AllowedComponentProps, onBeforeUnmount, onMounted, toRaw, type FunctionDirective, effectScope, toRef, type DirectiveBinding } from "vue";
 import { shouldHandleGlobalShortcut, useDomEventListener, type AnyRef } from "./utils";
 
 // https://stackoverflow.com/a/73784241/242365
@@ -32,23 +32,19 @@ export function computedOnResize<T>(getValue: () => T): Readonly<Ref<T>> {
 }
 
 /**
- * Returns a ref that represents the value of a prop but falls back to an internal state if the prop is not specified. This can be used to make a model prop
- * optional, so that if a v-model directive is used on the component, its state is persisted in the external model, but if v-model is not used, its state
- * is persisted in an internal value.
- * @param fallbackValue The initial value if the prop is undefined
- * @param getProp A getter for the model value prop. If it returns undefined, the prop is considered not set and the internal value is used instead.
- * @param onUpdate This is called when the value is set. This should emit the update:modelValue (or similar) event.
+ * Returns a ref to a model value that falls back to an internal state if it is undefined. This can be used to create hybrid stateless/stateful components.
+ * @param modelRef The ref to the model. Usually created using defineModel() (using `required: false` and for boolean values `default: undefined`).
+ * @param initialValue The initial value if the model is undefined.
  */
-export function useRefWithOverride<Value>(fallbackValue: Value, getProp: () => Value | undefined, onUpdate: (newValue: Value) => void): Ref<Value> {
-	const internalValue = ref(getProp() ?? fallbackValue);
+export function useModelWithFallback<Value>(modelRef: Ref<Value | undefined>, initialValue: Value): Ref<Value> {
+	const internalValue = ref(modelRef.value ?? initialValue);
 	return computed({
 		get: (): Value => {
-			const propValue = getProp();
-			return propValue !== undefined ? propValue : internalValue.value as Value;
+			return modelRef.value !== undefined ? modelRef.value : internalValue.value as Value;
 		},
 		set: (val: Value) => {
 			internalValue.value = val as any;
-			onUpdate(val);
+			modelRef.value = val;
 		}
 	});
 }
@@ -258,6 +254,50 @@ export const vKeyboardShortcut = vDirectiveWithScope<HTMLElement, string[] | str
 		}
 	}
 });
+
+function adjustBinding(binding: DirectiveBinding, modifiers: Ref<Record<string, boolean>>): DirectiveBinding {
+	return {
+		...binding,
+		modifiers: new Proxy({}, {
+			get(_, prop) {
+				return Object.hasOwn(binding.modifiers, prop) ? binding.modifiers[prop as any] : modifiers.value[prop as any];
+			},
+			ownKeys() {
+				return [...new Set([...Object.keys(modifiers.value), ...Object.keys(binding.modifiers)])];
+			},
+			getOwnPropertyDescriptor(target, prop) {
+				return Object.hasOwn(modifiers.value, prop) || Object.hasOwn(binding.modifiers, prop) ? {
+					enumerable: true,
+					configurable: true
+				} : undefined;
+			},
+			has(target, prop) {
+				return prop in modifiers.value || prop in binding.modifiers;
+			}
+		})
+	};
+}
+
+/**
+ * Wraps a Vue directive with modifiers applied to it in a reactive way.
+ */
+export function dynamicModifiers<M extends string, D extends Directive<any, any, M, any>>(directive: D, modifiers: Ref<Record<M, boolean>>): D {
+	if (typeof directive === "function") {
+		return ((el, binding, ...rest) => {
+			directive(el, adjustBinding(binding, modifiers), ...rest);
+		}) as D;
+	} else {
+		return Object.fromEntries(["created", "beforeMount", "mounted", "beforeUpdate", "updated", "beforeUnmount", "unmounted"].flatMap((k) => {
+			if (k in directive) {
+				return [[k, (el: any, binding: DirectiveBinding, ...rest: any[]) => {
+					(directive as any)[k](el, adjustBinding(binding, modifiers), ...rest);
+				}]];
+			} else {
+				return [];
+			}
+		})) as any;
+	}
+}
 
 export function getReactiveMediaQuery(query: string): Ref<boolean> {
 	const update = ref(0);

@@ -1,10 +1,14 @@
 {
     "common": {
-        "coordinates": "ஒருங்கிணைப்புகள்"
+        "coordinates": "ஒருங்கிணைப்புகள்",
+        "first": "முதல்",
+        "previous": "முந்தைய",
+        "next": "அடுத்தது",
+        "last": "கடைசி"
     },
     "about-dialog": {
         "map-data-search": "தேடல்",
-        "header": "FacilMap பற்றி {{version}}",
+        "about-header": "FacilMap பற்றி",
         "license-text": "{{facilmap}}} {{license}}இன் கீழ் கிடைக்கிறது.",
         "license-text-facilmap": "வசதி",
         "license-text-license": "குனு பொது பொதுமக்கள் உரிமம் பதிப்பு 3",
@@ -772,12 +776,6 @@
         "copied-message": "The map இணைப்பு was copied பெறுநர் the clipboard.",
         "random-tooltip": "சீரற்ற ஐடியை உருவாக்குங்கள்",
         "random-alt": "சீரற்ற"
-    },
-    "pagination": {
-        "first-label": "முதல்",
-        "previous-label": "முந்தைய",
-        "next-label": "அடுத்தது",
-        "last-label": "கடைசி"
     },
     "results": {
         "zoom-alt": "பெரிதாக்கு",

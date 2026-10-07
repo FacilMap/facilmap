@@ -106,7 +106,7 @@ export { default as UseAsDropdown } from "./components/ui/use-as-dropdown.vue";
 export { default as WidthPicker } from "./components/ui/width-picker.vue";
 export { default as ZoomToObjectButton } from "./components/ui/zoom-to-object-button.vue";
 
-export { default as AboutDialog } from "./components/about-dialog.vue";
+export { default as AboutDialog } from "./components/about-dialog/about-dialog.vue";
 export { default as ClickMarkerTab } from "./components/click-marker-tab.vue";
 export { default as ClientContext } from "./components/client-provider.vue";
 export { default as EditFilterDialog } from "./components/edit-filter-dialog.vue";

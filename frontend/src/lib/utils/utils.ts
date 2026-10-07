@@ -187,3 +187,19 @@ export function useUnloadHandler(hasUnsavedModifications: AnyRef<boolean>): void
 		}
 	});
 }
+
+/**
+ * Returns a transform function that can be applied to the source element to make it match the size and position
+ * of the destination element.
+ */
+export function getTransformOntoElement(source: HTMLElement, destination: HTMLElement): string {
+	const sourceRect = source.getBoundingClientRect();
+	const destRect = destination.getBoundingClientRect();
+
+	const sourceCenter = { x: sourceRect.left + sourceRect.width / 2, y: sourceRect.top + sourceRect.height / 2 };
+	const destCenter = { x: destRect.left + destRect.width / 2, y: destRect.top + destRect.height / 2 };
+
+	const translate = `${destCenter.x - sourceCenter.x}px, ${destCenter.y - sourceCenter.y}px`;
+	const scale = `${destRect.width / sourceRect.width}, ${destRect.height / sourceRect.height}`;
+	return `translate(${translate}) scale(${scale})`;
+}

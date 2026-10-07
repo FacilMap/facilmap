@@ -58,7 +58,7 @@
 			<OverpassInfo :element="elements[0]" :zoom="mapContext.zoom"></OverpassInfo>
 		</template>
 		<template v-else>
-			<Carousel ref="carouselRef">
+			<Carousel ref="carouselRef" noWrap>
 				<CarouselTab>
 					<Results
 						:items="elementItems"

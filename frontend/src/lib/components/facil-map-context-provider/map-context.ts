@@ -13,7 +13,6 @@ export type MapContextEvents = {
 };
 
 export interface MapComponents {
-	zoomControl: L.Control.Zoom;
 	attribution: AttributionControl;
 	bboxHandler: BboxHandler;
 	container: HTMLElement;
@@ -34,6 +33,8 @@ export interface MapComponents {
 export type MapContextData = {
 	center: LatLng;
 	zoom: number;
+	minZoom: number;
+	maxZoom: number;
 	bounds: LatLngBounds;
 	layers: VisibleLayers;
 	filter: string | undefined;

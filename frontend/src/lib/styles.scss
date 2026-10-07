@@ -1,3 +1,9 @@
+.fm-facilmap, .fm-modal {
+	--fm-donate-color: #ff00f6;
+	--fm-control-opacity: 0.8;
+	--fm-control-opacity-fade: 0.7s;
+}
+
 /**
  * Renders a form feedback error that is shown when the form has been validated, regardless of whether
  * it is a sibling of a form element.
@@ -42,4 +48,39 @@ kbd.fm-shortcut {
 	font-family: inherit;
 	padding: 0;
 	text-decoration: underline;
+}
+
+.fm-donate.fm-donate {
+	color: var(--fm-donate-color);
+	font-weight: bold;
+}
+
+ul.fm-card-items {
+	margin-left: 0;
+	padding-left: 0;
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+	gap: 5px;
+
+	li {
+		border: 1px solid rgba(0,0,0,.125);
+		display: flex;
+
+		a {
+			flex-grow: 1;
+			padding: 5px 10px;
+			text-align: center;
+
+			img, .fm-icon {
+				display: block;
+				margin: 5px auto;
+				height: 30px;
+			}
+
+			.fm-icon > svg {
+				height: 30px;
+				width: 30px;
+			}
+		}
+	}
 }

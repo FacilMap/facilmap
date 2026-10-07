@@ -1,11 +1,7 @@
-$btn-transition: color .15s ease-in-out, border-color .15s ease-in-out, box-shadow .15s ease-in-out; // Delete background-color from transition
 $enable-shadows: true;
 $enable-gradients: true;
 
-$secondary: #fff;
-
-$color-mode-type: media-query;
-
+//$secondary: #fff;
 
 // Bootstrap import, see https://getbootstrap.com/docs/5.3/customize/optimize/
 
@@ -31,7 +27,7 @@ $color-mode-type: media-query;
 @import "bootstrap/scss/nav";
 @import "bootstrap/scss/navbar";
 @import "bootstrap/scss/card";
-//@import "bootstrap/scss/accordion";
+@import "bootstrap/scss/accordion";
 //@import "bootstrap/scss/breadcrumb";
 @import "bootstrap/scss/pagination";
 @import "bootstrap/scss/badge";
@@ -59,9 +55,22 @@ html,body {
 	font-size: 14px;
 }
 
+$fm-button-colors: (
+	secondary: #fff
+);
+
+@include color-mode(light) {
+	@each $color, $value in $fm-button-colors {
+		.btn-#{$color} {
+			@include button-variant($value, $value);
+		}
+	}
+}
+
 // Set button style to bootstrap v3 theme
-@each $color, $value in $theme-colors {
-	.btn-#{$color} {
+@each $color, $value in map-merge($theme-colors, $fm-button-colors) {
+	// Increase specificity to override color-mode specific button styles above
+	.btn-#{$color}.btn-#{$color} {
 		$border: darken($value, 14%);
 		--#{$prefix}btn-border-color: #{$border};
 		--#{$prefix}btn-hover-border-color: #{darken($border, 12%)};
@@ -76,6 +85,10 @@ html,body {
 
 		@include gradient-y($start-color: $value, $end-color: darken($value, 12%));
 		background-repeat: repeat-x;
+
+		// Delete background-color from transition, as it causes flickering with the gradient. Delete it here for the
+		// regular button themes, but do not change $btn-transition, as that would also affect outline buttons.
+		@include transition(color .15s ease-in-out, border-color .15s ease-in-out, box-shadow .15s ease-in-out);
 
 		&:hover,
 		&:focus-visible {
@@ -105,11 +118,11 @@ html,body {
 }
 
 // Reset btn-outline-secondary colour scheme to original, as #fff makes the text invisible
-.btn-outline-secondary {
-	@include button-outline-variant(#6c757d);
-}
+// .btn-outline-secondary {
+// 	@include button-outline-variant(#6c757d);
+// }
 
-// Above, we override $secondary with white like in Bootstrap 3 instead of gray like in Bootstrap 4/5. In dark mode, use gray again.
+// Above, we override the secondary button style with white like in Bootstrap 3 instead of gray like in Bootstrap 4/5. In dark mode, use gray again.
 @include color-mode(dark) {
 	$color: secondary;
 	$value: $gray-600;
@@ -127,6 +140,12 @@ html,body {
 		--#{$prefix}btn-disabled-bg: #{darken($value, 12%)};
 
 		@include gradient-y($start-color: $value, $end-color: darken($value, 12%));
+	}
+
+	.btn-outline-dark {
+		// In dark mode, dark outline buttons have black text, making the text invisible. See also https://github.com/twbs/bootstrap/issues/39231
+		//--bs-btn-color: #fff;
+		@include button-outline-variant(#fff);
 	}
 }
 

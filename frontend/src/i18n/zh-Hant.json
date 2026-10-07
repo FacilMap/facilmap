@@ -3,7 +3,7 @@
         "coordinates": "座標"
     },
     "about-dialog": {
-        "header": "關於 FacilMap {{version}}",
+        "about-header": "關於 FacilMap",
         "help-text-documentation": "文件",
         "help-text-discussions": "討論論壇",
         "help-text-chat": "Matrix 聊天",

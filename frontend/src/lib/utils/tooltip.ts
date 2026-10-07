@@ -11,6 +11,7 @@ declare module "bootstrap" {
 	interface Tooltip {
 		tip: Element | null;
 		_newContent: Record<string, string> | null;
+		_config: Tooltip.Options;
 	}
 }
 
@@ -24,22 +25,24 @@ export function hideAllTooltips(): void {
 
 export type TooltipPlacement = "top" | "left" | "right" | "bottom";
 
-const updateTooltip: Directive<Element, string | undefined> = (el, binding) => {
+const updateTooltip: Directive<Element, string | undefined, "bottom" | "left" | "right" | "top"> = (el, binding) => {
+	const placement = (
+		binding.modifiers.bottom ? 'bottom' :
+		binding.modifiers.left ? 'left' :
+		binding.modifiers.right ? 'right' :
+		'top'
+	);
+
 	if (binding.value) {
 		if (!el._fmTooltip) {
 			el._fmTooltip = new Tooltip(el, {
-				placement: (
-					binding.modifiers.bottom ? 'bottom' :
-					binding.modifiers.left ? 'left' :
-					binding.modifiers.right ? 'right' :
-					'top'
-				),
+				placement,
 				title: binding.value ?? '',
 				trigger: 'hover focus'
 			});
 			allTooltips.add(el._fmTooltip);
 		}
-
+		el._fmTooltip._config.placement = placement;
 		el._fmTooltip._newContent = { '.tooltip-inner': binding.value ?? "" };
 
 		const tooltipInner = el._fmTooltip.tip?.querySelector<HTMLElement>('.tooltip-inner');

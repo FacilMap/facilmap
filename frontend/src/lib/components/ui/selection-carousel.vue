@@ -96,7 +96,7 @@
 </script>
 
 <template>
-	<Carousel ref="carouselRef">
+	<Carousel ref="carouselRef" noWrap>
 		<CarouselTab>
 			<slot v-bind="ctx"></slot>
 		</CarouselTab>
