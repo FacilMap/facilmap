@@ -46,14 +46,17 @@ const storageValidator2 = z.object({
 	autoZoom: z.boolean().catch(true),
 	routeQueries: z.boolean().catch(true),
 	bookmarks: arrayIgnoringInvalids(bookmarkValidator).catch(() => []),
-	baseLayer: z.string().optional(),
-	overlays: z.array(z.string()).optional(),
-	customLinks: z.array(customLinkValidator).optional(),
+	baseLayer: z.string().optional().catch(undefined),
+	overlays: z.array(z.string()).optional().catch(undefined),
+	customLinks: z.array(customLinkValidator).optional().catch(undefined),
 	presetLinks: z.record(z.object({
 		enabled: z.boolean().optional(),
 		idx: z.number().optional()
-	})).optional(),
-	lastNews: z.number().optional()
+	})).optional().catch(undefined),
+	lastNews: z.object({
+		id: z.string(),
+		date: z.string()
+	}).optional().catch(undefined)
 });
 export const storageValidator = z.record(z.any()).catch(() => ({})).pipe(storageValidator2);
 

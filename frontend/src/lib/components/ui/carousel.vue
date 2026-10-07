@@ -1,9 +1,10 @@
 <script lang="ts">
 	import Carousel from "bootstrap/js/dist/carousel";
 	import { pull } from "lodash-es";
-	import { type ComponentInstance, type DeepReadonly, type InjectionKey, type Ref, computed, defineComponent, h, inject, onBeforeUnmount, onMounted, provide, reactive, readonly, ref, toRef, useTemplateRef, watch } from "vue";
+	import { type ComponentInstance, type DeepReadonly, type InjectionKey, type Ref, Teleport, computed, defineComponent, h, inject, onBeforeUnmount, onMounted, provide, reactive, readonly, ref, toRef, useTemplateRef, watch } from "vue";
 	import { useI18n } from "../../utils/i18n";
 	import { applySwipeTransition, isSwipe, useDrag } from "../../utils/drag";
+	import { isMaxBreakpoint, type Breakpoint } from "../../utils/bootstrap";
 
 	export interface CarouselContext {
 		initialized: boolean;
@@ -103,6 +104,7 @@
 		registerTab(element: HTMLElement): void;
 		unregisterTab(element: HTMLElement): void;
 		tabs: HTMLElement[];
+		captionContainer: HTMLElement | undefined;
 	}
 
 	const contextKey = Symbol.for("fm-inject-carousel") as InjectionKey<InternalCarouselContext>;
@@ -139,7 +141,20 @@
 			return () => h("div", {
 				class: ["carousel-item", { active: active.value }],
 				ref: el
-			}, slots.default?.());
+			}, [
+				slots.default?.(),
+				...slots.caption ? (
+					context.captionContainer ? (
+						active.value ? (
+							[h(Teleport, { to: context.captionContainer }, slots.caption())]
+						) : []
+					) : (
+						[h("div", {
+							class: "carousel-caption"
+						}, slots.caption())]
+					)
+				) : []
+			]);
 		}
 	});
 </script>
@@ -151,9 +166,12 @@
 		noDrag?: boolean;
 		noWrap?: boolean;
 		ride?: boolean;
+		/** If defined, if the screen width is at this breakpoint or below, the carousel tab captions will be shown below the tabs instead of covering them. */
+		separateCaptionBreakpoint?: Breakpoint;
 	}>();
 
 	const carouselRef = ref<HTMLElement>();
+	const captionContainerRef = ref<HTMLElement>();
 
 	const context = useCarousel(carouselRef, readonly({
 		noWrap: toRef(() => props.noWrap),
@@ -181,7 +199,8 @@
 		},
 		unregisterTab: (el: HTMLElement) => {
 			pull(internalContext.tabs, el);
-		}
+		},
+		captionContainer: captionContainerRef
 	});
 	provide(contextKey, internalContext);
 
@@ -206,6 +225,8 @@
 	const prevTabIdx = computed(() => internalContext.tab > 0 ? internalContext.tab - 1 : actualTabCount.value - 1);
 
 	const activeTab = computed(() => internalContext.tabs[internalContext.tab]);
+
+	const isCard = computed(() => props.separateCaptionBreakpoint && isMaxBreakpoint(props.separateCaptionBreakpoint));
 
 	const drag = useDrag(toRef(() => props.noDrag ? undefined : activeTab.value), {
 		onlyTouch: true,
@@ -260,83 +281,91 @@
 </script>
 
 <template>
-	<div class="carousel slide fm-carousel" ref="carouselRef" :class="{ isDragging: drag.isDragging, showIndicators: props.showIndicators }">
-		<template v-if="props.showIndicators">
-			{{'' /*
-			Carousel has its own way of modifying the indicators, which interferes with our reactive approach of setting for example the active class.
-			As a workaround, we set the 'carousel-indicators' class only after Carousel has been initialized, as it looks for the element in its constructor.
-			The 'data-bs-target' attribute is necessary for the CSS styles. */}}
-			<div :class="{ 'carousel-indicators': internalContext.initialized }">
-				<button
-					v-for="n in actualTabCount"
-					:key="n"
-					type="button"
-					data-bs-target
-					:class="{ active: internalContext.tab === n - 1 }"
-					:aria-current="internalContext.tab === n - 1"
-					@click="internalContext.setTab(n - 1)"
-				></button>
-			</div>
-		</template>
+	<div class="fm-carousel" :class="{ card: isCard }">
+		<div class="carousel slide" ref="carouselRef" :class="{ isDragging: drag.isDragging, showIndicators: props.showIndicators, isCard }">
+			<template v-if="props.showIndicators">
+				{{'' /*
+				Carousel has its own way of modifying the indicators, which interferes with our reactive approach of setting for example the active class.
+				As a workaround, we set the 'carousel-indicators' class only after Carousel has been initialized, as it looks for the element in its constructor.
+				The 'data-bs-target' attribute is necessary for the CSS styles. */}}
+				<div :class="{ 'carousel-indicators': internalContext.initialized }">
+					<button
+						v-for="n in actualTabCount"
+						:key="n"
+						type="button"
+						data-bs-target
+						:class="{ active: internalContext.tab === n - 1 }"
+						:aria-current="internalContext.tab === n - 1"
+						@click="internalContext.setTab(n - 1)"
+					></button>
+				</div>
+			</template>
 
-		<div class="carousel-inner">
-			<slot v-bind="context"></slot>
-			<CarouselTab v-for="i in virtualTabCount" :key="i" ref="virtualTab"></CarouselTab>
+			<div class="carousel-inner">
+				<slot v-bind="context"></slot>
+				<CarouselTab v-for="i in virtualTabCount" :key="i" ref="virtualTab"></CarouselTab>
+			</div>
+
+			<template v-if="props.showControls">
+				<button class="carousel-control-prev" type="button" @click="internalContext.prev()">
+					<span class="carousel-control-prev-icon" aria-hidden="true"></span>
+					<span class="visually-hidden">{{i18n.t("general.previous")}}</span>
+				</button>
+				<button class="carousel-control-next" type="button" @click="internalContext.next()">
+					<span class="carousel-control-next-icon" aria-hidden="true"></span>
+					<span class="visually-hidden">{{i18n.t("general.next")}}</span>
+				</button>
+			</template>
 		</div>
 
-		<template v-if="props.showControls">
-			<button class="carousel-control-prev" type="button" @click="internalContext.prev()">
-				<span class="carousel-control-prev-icon" aria-hidden="true"></span>
-				<span class="visually-hidden">{{i18n.t("general.previous")}}</span>
-			</button>
-			<button class="carousel-control-next" type="button" @click="internalContext.next()">
-				<span class="carousel-control-next-icon" aria-hidden="true"></span>
-				<span class="visually-hidden">{{i18n.t("general.next")}}</span>
-			</button>
-		</template>
+		<div v-if="isCard" class="card-body">
+			<p class="card-text" ref="captionContainerRef"></p>
+		</div>
 	</div>
 </template>
 
 <style lang="scss">
 	.fm-carousel {
-		&, & > .carousel-inner {
-			display: flex;
-			min-height: 0;
-		}
-
-		> .carousel-inner {
-			> .carousel-item.active, > .carousel-item-next, > .carousel-item-prev {
+		> .carousel {
+			&, & > .carousel-inner {
 				display: flex;
-				flex-direction: column;
 				min-height: 0;
 			}
-		}
 
-		&.isDragging .carousel-item {
-			cursor: grabbing;
-
-			> * {
-				pointer-events: none;
+			> .carousel-inner {
+				> .carousel-item.active, > .carousel-item-next, > .carousel-item-prev {
+					display: flex;
+					flex-direction: column;
+					min-height: 0;
+				}
 			}
-		}
 
-		.carousel-caption.carousel-caption.carousel-caption {
-			background: rgba(var(--bs-body-bg-rgb), 0.75);
-			color: var(--bs-body-color);
-		}
+			&.isDragging .carousel-item {
+				cursor: grabbing;
 
-		.carousel-indicators.carousel-indicators.carousel-indicators [data-bs-target] {
-			background-color: var(--bs-body-color);
-		}
+				> * {
+					pointer-events: none;
+				}
+			}
 
-		&.showIndicators .carousel-caption {
-			bottom: 0.5rem;
-			padding-bottom: 2.25rem;
-		}
+			.carousel-caption.carousel-caption.carousel-caption {
+				background: rgba(var(--bs-body-bg-rgb), 0.75);
+				color: var(--bs-body-color);
+			}
 
-		.carousel-control-prev-icon, .carousel-control-next-icon {
-			// Copied from dark mode styles, causes arrows to be black instead of white
-			filter: invert(1) grayscale(100);
+			.carousel-indicators.carousel-indicators.carousel-indicators [data-bs-target] {
+				background-color: var(--bs-body-color);
+			}
+
+			&.showIndicators .carousel-caption {
+				bottom: 0.5rem;
+				padding-bottom: 2.25rem;
+			}
+
+			.carousel-control-prev-icon, .carousel-control-next-icon {
+				// Copied from dark mode styles, causes arrows to be black instead of white
+				filter: invert(1) grayscale(100);
+			}
 		}
 	}
 </style>

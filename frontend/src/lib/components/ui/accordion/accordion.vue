@@ -1,10 +1,8 @@
-
-
 <script lang="ts">
 	import { inject, provide, reactive, type InjectionKey } from "vue";
 	import { useModelWithFallback } from "../../../utils/vue";
 
-	interface AccordionContext {
+	export interface AccordionContext {
 		toggleItem(item: string): void;
 		activeItems: ReadonlyArray<string>;
 	}

@@ -96,7 +96,6 @@
     "@types/leaflet.locatecontrol": "^0.82.0",
     "@types/lodash-es": "^4.17.12",
     "@types/pluralize": "^0.0.33",
-    "cheerio": "1.0.0",
     "happy-dom": "^17.1.8",
     "osm-api": "^2.4.0",
     "rimraf": "^6.0.1",

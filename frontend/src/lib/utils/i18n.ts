@@ -6,6 +6,7 @@ import { cookies } from "./cookies";
 import { unitsValidator } from "facilmap-types";
 
 const namespace = "facilmap-frontend";
+export const newsNamespace = "facilmap-news";
 
 onI18nReady((i18n) => {
 	for (const [filename, module] of Object.entries(import.meta.glob('../../i18n/*.json', { eager: true }))) {
@@ -17,6 +18,11 @@ onI18nReady((i18n) => {
 		// }
 
 		i18n.addResourceBundle(lang, namespace, (module as any).default);
+	}
+
+	for (const [filename, module] of Object.entries(import.meta.glob('../../news/i18n/*.json', { eager: true }))) {
+		const lang = filename.match(/([^/\\]*)\.json$/i)![1];
+		i18n.addResourceBundle(lang, newsNamespace, (module as any).default);
 	}
 });
 

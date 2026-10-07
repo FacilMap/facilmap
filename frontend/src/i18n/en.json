@@ -9,6 +9,7 @@
     },
     "about-dialog": {
         "header": "Welcome to {{appName}}!",
+        "introduction": "FacilMap is a privacy-friendly, open-source versatile online map that combines different services based on OpenStreetMap and makes it easy to find places, plan trips and add markers, lines and routes to custom maps with live collaboration.",
         "start-header": "Get started",
         "start-explore": "**Explore** places, routes and community-sourced points of interest.",
         "start-create": "**Create** a custom map. Add your own markers, lines and routes.",
@@ -34,7 +35,15 @@
         "map-data-geoip-description": "This product includes GeoLite2 data created by MaxMind, available from {{maxmind}}.",
         "attribution-osm-contributors": "OSM Contributors",
         "programs-libraries": "Programs/libraries",
-        "icons": "Icons"
+        "icons": "Icons",
+        "help-documentation": "Documentation",
+        "help-issues": "Report a problem",
+        "help-questions": "Ask a question",
+        "help-chat": "Join our chat",
+        "donate-introduction": "FacilMap is a non-commercial free and open-source project developed by [Candid Dauth](https://github.com/cdauth). You are welcome to contribute code, improve the documentation, raise ideas on [GitHub](https://github.com/FacilMap/facilmap/issues) or contribute financially.",
+        "donate-more-options": "More options",
+        "news-show-more": "Show older news",
+        "news-hide-more": "Hide older news"
     },
     "add": {
         "hidden-markers-added-title_one": "Marker added",
@@ -572,7 +581,8 @@
         "zoom-in": "Zoom in",
         "zoom-out": "Zoom out",
         "locate": "Show my location",
-        "about": "About {{appName}}"
+        "about": "About {{appName}}",
+        "about-news": "What’s new?"
     },
     "leaflet-map-components": {
         "pois-too-many-results": "Not all POIs are shown because there are too many results. Zoom in to show all results.",

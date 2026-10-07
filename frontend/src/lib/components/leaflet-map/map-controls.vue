@@ -1,21 +1,24 @@
 <script setup lang="ts">
 	import { computed, ref, toRef } from "vue";
-	import { injectContextRequired } from "../facil-map-context-provider/facil-map-context-provider.vue";
+	import { injectContextRequired, requireClientContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
 	import { useI18n } from "../../utils/i18n";
 	import Icon from "../ui/icon.vue";
 	import vTooltip, { type TooltipPlacement } from "../../utils/tooltip";
 	import { dynamicModifiers } from "../../utils/vue";
 	import AboutDialog from "../about-dialog/about-dialog.vue";
+	import Badge from "../ui/badge.vue";
+	import { hasUnreadNews, shouldShowAboutDialog } from "../../utils/news.js";
 
-	const context = injectContextRequired();
 	const i18n = useI18n();
+	const context = injectContextRequired();
+	const client = requireClientContext(context);
 	const mapContext = toRef(() => context.components.map);
 
 	const props = defineProps<{
 		tooltipPlacement?: TooltipPlacement;
 	}>();
 
-	const aboutDialogOpen = ref(false);
+	const aboutDialogOpen = ref(client.value.mapId == null && shouldShowAboutDialog());
 	const aboutButtonRef = ref<HTMLElement>();
 
 	function zoomIn(ev: MouseEvent) {
@@ -27,6 +30,8 @@
 	}
 
 	const vPositionedTooltip = dynamicModifiers(vTooltip, computed(() => props.tooltipPlacement ? { [props.tooltipPlacement]: true } : {}));
+
+	const hasNews = computed(() => hasUnreadNews());
 </script>
 
 <template>
@@ -72,17 +77,21 @@
 
 		<button
 			type="button"
-			class="btn btn-outline-secondary fm-leaflet-map-controls-about"
+			class="btn btn-outline-secondary fm-leaflet-map-controls-about position-relative"
 			:aria-label="i18n.t('leaflet-map.about', { appName: context.appName })"
-			v-positioned-tooltip="i18n.t('leaflet-map.about', { appName: context.appName })"
+			v-positioned-tooltip="hasNews ? i18n.t('leaflet-map.about-news') : i18n.t('leaflet-map.about', { appName: context.appName })"
 			style="grid-area: about"
 			ref="aboutButtonRef"
 			@click="aboutDialogOpen = true"
-		>?</button>
+		>
+			?
+			<Badge v-if="hasNews" positioned colour="danger"></Badge>
+		</button>
 
 		<AboutDialog
 			v-if="aboutDialogOpen"
 			:animationReference="aboutButtonRef"
+			showNews
 			@hidden="aboutDialogOpen = false"
 		></AboutDialog>
 	</div>

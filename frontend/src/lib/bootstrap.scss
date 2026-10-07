@@ -69,7 +69,8 @@ $fm-button-colors: (
 
 // Set button style to bootstrap v3 theme
 @each $color, $value in map-merge($theme-colors, $fm-button-colors) {
-	.btn-#{$color} {
+	// Increase specificity to override color-mode specific button styles above
+	.btn-#{$color}.btn-#{$color} {
 		$border: darken($value, 14%);
 		--#{$prefix}btn-border-color: #{$border};
 		--#{$prefix}btn-hover-border-color: #{darken($border, 12%)};

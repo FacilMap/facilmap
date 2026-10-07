@@ -1,62 +1,50 @@
 <script setup lang="ts">
-	import { getLayers } from "facilmap-leaflet";
-	import { Util } from "leaflet";
-	import { computed, ref } from "vue";
+	import { computed, nextTick, ref, watch } from "vue";
 	import ModalDialog from "../ui/modal-dialog.vue";
-	import { injectContextRequired, requireMapContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
-	import { T, useI18n } from "../../utils/i18n";
+	import { injectContextRequired } from "../facil-map-context-provider/facil-map-context-provider.vue";
+	import { useI18n } from "../../utils/i18n";
 	import Accordion from "../ui/accordion/accordion.vue";
 	import AccordionItem from "../ui/accordion/accordion-item.vue";
-	import Carousel, { CarouselTab } from "../ui/carousel.vue";
-	import { markdownInline } from "facilmap-utils";
-	import { getNews } from "../../utils/news";
-	import storage from "../../utils/storage";
+	import AboutDialogStart from "./about-dialog-start.vue";
+	import AboutDialogHelp from "./about-dialog-help.vue";
+	import AboutDialogNews from "./about-dialog-news.vue";
+	import AboutDialogAbout from "./about-dialog-about.vue";
+	import AboutDialogDonate from "./about-dialog-donate.vue";
+	import { handleExpandNews, handleOpenAboutDialog, hasUnreadNews } from "../../utils/news.js";
 	import Badge from "../ui/badge.vue";
 
 	const i18n = useI18n();
 
 	const context = injectContextRequired();
-	const mapContext = requireMapContext(context);
 
 	const props = defineProps<{
 		animationReference?: HTMLElement;
+		/** If true, open with the news expanded if there are any unread ones. */
+		showNews?: boolean;
 	}>();
 
 	const emit = defineEmits<{
 		hidden: [];
 	}>();
 
-	const activeItems = ref(["start"]);
+	// Call this before loading the news for the first time. If this is our first time opening the dialog (and thus probably our
+	// first time using the app), we consider all news as read.
+	handleOpenAboutDialog();
 
-	// Store non-reactively, as it will be updated by reading the news
-	const lastNewsId = storage.lastNews;
+	const hasNews = computed(() => hasUnreadNews());
 
-	const news = computed(() => Object.entries(getNews()).map(([id, [date, text]]) => ({
-		id: Number(id),
-		date,
-		html: markdownInline(text, true),
-		isNew: Number(id) > 2// lastNewsId != null && Number(id) > lastNewsId
-	})).reverse());
+	const activeItems = ref([props.showNews && hasNews.value ? "news" : "start"]);
 
-	console.log(news);
-
-	const newsNew = computed(() => news.value.filter((n) => n.isNew));
-	const newsOld = computed(() => news.value.filter((n) => !n.isNew));
-
-	const layers = computed(() => {
-		const { baseLayers, overlays } = getLayers(mapContext.value.components.map);
-		return [...Object.values(baseLayers), ...Object.values(overlays)].flatMap((layer) => {
-			const attributionHtml = layer.getAttribution?.();
-			if (attributionHtml) {
-				return [{
-					id: Util.stamp(layer),
-					name: layer.options.fmGetName?.() ?? layer.options.fmName,
-					attributionHtml
-				}];
-			} else {
-				return [];
-			}
+	if (activeItems.value.includes("news")) {
+		void nextTick(() => {
+			handleExpandNews();
 		});
+	}
+
+	watch(activeItems, () => {
+		if (activeItems.value.includes("news")) {
+			handleExpandNews();
+		}
 	});
 </script>
 
@@ -68,198 +56,37 @@
 		:animationReference="props.animationReference"
 		@hidden="emit('hidden')"
 	>
+		<p>{{i18n.t("about-dialog.introduction")}}</p>
+
 		<Accordion v-model:show="activeItems">
 			<AccordionItem id="start" :header="i18n.t('about-dialog.start-header')">
-				<Carousel showControls showIndicators>
-					<CarouselTab>
-						<img src="./explore.png" alt="">
-						<div class="carousel-caption" v-html="markdownInline(i18n.t('about-dialog.start-explore'), true)"></div>
-					</CarouselTab>
-					<CarouselTab>
-						<div style="height: 250px; background: #555;"></div>
-						<div class="carousel-caption" v-html="markdownInline(i18n.t('about-dialog.start-create'), true)"></div>
-					</CarouselTab>
-					<CarouselTab>
-						<div style="height: 250px; background: #666;"></div>
-						<div class="carousel-caption" v-html="markdownInline(i18n.t('about-dialog.start-share'), true)"></div>
-					</CarouselTab>
-				</Carousel>
+				<AboutDialogStart></AboutDialogStart>
 			</AccordionItem>
 
 			<AccordionItem id="help" :header="i18n.t('about-dialog.help-header')">
-				<ul>
-					<li>
-						<a href="https://docs.facilmap.org/" target="_blank">
-							<img src="./facilmap.svg" alt="">
-							Documentation
-						</a>
-					</li>
-					<li>
-						<a href="https://github.com/FacilMap/facilmap/issues" target="_blank">
-							<img src="./github.svg" alt="">
-							Report a problem
-						</a>
-					</li>
-					<li>
-						<a href="https://github.com/FacilMap/facilmap/discussions" target="_blank">
-							<img src="./github.svg" alt="">
-							Ask a question
-						</a>
-					</li>
-					<li>
-						<a href="https://matrix.to/#/#facilmap:rankenste.in" target="_blank">
-							<img src="./matrix.svg" alt="">
-							Join our chat
-						</a>
-					</li>
-				</ul>
+				<AboutDialogHelp></AboutDialogHelp>
 			</AccordionItem>
 
 			<AccordionItem id="donate">
 				<template #header>
 					<span class="fm-donate">♥&nbsp;{{i18n.t("common.donate")}}</span>
 				</template>
+				<AboutDialogDonate></AboutDialogDonate>
 			</AccordionItem>
 
-			<AccordionItem id="news" :header="i18n.t('about-dialog.news-header')">
-				<dl v-if="newsNew.length > 0">
-					<template v-for="item in newsNew" :key="item.id">
-						<dt>
-							<span class="position-relative">
-								<Badge colour="secondary"></Badge>
-								{{item.date}}
-							</span>
-						</dt>
-						<dd v-html="item.html"></dd>
-					</template>
-				</dl>
-
-				<hr v-if="newsOld.length > 0 && newsNew.length > 0">
-
-				<dl v-if="newsOld.length > 0" class="text-body-secondary">
-					<template v-for="item in newsOld" :key="item.id">
-						<dt>{{item.date}}</dt>
-						<dd v-html="item.html"></dd>
-					</template>
-				</dl>
+			<AccordionItem id="news">
+				<template #header>
+					<span class="position-relative pe-2">
+						{{i18n.t('about-dialog.news-header')}}
+						<Badge v-if="hasNews" positioned colour="danger"></Badge>
+					</span>
+				</template>
+				<AboutDialogNews></AboutDialogNews>
 			</AccordionItem>
 
 			<AccordionItem id="about" :header="i18n.t('about-dialog.about-header', { appName: context.appName })">
-				<p>
-					<T k="about-dialog.license-text">
-						<template #facilmap>
-							<a href="https://github.com/facilmap/facilmap" target="_blank"><strong>{{i18n.t('about-dialog.license-text-facilmap')}}</strong></a>
-						</template>
-						<template #license>
-							<a href="https://www.gnu.org/licenses/agpl-3.0.en.html" target="_blank">{{i18n.t('about-dialog.license-text-license')}}</a>
-						</template>
-					</T>
-				</p>
-				<p>
-					<T k="about-dialog.issues-text">
-						<template #tracker>
-							<a href="https://github.com/FacilMap/facilmap/issues" target="_blank">{{i18n.t('about-dialog.issues-text-tracker')}}</a>
-						</template>
-					</T>
-				</p>
-
-				<p>
-					<T k="about-dialog.help-text">
-						<template #documentation>
-							<a href="https://docs.facilmap.org/users/" target="_blank">{{i18n.t('about-dialog.help-text-documentation')}}</a>
-						</template>
-						<template #discussions>
-							<a href="https://github.com/FacilMap/facilmap/discussions" target="_blank">{{i18n.t('about-dialog.help-text-discussions')}}</a>
-						</template>
-						<template #chat>
-							<a href="https://matrix.to/#/#facilmap:rankenste.in" target="_blank">{{i18n.t('about-dialog.help-text-chat')}}</a>
-						</template>
-					</T>
-				</p>
-
-				<p><a href="https://docs.facilmap.org/users/privacy/" target="_blank">{{i18n.t('about-dialog.privacy-information')}}</a></p>
-				<h4>{{i18n.t('about-dialog.map-data')}}</h4>
-				<dl class="row">
-					<template v-for="{ id, name, attributionHtml } in layers" :key="id">
-						<dt class="col-sm-3">{{name}}</dt>
-						<dd class="col-sm-9" v-html="attributionHtml"></dd>
-					</template>
-
-					<dt class="col-sm-3">{{i18n.t('about-dialog.map-data-search')}}</dt>
-					<dd class="col-sm-9"><a href="https://nominatim.openstreetmap.org/" target="_blank">Nominatim</a> / <a href="https://www.openstreetmap.org/copyright" target="_blank">{{i18n.t('about-dialog.attribution-osm-contributors')}}</a></dd>
-
-					<dt class="col-sm-3">{{i18n.t('about-dialog.map-data-pois')}}</dt>
-					<dd class="col-sm-9"><a href="https://overpass-api.de/" target="_blank">Overpass API</a> / <a href="https://www.openstreetmap.org/copyright" target="_blank">{{i18n.t('about-dialog.attribution-osm-contributors')}}</a></dd>
-
-					<dt class="col-sm-3">{{i18n.t('about-dialog.map-data-directions')}}</dt>
-					<dd class="col-sm-9"><a href="https://www.mapbox.com/api-documentation/#directions">Mapbox Directions API</a> / <a href="https://openrouteservice.org/">OpenRouteService</a> / <a href="https://www.openstreetmap.org/copyright" target="_blank">{{i18n.t('about-dialog.attribution-osm-contributors')}}</a></dd>
-
-					<dt class="col-sm-3">{{i18n.t('about-dialog.map-data-geoip')}}</dt>
-					<dd class="col-sm-9">
-						<T k="about-dialog.map-data-geoip-description">
-							<template #maxmind>
-								<a href="https://www.maxmind.com">https://www.maxmind.com</a>
-							</template>
-						</T>
-					</dd>
-				</dl>
-				<h4>{{i18n.t('about-dialog.programs-libraries')}}</h4>
-				<ul>
-					<li><a href="https://nodejs.org/" target="_blank">Node.js</a></li>
-					<li><a href="https://sequelize.org/" target="_blank">Sequelize</a></li>
-					<li><a href="https://socket.io/" target="_blank">socket.io</a></li>
-					<li><a href="https://www.typescriptlang.org/" target="_blank">TypeScript</a></li>
-					<li><a href="https://vuejs.org/" target="_blank">Vue.js</a></li>
-					<li><a href="https://vitejs.dev/" target="_blank">Vite</a></li>
-					<li><a href="https://getbootstrap.com/" target="_blank">Bootstrap</a></li>
-					<li><a href="https://leafletjs.com/" target="_blank">Leaflet</a></li>
-					<li><a href="http://project-osrm.org/" target="_blank">OSRM</a></li>
-					<li><a href="https://openrouteservice.org/" target="_blank">OpenRouteService</a></li>
-					<li><a href="https://nominatim.openstreetmap.org/" target="_blank">Nominatim</a></li>
-					<li><a href="https://github.com/joewalnes/filtrex" target="_blank">Filtrex</a></li>
-					<li><a href="https://github.com/chjj/marked" target="_blank">Marked</a></li>
-					<li><a href="https://github.com/cure53/DOMPurify" target="_blank">DOMPurify</a></li>
-					<li><a href="https://expressjs.com/" target="_blank">Express</a></li>
-					<li><a href="https://vuepress.vuejs.org/" target="_blank">Vuepress</a></li>
-					<li><a href="https://www.i18next.com/" target="_blank">I18next</a></li>
-				</ul>
-				<h4>{{i18n.t('about-dialog.icons')}}</h4>
-				<ul>
-					<li><a href="https://github.com/twain47/Open-SVG-Map-Icons/" target="_blank">Open SVG Map Icons</a></li>
-					<li><a href="https://glyphicons.com/" target="_blank">Glyphicons</a></li>
-					<li><a href="https://zavoloklom.github.io/material-design-iconic-font/index.html" target="_blank">Material Design Iconic Font</a></li>
-					<li><a href="https://fontawesome.com/" target="_blank">Font Awesome</a></li>
-				</ul>
+				<AboutDialogAbout></AboutDialogAbout>
 			</AccordionItem>
 		</Accordion>
 	</ModalDialog>
 </template>
-
-<style lang="scss">
-	.fm-about {
-		ul {
-			margin-left: 0;
-			padding-left: 0;
-			display: grid;
-			grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-			gap: 5px;
-
-			li {
-				border: 1px solid rgba(0,0,0,.125);
-				display: flex;
-
-				a {
-					flex-grow: 1;
-					padding: 5px 10px;
-					text-align: center;
-
-					img {
-						display: block;
-						margin: 5px auto;
-						height: 30px;
-					}
-				}
-			}
-		}
-	}
-</style>
