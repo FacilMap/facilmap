@@ -25,5 +25,9 @@
         "hidden-objects-added-message": "{{count}} objektů bylo úspěšně přidáno, ale aktivní filtr brání jejich zobrazení.",
         "hidden-objects-added-title": "{{count}} objektů přidáno",
         "hidden-objects-added-message-some": "{{count}} objektů bylo úspěšně přidáno, ale aktivní filtr brání zobrazení některých z nich."
+    },
+    "common": {
+        "coordinates": "Souřadnice",
+        "donate": "Darujte"
     }
 }
