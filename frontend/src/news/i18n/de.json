@@ -1,1 +1,27 @@
-{}
+{
+	"news": {
+		"2026-03-30-Hhgb_gso-heading": "Routenstatistik",
+		"2026-03-30-Hhgb_gso-content": "Beim Berechnen einer Route mit der aktivierten Option „Details laden“ ist jetzt eine Statistik (Anteile der Straßenarten, Oberflächen, etc.) über den Infoknopf neben dem Aufstieg/Abstieg verfügbar.",
+		"2026-04-09-wkvkxNQk-heading": "POI-Varianten (kostenpflichtig / kostenlos)",
+		"2026-04-09-wkvkxNQk-content": "Die POI-Typen „Toilette“ und „Kfz-Parkplatz“ haben jetzt ein kleines Untermenü, über das zum Beispiel nur solche ohne Gebühr angezeigt werden können. Auch für andere POI-Typen können jetzt Varianten eingebaut werden; Vorschläge sind willkommen.",
+		"2026-04-09-mZV53Jjp-heading": "Tastenkürzel",
+		"2026-04-09-mZV53Jjp-content": "Es gibt jetzt Tastenkürzel fürs Bearbeiten (<kbd>e</kbd>) und Löschen (<kbd>Entf</kbd> oder <kbd>Backspace</kbd>) von Markern/Linien.",
+		"2026-04-14-4tou7_2l-heading": "Schnellere POIs",
+		"2026-04-14-4tou7_2l-content": "Der Server, von dem die POIs bislang geladen wurden, war häufig überlastet. FacilMap hostet die POIs deshalb jetzt selbst, weshalb diese deutlich schneller und zuverlässiger laden sollten. Finanzielle Unterstützung ist willkommen, zum Beispiel durch eine kleine wiederkehrende [Spende](https://docs.facilmap.org/users/contribute/).",
+		"2026-04-14-OBYNgWha-heading": "Übersetzungsfortschritte",
+		"2026-04-14-OBYNgWha-content": "In der Sprachauswahl in den Benutzereinstellungen wird jetzt angezeigt, wie vollständig die Übersetzung einer Sprache bislang ist. Unterstützung bei den Übersetzungen ist auf der [Übersetzungsplatform](https://hosted.weblate.org/projects/facilmap/) willkommen.",
+		"2026-04-30-CiW2OvMj-heading": "Höhere Zoom-Level",
+		"2026-04-30-CiW2OvMj-content": "Bei einigen Kartenstilen kann jetzt weiter hineingezoomt werden. Beim Standardkartenstil „Mapnik“ zum Beispiel kann jetzt bis Level 19 statt 18 gezoomt werden.",
+		"2026-04-30-366qozps-heading": "OpenCycleMap-Kartenstil",
+		"2026-04-30-366qozps-content": "Der OpenCycleMap-Kartenstil ist wieder verfügbar. Er fehlte aufgrund eines Bugs.",
+		"2026-05-10-Q5v_OStD-heading": "Verbessertes Objektdesign",
+		"2026-05-10-Q5v_OStD-content": "Marker, Linien und Polygone (bei Suchergebnissen) haben ein neues Design. Die Umrandung ist jetzt immer schwarz und einen Pixel breit, und die Hervorhebung aktiver Objekte ist immer weiß. Bislang hatte es keine Hervorhebung gegeben, sondern eine dicke schwarze Umrandung für helle Objekte und eine dicke weiße Umrandung für dunkle Objekte. Das neue Design macht Objekte sichtbarer und gibt auch deren eingestellte Farbe besser wieder.",
+		"2026-06-10-_wvav_t7-heading": "Mautstraßen-Kartenstil",
+		"2026-06-10-_wvav_t7-content": "Ein neuer Kartenstil steht zur Auswahl, der Mautstraßen hervorhebt.",
+		"2026-06-29-zETkJnOb-heading": "Kartenstile für Radfahrverbote und Kopfsteilpflaster",
+		"2026-06-29-zETkJnOb-content": "Es gibt zwei neue Kartenstile, die Radfahrverbote und Kopfsteinpflasterstraßen hervoheben. Wenn sie aktiv sind, wird eine Legende eingeblendet, die die verschiedenen Farben erklärt. Auch für die anderen überlagernden Kartenstile (ÖPNV, Fahrradrouten, Wanderwege und Mautstraßen) wurde eine Legende eingebaut.",
+		"2026-06-30-FFuYJwNx-heading": "Kartenstile „Mapnik Water“ und Schifffahrtszeichen.",
+		"2026-06-30-FFuYJwNx-content": "Die Kartenstile „Mapnik Water“ und „Schifffahrtszeichen“ sind wieder verfügbar, nachdem der dahinter stehende Dienst (Freie Tonne) wiederbelebt wurde.",
+		"2026-07-24-IBNnqPRS-heading": "Formelfelder"
+	}
+}
