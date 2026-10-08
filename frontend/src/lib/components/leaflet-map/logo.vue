@@ -16,7 +16,7 @@
 <template>
 	<div class="fm-logo">
 		<a
-			v-if="!context.settings.linkLogo"
+			v-if="context.settings.linkLogo"
 			:href="selfUrl"
 			target="_blank"
 			v-tooltip.right="i18n.t('leaflet-map.open-full-size', { appName: context.appName })"
@@ -41,11 +41,7 @@
 		}
 
 		img {
-			position: absolute;
 			transform: translate(-40px, -39px);
-			// left: -40px;
-			// bottom: -39px;
-			overflow: hidden;
 			color-scheme: only light;
 		}
 	}

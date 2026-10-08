@@ -64,7 +64,9 @@
 					{{mapContext.overpassMessage}}
 				</div>
 
-				<Logo v-if="mapContext"></Logo>
+				<div v-if="mapContext" class="fm-leaflet-map-logo">
+					<Logo></Logo>
+				</div>
 
 				<div class="spinner-border fm-leaflet-map-spinner" v-show="client.loading > 0 || (mapContext && mapContext.loading > 0)"></div>
 
@@ -293,10 +295,13 @@
 			color: #00272a;
 		}
 
-		.fm-logo {
+		.fm-leaflet-map-logo {
 			position: absolute;
-			bottom: calc(var(--fm-leaflet-map-inset-bottom, 0px) + 15px);
-			left: calc(var(--facilmap-inset-left, 0px) + 15px);
+			padding: 40px 40px calc(var(--fm-leaflet-map-inset-bottom, 0px) + 15px) calc(var(--facilmap-inset-left, 0px) + 15px);
+			overflow: hidden;
+			bottom: 0;
+			left: 0;
+			pointer-events: none;
 		}
 
 	}
