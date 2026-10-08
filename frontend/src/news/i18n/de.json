@@ -22,6 +22,13 @@
 		"2026-06-29-zETkJnOb-content": "Es gibt zwei neue Kartenstile, die Radfahrverbote und Kopfsteinpflasterstraßen hervoheben. Wenn sie aktiv sind, wird eine Legende eingeblendet, die die verschiedenen Farben erklärt. Auch für die anderen überlagernden Kartenstile (ÖPNV, Fahrradrouten, Wanderwege und Mautstraßen) wurde eine Legende eingebaut.",
 		"2026-06-30-FFuYJwNx-heading": "Kartenstile „Mapnik Water“ und Schifffahrtszeichen.",
 		"2026-06-30-FFuYJwNx-content": "Die Kartenstile „Mapnik Water“ und „Schifffahrtszeichen“ sind wieder verfügbar, nachdem der dahinter stehende Dienst (Freie Tonne) wiederbelebt wurde.",
-		"2026-07-24-IBNnqPRS-heading": "Formelfelder"
+		"2026-07-24-IBNnqPRS-heading": "Formelfelder",
+		"2026-07-24-IBNnqPRS-content": "Formelfelder sind jetzt als neuer Feldtyp für Marker- und Linientypen verfügbar. Sie berechnen Werte aus anderen Feldwerten oder den Metadaten des Markers oder der Linie und benutzen dafür die selbe Syntax wie Filter. Zum Beispiel könnte für Linien ein „Tage“-Feld angelegt werden, das die Anzahl der Tage aus der Länge der Route und einer maximalen Strecke pro Tag berechnet. Formeln können auch Markdown und damit Text mit Formatierungen produzieren.",
+		"2026-07-25-wukaUtqo-heading": "Formelfelder können einander referenzieren",
+		"2026-07-25-wukaUtqo-content": "Formelfelder können jetzt auch die berechneten Werte anderer Formelfelder referenzieren.",
+		"2026-08-19-3q7DItDn-heading": "Eigene Funktionen und Routenformeln",
+		"2026-08-19-3q7DItDn-content": "In den Karteneinstellungen gibt es jetzt einen „Formeln“-Tab. Dort können _eigene Funktionen_ definiert werden, welche dann in allen Filtern und Formeln auf der Karte zur Verfügung stehen. Eine eigene Funktion kann auch einen einfachen Wert zurück geben, um als Konstante zu fungieren. _Routenformeln_ zeigen berechnete Werte an, wenn eine Route berechnet wird, während die Karte geöffnet wird, ohne dass diese Route erst als Linie abgespeichert werden muss.",
+		"2026-10-08-lPIE9IMa-heading": "„Über FacilMap“-Dialog",
+		"2026-10-08-lPIE9IMa-content": "Der neue „Über FacilMap“-Dialog begrüßt neue Nutzer der App und informiert wiederkehrende Nutzer über die neuesten Änderungen."
 	}
 }
