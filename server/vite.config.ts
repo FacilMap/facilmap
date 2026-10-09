@@ -3,12 +3,14 @@ import dtsPlugin from "vite-plugin-dts";
 import tsconfigPaths from "vite-tsconfig-paths";
 import { isAbsolute } from "node:path";
 import languagesPlugin from "facilmap-utils/rollup-languages";
+import newsMtimesPlugin from "facilmap-utils/rollup-news-mtimes";
 
 export default defineConfig({
 	plugins: [
 		dtsPlugin({ rollupTypes: true, tsconfigPath: "./tsconfig.build.json" }),
 		tsconfigPaths({ loose: true }),
-		languagesPlugin()
+		languagesPlugin(),
+		newsMtimesPlugin()
 	],
 	build: {
 		sourcemap: false,

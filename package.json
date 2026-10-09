@@ -22,7 +22,7 @@
     "dev-server": "yarn workspace facilmap-server run dev-server",
     "check-types": "yarn workspaces foreach -vt run check-types",
     "test": "yarn workspaces foreach -v run test",
-    "generate-news": "yarn workspace facilmap-frontend run generate-news"
+    "generate-news": "yarn workspace facilmap-utils run generate-news"
   },
   "devDependencies": {
     "@types/eslint": "^9.6.1",

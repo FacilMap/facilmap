@@ -1,24 +1,12 @@
-import { getI18n, newsNamespace } from "./i18n";
 import storage from "./storage";
-import newsJson from "../../news/news.json";
+import { getLastNews, getNews, type News } from "facilmap-utils";
 
-export interface News {
-	id: string;
-	date: string;
-	heading: string;
-	content: string;
+export interface PersonalNews extends News {
 	isNew: boolean;
 }
 
-export function getNews(lastNews = storage.lastNews): News[] {
-	const i18n = getI18n();
-
-	const news = newsJson.map((n) => ({
-		id: n.id,
-		date: n.date,
-		heading: i18n.t(`news.${n.date}-${n.id}-heading`, { ns: newsNamespace }),
-		content: i18n.t(`news.${n.date}-${n.id}-content`, { ns: newsNamespace })
-	}));
+export function getPersonalNews(lastNews = storage.lastNews): PersonalNews[] {
+	const news = getNews();
 
 	let lastReadIdx = lastNews && news.findIndex((n) => n.id === lastNews!.id);
 	if (!lastReadIdx && lastNews) {
@@ -34,11 +22,7 @@ export function getNews(lastNews = storage.lastNews): News[] {
 }
 
 export function hasUnreadNews(lastNews = storage.lastNews): boolean {
-	return !!lastNews && getNews(lastNews).some((n) => n.isNew);
-}
-
-function getLastNews(): { id: string; date: string } {
-	return newsJson[newsJson.length - 1];
+	return !!lastNews && getPersonalNews(lastNews).some((n) => n.isNew);
 }
 
 /**

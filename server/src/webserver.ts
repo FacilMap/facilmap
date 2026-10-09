@@ -16,6 +16,7 @@ import { exportCsv } from "./export/csv.js";
 import * as z from "zod";
 import cookieParser from "cookie-parser";
 import { getI18n, i18nMiddleware } from "./i18n.js";
+import { getNewsAtom } from "./news.js";
 
 function getBaseUrl(req: Request): string {
 	return config.baseUrl ?? `${req.protocol}://${req.host}/`;
@@ -123,6 +124,11 @@ export async function initWebserver(database: Database, port: number, host?: str
 		res.header("Content-type", "application/json");
 
 		res.send(getOembedJson(baseUrl, mapData, query));
+	});
+
+	app.get(`${paths.base}news.atom`, async (req, res) => {
+		res.header("Content-type", "application/atom+xml");
+		void getNewsAtom(getBaseUrl(req)).pipeTo(Writable.toWeb(res));
 	});
 
 	app.use(await getStaticFrontendMiddleware());

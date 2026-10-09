@@ -6,6 +6,7 @@
 	},
 	"include": [
 		"vite.config.ts",
-		"rollup-languages.ts"
+		"rollup-languages.ts",
+		"rollup-news-mtimes.ts"
 	]
 }

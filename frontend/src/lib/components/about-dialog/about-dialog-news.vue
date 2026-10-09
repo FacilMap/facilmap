@@ -1,19 +1,21 @@
 <script setup lang="ts">
 	import { computed, ref } from "vue";
-	import { getNews } from "../../utils/news";
+	import { getPersonalNews } from "../../utils/news";
 	import storage from "../../utils/storage";
 	import Badge from "../ui/badge.vue";
-	import { markdownBlock, markdownInline, quoteHtml } from "facilmap-utils";
+	import { LANG_QUERY, markdownBlock, markdownInline, quoteHtml } from "facilmap-utils";
 	import Collapse from "../ui/collapse.vue";
 	import { useI18n } from "../../utils/i18n";
 	import Icon from "../ui/icon.vue";
+	import config from "../../../map/config";
+	import vTooltip from "../../utils/tooltip";
 
 	const i18n = useI18n();
 
 	// Store non-reactively, as it will be updated by reading the news
 	const lastNews = storage.lastNews;
 
-	const news = computed(() => getNews(lastNews).map((n) => ({
+	const news = computed(() => getPersonalNews(lastNews).map((n) => ({
 		...n,
 		headingHtml: markdownInline(n.heading, true),
 		contentHtml: markdownBlock(n.content, true)
@@ -28,6 +30,15 @@
 
 <template>
 	<div class="fm-about-dialog-news">
+		<a
+			:href="`.${config.basePath}news.atom?${encodeURIComponent(LANG_QUERY)}=${encodeURIComponent(i18n.currentLanguage)}`"
+			target="_blank"
+			v-tooltip="i18n.t('about-dialog.news-atom-feed')"
+			class="atom-feed-link"
+		>
+			<img src="./feed.svg" :alt="i18n.t('about-dialog.news-atom-feed')">
+		</a>
+
 		<dl v-if="newsNew.length > 0">
 			<template v-for="item in newsNew" :key="item.id">
 				<dt>
@@ -79,6 +90,14 @@
 
 <style lang="scss">
 	.fm-about-dialog-news {
+		.atom-feed-link {
+			float: right;
+
+			img {
+				height: 2rem;
+			}
+		}
+
 		dt {
 			margin: 0.25rem 0;
 			display: flex;

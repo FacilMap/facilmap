@@ -43,7 +43,8 @@
         "donate-introduction": "FacilMap is a non-commercial free and open-source project developed by [Candid Dauth](https://github.com/cdauth). You are welcome to contribute code, improve the documentation, raise ideas on [GitHub](https://github.com/FacilMap/facilmap/issues) or contribute financially.",
         "donate-more-options": "More options",
         "news-show-more": "Show older news",
-        "news-hide-more": "Hide older news"
+        "news-hide-more": "Hide older news",
+        "news-atom-feed": "Atom feed"
     },
     "add": {
         "hidden-markers-added-title_one": "Marker added",

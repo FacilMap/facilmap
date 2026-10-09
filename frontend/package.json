@@ -36,8 +36,7 @@
     "dev-server": "NODE_OPTIONS='--import tsx' vite",
     "test": "NODE_OPTIONS='--import tsx' vitest run",
     "test-watch": "NODE_OPTIONS='--import tsx' vitest",
-    "check-types": "vue-tsc -b --emitDeclarationOnly",
-    "generate-news": "NODE_OPTIONS='--import tsx' vite-node src/news/generate-news.ts"
+    "check-types": "vue-tsc -b --emitDeclarationOnly"
   },
   "dependencies": {
     "@ckpack/vue-color": "^1.6.0",
@@ -103,7 +102,6 @@
     "svgo": "^3.3.2",
     "tsx": "^4.19.3",
     "typescript": "^5.7.3",
-    "vite-node": "^6.0.0",
     "vite-tsconfig-paths": "^5.1.4",
     "vitest": "^3.0.7",
     "vue-component-type-helpers": "^2.2.8",

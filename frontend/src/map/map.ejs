@@ -17,6 +17,9 @@
 		<link rel="manifest" href=".<%=paths.base%>manifest.json">
 		<link rel="search" type="application/opensearchdescription+xml" title="<%=appName%>" href=".<%=paths.base%>opensearch.xml">
 		<link rel="alternate" type="application/json+oembed" href=".<%=paths.base%>oembed?url=<%=encodeURIComponent(url)%>&amp;format=json" title="<%=normalizePageTitle(mapData ? normalizeMapName(mapData.name) : undefined, appName)%>" />
+<% if (!mapData) { -%>
+		<link id="fm-news-atom-link" rel="alternate" type="application/atom+xml" href="<%=newsAtomPath%>" />
+<% } -%>
 		<link rel="iframely geolocation web-share resizable" href="<%=url%>">
 		<style type="text/css">
 			html, body, #app {

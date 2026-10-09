@@ -65,3 +65,7 @@ In the map settings, there is now a “Formulas” tab. _Custom functions_ can b
 ## 2026-10-08: “About FacilMap” dialog
 
 The new “About FacilMap” dialog welcomes new users to the app and informs returning users about the latest changes.
+
+## 2026-10-09: Atom feed for what’s new
+
+You can now subscribe to an Atom feed to get informed about these latest changes to FacilMap.

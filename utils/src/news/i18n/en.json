@@ -29,6 +29,8 @@
 		"2026-08-19-3q7DItDn-heading": "Custom functions and route formulas",
 		"2026-08-19-3q7DItDn-content": "In the map settings, there is now a “Formulas” tab. _Custom functions_ can be defined there to be used in any filter or formula expression on your map. A custom function can also return a simple value to act as a constant. _Route formulas_ allow displaying calculated values when calculating a route while having the map open, without having to save that route as a line.",
 		"2026-10-08-lPIE9IMa-heading": "“About FacilMap” dialog",
-		"2026-10-08-lPIE9IMa-content": "The new “About FacilMap” dialog welcomes new users to the app and informs returning users about the latest changes."
+		"2026-10-08-lPIE9IMa-content": "The new “About FacilMap” dialog welcomes new users to the app and informs returning users about the latest changes.",
+		"2026-10-09-5TWveir7-heading": "Atom feed for what’s new",
+		"2026-10-09-5TWveir7-content": "You can now subscribe to an Atom feed to get informed about these latest changes to FacilMap."
 	}
 }

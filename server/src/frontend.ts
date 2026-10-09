@@ -5,7 +5,7 @@ import type { ID, MapData, Type } from "facilmap-types";
 import * as ejs from "ejs";
 import { Router, type RequestHandler } from "express";
 import { static as expressStatic } from "express";
-import { normalizeMapName, type InjectedConfig, quoteHtml, normalizePageTitle, normalizePageDescription, formatTypeName } from "facilmap-utils";
+import { normalizeMapName, type InjectedConfig, quoteHtml, normalizePageTitle, normalizePageDescription, formatTypeName, LANG_QUERY } from "facilmap-utils";
 import config from "./config";
 import { streamPromiseToStream, streamReplace } from "./utils/streams";
 import { ReadableStream } from "stream/web";
@@ -73,7 +73,8 @@ function getInjectedConfig(): InjectedConfig {
 		hideCommercialMapLinks: config.hideCommercialMapLinks,
 		supportsRoutes: !!config.mapboxToken || !!config.orsToken,
 		supportsAdvancedRoutes: !!config.orsToken,
-		donateUrl: config.donateUrl
+		donateUrl: config.donateUrl,
+		basePath: paths.base
 	};
 }
 
@@ -89,6 +90,8 @@ export async function renderMap(params: RenderMapParams): Promise<string> {
 		getScripts("mapEntry")
 	]);
 
+	const i18n = getI18n();
+
 	return ejs.render(template, {
 		appName: config.appName,
 		config: getInjectedConfig(),
@@ -96,7 +99,8 @@ export async function renderMap(params: RenderMapParams): Promise<string> {
 		normalizePageTitle,
 		normalizePageDescription,
 		normalizeMapName,
-		i18n: getI18n(),
+		i18n,
+		newsAtomPath: `.${paths.base}news.atom?${encodeURIComponent(LANG_QUERY)}=${encodeURIComponent(i18n.currentLanguage)}`,
 		...injections,
 		paths,
 		...params

@@ -4,6 +4,7 @@ export * from "./filter.js";
 export * from "./format.js";
 export * from "./i18n.js";
 export * from "./i18n-utils.js";
+export * from "./news/news.js";
 export * from "./objects.js";
 export * from "./osm/changeset.js";
 export * from "./osm/feature-blame.js";
