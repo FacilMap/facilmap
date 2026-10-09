@@ -23,7 +23,7 @@ export function getNewsAtom(baseUrl: string): ReadableStream<string> {
 			`\t\t<name>${quoteHtml(config.appName)}</name>\n` +
 			`\t</author>\n` +
 			`\t<link rel="self" href="${quoteHtml(`${urlPrefix}news.atom`)}" />\n` +
-			`\t<icon>${quoteHtml(`${urlPrefix}favicon.svg`)}</icon>\n`
+			`\t<icon>${quoteHtml(`${urlPrefix}static/favicon.svg`)}</icon>\n`
 		);
 
 		const dateTimes: Record<string, Date> = {};
