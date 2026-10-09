@@ -12,6 +12,7 @@
 	import AboutDialogDonate from "./about-dialog-donate.vue";
 	import { handleExpandNews, handleOpenAboutDialog, hasUnreadNews } from "../../utils/news.js";
 	import Badge from "../ui/badge.vue";
+	import config from "../../../map/config.js";
 
 	const i18n = useI18n();
 
@@ -67,7 +68,7 @@
 				<AboutDialogHelp></AboutDialogHelp>
 			</AccordionItem>
 
-			<AccordionItem id="donate">
+			<AccordionItem v-if="config.donateUrl === 'https://docs.facilmap.org/users/contribute/'" id="donate">
 				<template #header>
 					<span class="fm-donate">♥&nbsp;{{i18n.t("common.donate")}}</span>
 				</template>
