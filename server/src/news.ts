@@ -2,7 +2,7 @@ import { getLastNewsModification, getNews, markdownBlock, markdownInline, quoteH
 import config from "./config"
 import { asyncIteratorToStream } from "./utils/streams"
 import { ReadableStream } from "stream/web";
-import { paths } from "facilmap-frontend/build";
+import { paths } from "facilmap-frontend/build.js";
 import { getI18n } from "./i18n";
 
 const tagPrefix = "tag:facilmap.org,2026-10-09:";
