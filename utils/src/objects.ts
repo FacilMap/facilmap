@@ -53,7 +53,7 @@ export function normalizeFieldValue(field: Field, value: string | undefined, ign
 	} else if (field.type === "formula") {
 		return "";
 	} else {
-		return value ?? "";
+		return value ?? (ignoreDefault ? "" : (field.default ?? ""));
 	}
 }
 
