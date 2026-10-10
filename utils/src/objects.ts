@@ -1,4 +1,4 @@
-import { lineValidator, markerValidator, type CRU, type Field, type FieldOption, type Line, type LineTemplate, type Marker, type Type } from "facilmap-types";
+import { lineValidator, markerValidator, type CRU, type Field, type FieldOption, type FieldUpdate, type Line, type LineTemplate, type Marker, type Type } from "facilmap-types";
 import { omit } from "lodash-es";
 import { getI18n } from "./i18n.js";
 
@@ -43,6 +43,21 @@ export function getSelectedOption(field: Field, value: string | undefined, ignor
 	};
 
 	return (value != null && get(value)) || (!ignoreDefault && field.default != null && get(field.default)) || field.options?.[0];
+}
+
+export function getControlNumber(type: Type<CRU.READ | CRU.CREATE_VALIDATED>, field: Field | FieldUpdate): number {
+	return [
+		field.controlColour,
+		...(type.type == "marker" ? [
+			field.controlSize,
+			field.controlIcon,
+			field.controlShape
+		] : []),
+		...(type.type == "line" ? [
+			field.controlWidth,
+			field.controlStroke
+		] : [])
+	].filter((v) => v).length;
 }
 
 export function normalizeFieldValue(field: Field, value: string | undefined, ignoreDefault = false): string {

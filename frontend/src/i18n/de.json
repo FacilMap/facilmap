@@ -299,25 +299,26 @@
         "fields": "Felder",
         "field-name": "Name",
         "field-type": "Art",
-        "field-default-value": "Standardwert",
         "field-delete": "Löschen",
-        "field-type-input": "Textfeld einzeilig",
-        "field-type-textarea": "Textfeld mehrzeilig",
-        "field-type-dropdown": "Dropdown",
-        "field-type-checkbox": "Checkbox",
         "field-edit": "Bearbeiten",
         "field-reorder": "Umordnen",
-        "field-add": "Erstellen",
-        "field-type-formula": "Formel"
+        "field-add": "Erstellen"
     },
-    "edit-type-dropdown-dialog": {
+    "field-type-picker": {
+        "input": "Textfeld einzeilig",
+        "textarea": "Textfeld mehrzeilig",
+        "dropdown": "Dropdown",
+        "checkbox": "Checkbox",
+        "formula": "Formel"
+    },
+    "edit-field-dialog": {
+        "default-value": "Standardwert",
         "delete-option-title": "Option löschen",
         "delete-option-message": "Wollen Sie die Option „{{value}}“ wirklich löschen?",
         "delete-option-button": "Löschen",
         "unique-value-error": "Mehrere Optionen können nicht den selben Wert haben.",
         "no-options-error": "Felder mit Attributkontrolle müssen mindestens eine Option haben.",
-        "title-checkbox": "Checkbox-Feld bearbeiten",
-        "title-dropdown": "Dropdown-Feld bearbeiten",
+        "title": "Feld „{{name}}“ bearbeiten",
         "ok-button": "OK",
         "control": "Attributkontrolle",
         "control-interpolation-marker": "des Markers",
@@ -339,7 +340,8 @@
         "stroke": "Kontur",
         "option-remove": "Löschen",
         "option-reorder": "Umordnen",
-        "option-add": "Erstellen"
+        "option-add": "Erstellen",
+        "formula-introduction": "Formeln ermöglichen es, Werte automatisch aus anderen Feldwerten oder Eigenschaften des selben Markers oder der selben Linie zu generieren. Hier ist eine Übersicht der Möglichkeiten. Bei Anwendungsfällen, für die die verfügbaren Funktionen nicht ausreichen, bitte ein [Issue](https://github.com/FacilMap/facilmap/issues) öffnen."
     },
     "elevation-stats": {
         "ascent-alt": "Aufstieg",
@@ -1084,10 +1086,5 @@
         "cycling-restrictions-allowed-description": "Das Radfahren ist in Pfeilrichtung erlaubt, zum Beispiel entgegen einer Einbahnstraße.",
         "cobblestone": "Kopfsteinpflaster",
         "cobblestone-cobblestone-label": "Kopfsteinpflaster"
-    },
-    "edit-type-formula-dialog": {
-        "title": "Formel bearbeiten",
-        "ok-button": "OK",
-        "introduction": "Formeln ermöglichen es, Werte automatisch aus anderen Feldwerten oder Eigenschaften des selben Markers oder der selben Linie zu generieren. Hier ist eine Übersicht der Möglichkeiten. Bei Anwendungsfällen, für die die verfügbaren Funktionen nicht ausreichen, bitte ein [Issue](https://github.com/FacilMap/facilmap/issues) öffnen."
     }
 }

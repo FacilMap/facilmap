@@ -10,11 +10,10 @@
 	import IconPicker from "../ui/icon-picker.vue";
 	import RouteMode from "../ui/route-mode.vue";
 	import Draggable from "vuedraggable";
-	import FieldInput from "../ui/field-input.vue";
 	import Icon from "../ui/icon.vue";
 	import WidthPicker from "../ui/width-picker.vue";
 	import SizePicker from "../ui/size-picker.vue";
-	import EditTypeDropdownDialog from "./edit-type-dropdown-dialog.vue";
+	import EditFieldDialog from "./edit-field-dialog/edit-field-dialog.vue";
 	import { computed, ref, watch } from "vue";
 	import ModalDialog from "../ui/modal-dialog.vue";
 	import { showConfirm } from "../ui/alert.vue";
@@ -22,7 +21,7 @@
 	import ValidatedField from "../ui/validated-form/validated-field.vue";
 	import StrokePicker from "../ui/stroke-picker.vue";
 	import { useI18n } from "../../utils/i18n";
-	import EditTypeFormulaDialog from "./edit-type-formula-dialog.vue";
+	import FieldTypePicker from "../ui/field-type-picker.vue";
 
 	const context = injectContextRequired();
 	const client = requireClientContext(context);
@@ -413,10 +412,8 @@
 			<table class="table table-hover table-striped">
 				<thead>
 					<tr>
-						<th style="width: 35%; min-width: 150px">{{i18n.t("edit-type-dialog.field-name")}}</th>
-						<th style="width: 35%; min-width: 120px">{{i18n.t("edit-type-dialog.field-type")}}</th>
-						<th style="width: 35%; min-width: 150px">{{i18n.t("edit-type-dialog.field-default-value")}}</th>
-						<th>{{i18n.t("edit-type-dialog.field-delete")}}</th>
+						<th style="min-width: 150px">{{i18n.t("edit-type-dialog.field-name")}}</th>
+						<th style="min-width: 120px">{{i18n.t("edit-type-dialog.field-type")}}</th>
 						<th></th>
 					</tr>
 				</thead>
@@ -446,26 +443,11 @@
 								</template>
 							</ValidatedField>
 							<td>
-								<div class="input-group">
-									<select class="form-select" v-model="field.type">
-										<option value="input">{{i18n.t("edit-type-dialog.field-type-input")}}</option>
-										<option value="textarea">{{i18n.t("edit-type-dialog.field-type-textarea")}}</option>
-										<option value="dropdown">{{i18n.t("edit-type-dialog.field-type-dropdown")}}</option>
-										<option value="checkbox">{{i18n.t("edit-type-dialog.field-type-checkbox")}}</option>
-										<option value="formula">{{i18n.t("edit-type-dialog.field-type-formula")}}</option>
-									</select>
-									<template v-if="['dropdown', 'checkbox', 'formula'].includes(field.type)">
-										<button type="button" class="btn btn-secondary" @click="editField(field)">{{i18n.t("edit-type-dialog.field-edit")}}</button>
-									</template>
-								</div>
-							</td>
-							<td class="text-center align-middle">
-								<FieldInput v-if="field.type !== 'formula'" :field="field" v-model="field.default" ignore-default></FieldInput>
+								<FieldTypePicker v-model="field.type"></FieldTypePicker>
 							</td>
 							<td class="td-buttons">
+								<button type="button" class="btn btn-secondary" @click="editField(field)">{{i18n.t("edit-type-dialog.field-edit")}}</button>
 								<button type="button" class="btn btn-secondary" @click="deleteField(field)">{{i18n.t("edit-type-dialog.field-delete")}}</button>
-							</td>
-							<td class="td-buttons">
 								<button type="button" class="btn btn-secondary fm-drag-handle"><Icon icon="resize-vertical" :alt="i18n.t('edit-type-dialog.field-reorder')"></Icon></button>
 							</td>
 						</tr>
@@ -473,29 +455,20 @@
 				</Draggable>
 				<tfoot>
 					<tr>
-						<td colspan="4">
+						<td colspan="3">
 							<button type="button" class="btn btn-secondary" @click="createField()"><Icon icon="plus" :alt="i18n.t('edit-type-dialog.field-add')"></Icon></button>
 						</td>
-						<td class="move"></td>
 					</tr>
 				</tfoot>
 			</table>
 		</div>
 
-		<EditTypeDropdownDialog
-			v-if="fieldEdit != null && ['dropdown', 'checkbox'].includes(fieldEdit.type)"
+		<EditFieldDialog
+			v-if="fieldEdit != null"
 			:type="type"
 			:field="fieldEdit"
 			@update:field="handleUpdateField($event)"
 			@hidden="fieldEdit = undefined"
-		></EditTypeDropdownDialog>
-
-		<EditTypeFormulaDialog
-			v-if="fieldEdit != null && fieldEdit.type === 'formula'"
-			:type="type"
-			:field="fieldEdit"
-			@update:field="handleUpdateField($event)"
-			@hidden="fieldEdit = undefined"
-		></EditTypeFormulaDialog>
+		></EditFieldDialog>
 	</ModalDialog>
 </template>

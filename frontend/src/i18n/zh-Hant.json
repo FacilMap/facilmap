@@ -112,17 +112,18 @@
         "field-add": "新增",
         "field-type": "類型",
         "delete-field-button": "刪除",
-        "field-default-value": "預設值",
         "field-delete": "刪除",
         "delete-field-title": "刪除欄位",
-        "field-type-input": "文字欄位",
-        "field-type-dropdown": "下拉式選單",
         "title": "編輯類型"
     },
-    "edit-type-dropdown-dialog": {
+    "field-type-picker": {
+        "input": "文字欄位",
+        "dropdown": "下拉式選單"
+    },
+    "edit-field-dialog": {
+        "default-value": "預設值",
         "delete-option-title": "刪除選項",
         "delete-option-button": "刪除",
-        "title-dropdown": "編輯下拉式選單",
         "ok-button": "好的",
         "control-colour": "控制 {{type}} 顏色",
         "control-icon": "控制 {{type}} 圖示",

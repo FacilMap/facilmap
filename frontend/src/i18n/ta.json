@@ -126,17 +126,18 @@
         "field-name": "பெயர்",
         "field-type": "வகை",
         "field-delete": "நீக்கு",
-        "field-type-input": "உரை புலம்",
-        "field-type-textarea": "உரை பகுதி",
-        "field-type-dropdown": "கீழ்தோன்றும்",
-        "field-type-checkbox": "தேர்வுப்பெட்டி",
         "field-edit": "தொகு",
-        "field-default-value": "இயல்புநிலை மதிப்பு",
         "field-reorder": "மறுவரிசை",
         "field-add": "கூட்டு"
     },
-    "edit-type-dropdown-dialog": {
-        "title-dropdown": "கீழ்தோன்றும் திருத்து",
+    "field-type-picker": {
+        "input": "உரை புலம்",
+        "textarea": "உரை பகுதி",
+        "dropdown": "கீழ்தோன்றும்",
+        "checkbox": "தேர்வுப்பெட்டி"
+    },
+    "edit-field-dialog": {
+        "default-value": "இயல்புநிலை மதிப்பு",
         "ok-button": "சரி",
         "control": "கட்டுப்பாடு",
         "control-interpolation-marker": "மார்க்கர்",
@@ -145,7 +146,6 @@
         "unique-value-error": "பல விருப்பங்கள் ஒரே லேபிளைக் கொண்டிருக்க முடியாது.",
         "delete-option-message": "“{{value}}” என்ற விருப்பத்தை நீக்க விரும்புகிறீர்களா?",
         "no-options-error": "கட்டுப்படுத்தும் புலங்களுக்கு குறைந்தது ஒரு விருப்பத்தோ இருக்க வேண்டும்.",
-        "title-checkbox": "தேர்வுப்பெட்டியைத் திருத்தவும்",
         "control-interpolation-line": "வரி",
         "control-colour": "கட்டுப்பாடு {{type}} வண்ணம்",
         "control-size": "கட்டுப்பாடு {{type}} அளவு",

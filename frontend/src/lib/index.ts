@@ -26,7 +26,7 @@ export * from "./utils/vue";
 export * from "./utils/zoom";
 
 export { default as EditTypeDialog } from "./components/edit-type-dialog/edit-type-dialog.vue";
-export { default as EditTypeDropdownDialog } from "./components/edit-type-dialog/edit-type-dropdown-dialog.vue";
+export { default as EditFieldDialog } from "./components/edit-type-dialog/edit-field-dialog/edit-field-dialog.vue";
 export * from "./components/edit-type-dialog/edit-type-utils";
 export * from "./components/facil-map-context-provider/click-marker-tab-context";
 export * from "./components/facil-map-context-provider/client-context";

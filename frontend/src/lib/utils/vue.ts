@@ -159,14 +159,16 @@ export function useIsMounted(): Readonly<Ref<boolean>> {
  * to the returned ref. When the returned ref is updated (deep watch), a deep clone is applied to the model ref.
  * Use this as `useImmutableModel(defineModel(...))` to allow changing nested properties of the model without mutating
  * the actual object passed as the model value.
+ * @param prepareValue If defined, can make some modifications to the model value when it is deep cloned into the internal
+ * state.
  */
-export function useImmutableModel<T>(modelRef: Ref<T>): Ref<T> {
+export function useImmutableModel<T>(modelRef: Ref<T>, prepareValue = (value: T) => value): Ref<T> {
 	const value = ref() as Ref<T>;
 	watch(modelRef, () => {
-		value.value = cloneDeep(modelRef.value);
-	}, { immediate: true });
+		value.value = prepareValue(cloneDeep(modelRef.value));
+	}, { immediate: true, deep: true });
 	watch(value, () => {
-		if (!isEqual(toRaw(value.value), toRaw(modelRef.value))) {
+		if (!isEqual(toRaw(value.value), toRaw(prepareValue(cloneDeep(modelRef.value))))) {
 			modelRef.value = cloneDeep(value.value);
 		}
 	}, { deep: true });

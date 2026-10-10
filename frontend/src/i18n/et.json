@@ -319,8 +319,6 @@
         "field-name": "Nimi",
         "field-type": "Tüüp",
         "field-delete": "Kustuta",
-        "field-type-dropdown": "Rippmenüü",
-        "field-type-checkbox": "Märkeruut",
         "field-edit": "Muuda",
         "field-reorder": "Muuda järjekorda",
         "field-add": "Lisa",
@@ -328,12 +326,16 @@
         "default-icon": "Vaikimisi ikoon",
         "default-size": "Vaikimisi suurus",
         "default-width": "Vaikimisi laius",
-        "default-route-mode": "Vaikimisi teekonna koostamise režiim",
-        "field-default-value": "Vaikimisi väärtus",
-        "field-type-input": "Tekstiväli",
-        "field-type-textarea": "Tekstiala"
+        "default-route-mode": "Vaikimisi teekonna koostamise režiim"
     },
-    "edit-type-dropdown-dialog": {
+    "field-type-picker": {
+        "dropdown": "Rippmenüü",
+        "checkbox": "Märkeruut",
+        "input": "Tekstiväli",
+        "textarea": "Tekstiala"
+    },
+    "edit-field-dialog": {
+        "default-value": "Vaikimisi väärtus",
         "delete-option-button": "Kustuta",
         "ok-button": "Sobib",
         "control-interpolation-line": "joon",

@@ -301,25 +301,27 @@
         "fields": "Fields",
         "field-name": "Name",
         "field-type": "Type",
-        "field-default-value": "Default value",
         "field-delete": "Delete",
-        "field-type-input": "Text field",
-        "field-type-textarea": "Text area",
-        "field-type-dropdown": "Dropdown",
-        "field-type-checkbox": "Checkbox",
-        "field-type-formula": "Formula",
         "field-edit": "Edit",
         "field-reorder": "Reorder",
         "field-add": "Add"
     },
-    "edit-type-dropdown-dialog": {
+    "field-type-picker": {
+        "input": "Text field",
+        "textarea": "Text area",
+        "dropdown": "Dropdown",
+        "checkbox": "Checkbox",
+        "formula": "Formula"
+    },
+    "edit-field-dialog": {
+        "field-type": "Field type",
+        "default-value": "Default value",
         "delete-option-title": "Delete option",
         "delete-option-message": "Do you really want to delete the option “{{value}}”?",
         "delete-option-button": "Delete",
         "unique-value-error": "Multiple options cannot have the same label.",
         "no-options-error": "Controlling fields need to have at least one option.",
-        "title-checkbox": "Edit Checkbox",
-        "title-dropdown": "Edit Dropdown",
+        "title": "Edit Field “{{name}}”",
         "ok-button": "OK",
         "control": "Control",
         "control-interpolation-marker": "marker",
@@ -331,6 +333,7 @@
         "control-width": "Control {{type}} width",
         "control-stroke": "Control {{type}} stroke",
         "show-in-legend": "Show in legend",
+        "options": "Options",
         "option": "Option",
         "label": "Label (for legend)",
         "colour": "Colour",
@@ -341,12 +344,9 @@
         "stroke": "Stroke",
         "option-remove": "Remove",
         "option-reorder": "Reorder",
-        "option-add": "Add"
-    },
-    "edit-type-formula-dialog": {
-        "title": "Edit Formula",
-        "ok-button": "OK",
-        "introduction": "Formulas allow you to automatically generate values out of other field values or properties of the same marker or line. Here is an overview over the possibilities. If some functionality is missing for your use case, please [report an issue](https://github.com/FacilMap/facilmap/issues)."
+        "option-add": "Add",
+        "formula-introduction": "Formulas allow you to automatically generate values out of other field values or properties of the same marker or line. Here is an overview over the possibilities. If some functionality is missing for your use case, please [report an issue](https://github.com/FacilMap/facilmap/issues).",
+        "formula": "Formula"
     },
     "elevation-stats": {
         "ascent-alt": "Ascent",

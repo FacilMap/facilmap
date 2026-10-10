@@ -38,16 +38,18 @@
         "default-shape": "Forvalgt form",
         "default-width": "Forvalgt bredde",
         "field-name": "Navn",
-        "field-default-value": "Forvalgt verdi",
         "field-delete": "Slett",
-        "field-type-input": "Tekstfelt",
-        "field-type-textarea": "Tekstområde",
-        "field-type-checkbox": "Avkryssningsboks",
         "field-edit": "Rediger",
         "field-reorder": "Endre rekkefølge",
         "field-add": "Legg til"
     },
-    "edit-type-dropdown-dialog": {
+    "field-type-picker": {
+        "input": "Tekstfelt",
+        "textarea": "Tekstområde",
+        "checkbox": "Avkryssningsboks"
+    },
+    "edit-field-dialog": {
+        "default-value": "Forvalgt verdi",
         "delete-option-title": "Slett alternativ",
         "delete-option-message": "Slett alternativet «{{value}}»?",
         "delete-option-button": "Slett"
