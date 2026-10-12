@@ -1,10 +1,14 @@
 {
     "common": {
         "coordinates": "Koordinaadid",
-        "donate": "Toeta meid rahaliselt"
+        "donate": "Toeta meid rahaliselt",
+        "first": "Esimene",
+        "previous": "Eelmine",
+        "next": "Järgmine",
+        "last": "Viimane"
     },
     "about-dialog": {
-        "header": "Veebirakenduse teave: FacilMap {{version}}",
+        "header": "Tere tulemast. See on {{appName}}!",
         "license-text": "{{facilmap}} on avaldatud {{license}} litsentsi alusel.",
         "license-text-facilmap": "FacilMap",
         "icons": "Ikoonid",
@@ -23,7 +27,15 @@
         "privacy-information": "Privaatsusteave",
         "attribution-osm-contributors": "Openstreetmapi kaasautorid",
         "map-data-geoip-description": "Selles tootes kasutatakse GeoLite2 andmekogu, mille on koostanud MaxMind ja mis on saadaval siin: {{maxmind}}.",
-        "license-text-license": "GNU Affero Üldise Avaliku Litsentsi 3. versiooni"
+        "license-text-license": "GNU Affero Üldise Avaliku Litsentsi 3. versiooni",
+        "introduction": "FacilMap on privaatsust austav, avatud lähtekoodiga mitmekülgne veebikaart, mis ühendab endas erinevaid OpenStreetMapil põhinevaid teenuseid ning võimaldab hõlpsasti leida asukohti, planeerida reise ja lisada märgiseid, jooni ja marsruute kohandatud kaartidele tehes koostööd reaalajas.",
+        "start-header": "Alustame siis",
+        "news-header": "Mida on meil uut",
+        "help-issues": "Teata veast",
+        "help-documentation": "Dokumentatsioon",
+        "help-questions": "Küsi teavet",
+        "help-chat": "Liitu meie vestlusega",
+        "news-hide-more": "Peida vanemad uudised"
     },
     "user-preferences-dialog": {
         "external-links-delete-tooltip": "Kustuta",
@@ -185,7 +197,9 @@
         "number-description": "Numbriline väärtus",
         "text-description": "Tekstiline väärtus",
         "lower-description": "Teisenda väiketähtedeks",
-        "regexp-description": "Vaste regulaaravaldisele (tõstutundlik)"
+        "regexp-description": "Vaste regulaaravaldisele (tõstutundlik)",
+        "comparison": "Võrdlus",
+        "number": "Number"
     },
     "add-to-map-dropdown": {
         "fallback-label": "Lisa kaardile",
@@ -277,7 +291,13 @@
         "export-method": "Eksportimise meetod",
         "apply-filter": "Rakenda filtrit",
         "include-columns": "Kaasa veerud",
-        "type": "Tüüp"
+        "type": "Tüüp",
+        "route-type-track": "Rajapunktid",
+        "route-type-track-zip": "Rajapunktid, üks fail raja kohta (ZIP-fail)",
+        "route-type": "Marsruudi tüüp",
+        "csv-explanation-interpolation-csv": "CSV-fail",
+        "html-explanation-interpolation-html": "HTML-fail",
+        "track-explanation-interpolation-track": "Rajapunktid"
     },
     "edit-line-dialog": {
         "save-error": "Viga joone salvestamisel",
@@ -331,7 +351,8 @@
         "default-route-mode": "Vaikimisi teekonna koostamise režiim",
         "field-default-value": "Vaikimisi väärtus",
         "field-type-input": "Tekstiväli",
-        "field-type-textarea": "Tekstiala"
+        "field-type-textarea": "Tekstiala",
+        "default-colour": "Vaikimisi värv"
     },
     "edit-type-dropdown-dialog": {
         "delete-option-button": "Kustuta",
@@ -350,7 +371,8 @@
         "delete-option-title": "Kustuta valik",
         "delete-option-message": "Kas sa kindlasti soovid „{{value}}“ valiku kustutada?",
         "unique-value-error": "Mitmel valikul ei saa olla sama silti.",
-        "show-in-legend": "Näita kaardilegendis"
+        "show-in-legend": "Näita kaardilegendis",
+        "title-checkbox": "Muuda märkeruutu"
     },
     "heightgraph": {
         "surface-unpaved": "Sillutamata",
@@ -369,5 +391,9 @@
     "export-dropdown": {
         "button-label": "Ekspordi",
         "export-error": "Viga marsruudi eksportimisel"
+    },
+    "edit-type-formula-dialog": {
+        "title": "Muuda valemit",
+        "ok-button": "Sobib"
     }
 }
