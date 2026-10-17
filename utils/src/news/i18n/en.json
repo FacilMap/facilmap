@@ -31,6 +31,8 @@
 		"2026-10-08-lPIE9IMa-heading": "“About FacilMap” dialog",
 		"2026-10-08-lPIE9IMa-content": "The new “About FacilMap” dialog welcomes new users to the app and informs returning users about the latest changes.",
 		"2026-10-09-5TWveir7-heading": "Atom feed for what’s new",
-		"2026-10-09-5TWveir7-content": "You can now subscribe to an Atom feed to get informed about these latest changes to FacilMap."
+		"2026-10-09-5TWveir7-content": "You can now subscribe to an Atom feed to get informed about these latest changes to FacilMap.",
+		"2026-10-17-l39gdaBI-heading": "Field description, edit hint and visibility",
+		"2026-10-17-l39gdaBI-content": "The field settings dialog has been overhauled and you can now set a description, an edit hint and a visibility level. The field description will be shown as an info tooltip when viewing or editing objects and the edit hint is shown under the field when editing it. This allows you to give readers and editors of your map additional context.\n\nThe field visibility allows hiding a field when viewing an object or when editing it. It is especially useful for formula fields and the fields they reference, as it allows separating the input and the output of data. As a very trivial example, you could create a “first name” and “last name” text field that are only shown when editing the object, and then a “full name” formula field that combines the two and is shown when viewing the object. This makes it possible to focus on the structure of your content when your editors enter it, but focus on the formatting when your readers view it."
 	}
 }
