@@ -1,13 +1,14 @@
 <script setup lang="ts">
 	import type { Field, Line, MapData, Marker, Type } from "facilmap-types";
 	import { computed } from "vue";
-	import { formatFieldName, formatFieldValue, normalizeFieldValue } from "facilmap-utils";
+	import { formatFieldName, formatFieldValue, markdownBlock, normalizeFieldValue } from "facilmap-utils";
 
 	const props = withDefaults(defineProps<{
 		mapData?: MapData;
 		type?: Type;
 		object?: Marker | Line;
 		field: Field;
+		noHint?: boolean;
 		ignoreDefault?: boolean;
 		modelValue?: string;
 		id?: string;
@@ -75,5 +76,11 @@
 		<template v-else>
 			<input type="text" class="form-control" :id="id" v-model="value"/>
 		</template>
+
+		<div
+			v-if="!props.noHint && field.type !== 'formula' && field.editHint"
+			class="form-text"
+			v-html="markdownBlock(field.editHint, true)"
+		></div>
 	</div>
 </template>

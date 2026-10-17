@@ -205,7 +205,6 @@
         "field-name": "Nombre",
         "field-delete": "Eliminar",
         "field-add": "Añadir",
-        "field-edit": "Editar",
         "field-update-error": "Error al actualizar el campo",
         "default-route-mode": "Modo de enrutamiento predeterminado",
         "unique-field-name-error": "Varios campos no pueden compartir el mismo nombre.",

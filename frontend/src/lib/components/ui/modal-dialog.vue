@@ -22,7 +22,6 @@
 		size?: "sm" | "default" | "lg" | "xl";
 		okLabel?: string;
 		okVariant?: ThemeColour;
-		formValidationError?: string | undefined;
 		action?: string;
 		target?: string;
 		animationReference?: HTMLElement;
@@ -103,7 +102,6 @@
 					@submit="handleSubmit"
 					ref="validatedFormRef"
 					:noValidate="isCloseButton"
-					:formValidationError="formValidationError"
 				>
 					<div class="modal-header">
 						<h1 class="modal-title fs-5">{{props.title}}</h1>

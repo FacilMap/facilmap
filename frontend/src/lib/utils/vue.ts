@@ -1,11 +1,24 @@
 import { cloneDeep, isEqual, sortBy } from "lodash-es";
-import { type ComponentPublicInstance, type DeepReadonly, type Directive, type Ref, computed, onScopeDispose, readonly, ref, shallowReadonly, shallowRef, watch, type ComputedGetter, type Component, type VNodeProps, type AllowedComponentProps, onBeforeUnmount, onMounted, toRaw, type FunctionDirective, effectScope, toRef, type DirectiveBinding } from "vue";
+import { type ComponentPublicInstance, type DeepReadonly, type Directive, type Ref, computed, onScopeDispose, readonly, ref, shallowReadonly, shallowRef, watch, type ComputedGetter, type Component, type VNodeProps, type AllowedComponentProps, onBeforeUnmount, onMounted, toRaw, type FunctionDirective, effectScope, toRef, type DirectiveBinding, reactive } from "vue";
 import { shouldHandleGlobalShortcut, useDomEventListener, type AnyRef } from "./utils";
 
 // https://stackoverflow.com/a/73784241/242365
 export type ComponentProps<C extends Component> = C extends new (...args: any) => any
   ? Omit<InstanceType<C>['$props'], keyof VNodeProps | keyof AllowedComponentProps>
   : never;
+
+/**
+ * Attempts to reverse the Vue type UnwrapNestedRefs<T>. This can be used to fix the typings anywhere Vue uses that type.
+ * For example, `const test: MyType = reactive(myObject);` will unwrap any nested refs in `myObject`, but the type check
+ * will fail for them, as `reactive()` expects `myObject` to be of type `MyType`. This can be fixed by using
+ * `const test: MyType = reactive<WrapNestedRefs<MyType>>(myObject);`.
+ *
+ * For now, this type is still very basic and only implements a fraction of the types that UnwrapNestedRefs<T> supports.
+ * It should be refined whenever the need for it arises.
+ */
+export type WrapNestedRefs<T> = T extends object ? {
+	[P in keyof T]: T[P] | Ref<T[P]>;
+} : T;
 
 export const vScrollIntoView: Directive<Element, boolean | undefined> = (el, binding) => {
 	if (binding.value)
@@ -314,3 +327,22 @@ export function getReactiveMediaQuery(query: string): Ref<boolean> {
 };
 
 export const canHover = getReactiveMediaQuery("(hover: hover)");
+
+export function usePointerOver(options: { filter?: (e: PointerEvent) => void } = {}): {
+	handleEnter: (e: PointerEvent) => void;
+	handleLeave: (e: PointerEvent) => void;
+	isOver: boolean;
+} {
+	const over = reactive<Record<number, boolean>>({});
+	return reactive({
+		handleEnter: (e: PointerEvent) => {
+			if (!options.filter || options.filter(e)) {
+				over[e.pointerId] = true;
+			}
+		},
+		handleLeave: (e: PointerEvent) => {
+			over[e.pointerId] = false;
+		},
+		isOver: computed(() => Object.values(over).some((v) => v))
+	});
+}

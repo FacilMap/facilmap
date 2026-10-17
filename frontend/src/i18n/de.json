@@ -300,7 +300,6 @@
         "field-name": "Name",
         "field-type": "Art",
         "field-delete": "Löschen",
-        "field-edit": "Bearbeiten",
         "field-reorder": "Umordnen",
         "field-add": "Erstellen"
     },

@@ -7,7 +7,7 @@
 	import { getZoomDestinationForLine } from "../../utils/zoom";
 	import RouteForm from "../route-form/route-form.vue";
 	import vTooltip from "../../utils/tooltip";
-	import { formatDistance, formatFieldName, formatFieldValue, formatRouteTime, formatTypeName, normalizeLineName } from "facilmap-utils";
+	import { formatDistance, formatFieldValue, formatRouteTime, formatTypeName, normalizeLineName } from "facilmap-utils";
 	import { computed, reactive, ref, toRef } from "vue";
 	import { useToasts } from "../ui/toasts/toasts.vue";
 	import { showConfirm } from "../ui/alert.vue";
@@ -17,6 +17,7 @@
 	import { useI18n } from "../../utils/i18n";
 	import DropdownMenu from "../ui/dropdown-menu.vue";
 	import { vKeyboardShortcut } from "../../utils/vue";
+	import FieldName from "../ui/field-name.vue";
 
 	const context = injectContextRequired();
 	const client = requireClientContext(context);
@@ -187,8 +188,12 @@
 
 				<template v-if="line.ascent == null || !showElevationPlot">
 					<template v-for="field in client.types[line.typeId].fields" :key="field.name">
-						<dt>{{formatFieldName(field.name)}}</dt>
-						<dd v-html="client.mapData && formatFieldValue(client.mapData, client.types[line.typeId], field, line, true)"></dd>
+						<template v-if="field.visibility !== 'edit'">
+							<dt>
+								<FieldName :field="field"></FieldName>
+							</dt>
+							<dd v-html="client.mapData && formatFieldValue(client.mapData, client.types[line.typeId], field, line, true)"></dd>
+						</template>
 					</template>
 				</template>
 			</dl>

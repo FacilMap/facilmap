@@ -446,7 +446,7 @@
 								<FieldTypePicker v-model="field.type"></FieldTypePicker>
 							</td>
 							<td class="td-buttons">
-								<button type="button" class="btn btn-secondary" @click="editField(field)">{{i18n.t("edit-type-dialog.field-edit")}}</button>
+								<button type="button" class="btn btn-secondary" @click="editField(field)">{{i18n.t("edit-type-dialog.field-settings")}}</button>
 								<button type="button" class="btn btn-secondary" @click="deleteField(field)">{{i18n.t("edit-type-dialog.field-delete")}}</button>
 								<button type="button" class="btn btn-secondary fm-drag-handle"><Icon icon="resize-vertical" :alt="i18n.t('edit-type-dialog.field-reorder')"></Icon></button>
 							</td>

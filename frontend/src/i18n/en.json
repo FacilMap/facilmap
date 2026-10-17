@@ -302,7 +302,7 @@
         "field-name": "Name",
         "field-type": "Type",
         "field-delete": "Delete",
-        "field-edit": "Edit",
+        "field-settings": "Settings",
         "field-reorder": "Reorder",
         "field-add": "Add"
     },
@@ -313,8 +313,18 @@
         "checkbox": "Checkbox",
         "formula": "Formula"
     },
+    "field-visibility-picker": {
+        "always": "Always",
+        "view": "Only when viewing object",
+        "edit": "Only when editing object"
+    },
     "edit-field-dialog": {
         "field-type": "Field type",
+        "visibility": "Visibility",
+        "description": "Description",
+        "description-description": "A small info icon with this description will be shown when viewing or editing objects.",
+        "edit-hint": "Edit hint",
+        "edit-hint-description": "Will be shown under the field when editing its content.",
         "default-value": "Default value",
         "delete-option-title": "Delete option",
         "delete-option-message": "Do you really want to delete the option “{{value}}”?",
@@ -1092,5 +1102,8 @@
         "bing-maps-satellite": "Bing Maps (Satellite)",
         "mapy-cz": "Mapy.cz",
         "park4night": "park4night"
+    },
+    "field-description": {
+        "field-description-alt": "Show description"
     }
 }

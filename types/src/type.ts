@@ -8,6 +8,10 @@ export type ObjectType = z.infer<typeof objectTypeValidator>;
 export const fieldTypeValidator = z.enum(["textarea", "dropdown", "checkbox", "input", "formula"]);
 export type FieldType = z.infer<typeof fieldTypeValidator>;
 
+export const fieldVisibilityValidator = z.enum(["view", "edit"]).or(z.undefined());
+/** Whether a field should be shown only in view/edit mode. If undefined, it should be shown in both modes. */
+export type FieldVisibility = z.infer<typeof fieldVisibilityValidator>
+
 export const fieldOptionValidator = cruValidator({
 	value: z.string().trim(),
 	colour: colourValidator.optional(),
@@ -72,6 +76,9 @@ export const fieldValidator = cruValidator({
 	controlWidth: z.boolean().optional(),
 	controlStroke: z.boolean().optional(),
 	showInLegend: z.boolean().optional(),
+	visibility: fieldVisibilityValidator.optional(),
+	description: z.string().optional(),
+	editHint: z.string().optional(),
 
 	options: {
 		read: fieldOptionsValidator.read.optional(),

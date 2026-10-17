@@ -1,5 +1,5 @@
 <script setup lang="ts">
-	import type { Validator } from "./validated-form/validated-field.vue";
+	import type { Validator } from "./validated-form/validation-utils";
 	import ValidatedField from "./validated-form/validated-field.vue";
 	import { useValidatedModel } from "../../utils/vue";
 	import { computed } from "vue";

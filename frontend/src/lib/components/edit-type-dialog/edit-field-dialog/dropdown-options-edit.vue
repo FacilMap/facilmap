@@ -1,5 +1,5 @@
 <script setup lang="ts">
-	import type { CRU, FieldOptionUpdate, FieldUpdate, Type } from "facilmap-types";
+	import type { CRU, FieldOption, FieldOptionUpdate, FieldUpdate, Type } from "facilmap-types";
 	import { formatCheckboxValue, getControlNumber, getDefaultFieldShowInLegend } from "facilmap-utils";
 	import ColourPicker from "../../ui/colour-picker.vue";
 	import Draggable from "vuedraggable";
@@ -14,6 +14,7 @@
 	import StrokePicker from "../../ui/stroke-picker.vue";
 	import { useI18n } from "../../../utils/i18n";
 	import { useImmutableModel } from "../../../utils/vue";
+	import Validation from "../../ui/validated-form/validation.vue";
 
 	const i18n = useI18n();
 
@@ -50,6 +51,12 @@
 	function validateOptionValue(value: string): string | undefined {
 		if (field.value.type !== "checkbox" && field.value.options!.filter((op) => op.value === value).length > 1) {
 			return i18n.t("edit-field-dialog.unique-value-error");
+		}
+	}
+
+	function validateOptions(options: FieldOption[] | undefined) {
+		if (controlNumber.value > 0 && (options?.length ?? 0) === 0) {
+			return i18n.t("edit-field-dialog.no-options-error");
 		}
 	}
 
@@ -176,5 +183,16 @@
 				</tr>
 			</tfoot>
 		</table>
+
+		<Validation
+			:value="field.options"
+			:validators="[validateOptions]"
+		>
+			<template #default="slotProps">
+				<div v-if="slotProps.validationError" class="fm-form-invalid-feedback">
+					{{slotProps.validationError}}
+				</div>
+			</template>
+		</Validation>
 	</div>
 </template>

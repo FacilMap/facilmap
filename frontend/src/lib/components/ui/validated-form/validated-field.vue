@@ -1,58 +1,11 @@
-<script lang="ts">
-	import { ref, watchEffect, computed, watchSyncEffect, readonly } from "vue";
-	import { isPromise } from "facilmap-utils";
+<script setup lang="ts" generic="T">
+	import { ref, watchEffect, computed, readonly, type ComponentPublicInstance, reactive, toRef } from "vue";
 	import { useDomEventListener } from "../../../utils/utils";
 	import { getValidatedForm } from "./validated-form.vue";
-	import { useToasts } from "../toasts/toasts.vue";
-	import pDebounce from "p-debounce";
-	import { useI18n } from "../../../utils/i18n";
-
-	type SyncValidationResult = string | undefined;
-	type AsyncValidationResult = Promise<SyncValidationResult>;
-	type ValidationResult = SyncValidationResult | AsyncValidationResult;
-	export type Validator<T> = (value: T, signal: AbortSignal) => ValidationResult;
-
-	function validate<T>(value: T, validators: Array<Validator<T>>, signal: AbortSignal): ValidationResult {
-		for (let i = 0; i < validators.length; i++) {
-			if (signal.aborted) {
-				return;
-			}
-
-			const result = validators[i](value, signal);
-			if (isPromise(result)) {
-				return resolveValidationResult([
-					result,
-					...validators.slice(i + 1).map((validator) => validator(value, signal))
-				], signal);
-			} else if (result) {
-				return result;
-			}
-		}
-		return undefined;
-	}
-
-	function resolveValidationResult(results: ValidationResult[], signal: AbortSignal): AsyncValidationResult {
-		return new Promise<SyncValidationResult>((resolve, reject) => {
-			for (const result of results) {
-				void Promise.resolve(result).then((res) => {
-					if (res) {
-						resolve(res);
-					}
-				});
-			}
-
-			Promise.all(results).then(() => {
-				resolve(undefined);
-			}).catch(reject);
-		});
-	}
-</script>
-
-<script setup lang="ts" generic="T">
-	const toasts = useToasts();
-	const i18n = useI18n();
+	import { useValidation, type Validator } from "./validation-utils";
 
 	const props = withDefaults(defineProps<{
+		/** The value that will be passed to the validators. */
 		value: T;
 		validators?: Array<Validator<T>>;
 		tag?: string;
@@ -88,108 +41,63 @@
 	});
 	const validatedForm = computed(() => formRef.value && getValidatedForm(formRef.value));
 
-	const validationErrorPromise = ref<Promise<void>>();
-	const resolvedValidationError = ref<string | undefined>();
-	const isValidating = ref(false);
-
-	let debouncedValidate: typeof validate;
-	watchSyncEffect(() => {
-		debouncedValidate = pDebounce(validate, props.debounceMs ?? 0);
-	});
-
-	// Memoize validators prop with a shallow equality check, since mostly we specify them using an inline array
-	const memoizedValidators = ref<Array<Validator<T>>>([]);
-	watchEffect(() => {
-		if (props.validators.length !== memoizedValidators.value.length || props.validators.some((v, i) => memoizedValidators.value[i] !== v)) {
-			memoizedValidators.value = props.validators;
-		}
-	});
-
-	watchEffect((onCleanup) => {
-		const abortController = new AbortController();
-		onCleanup(() => {
-			abortController.abort();
-		});
-
-		try {
-			toasts.hideToast("fm-validity-error");
-
-			const result = (props.debounceMs ? debouncedValidate : validate)(props.value, memoizedValidators.value, abortController.signal);
-			if (isPromise(result)) {
-				isValidating.value = true;
-				const promise = validationErrorPromise.value = result.then((res) => {
-					if (validationErrorPromise.value === promise) {
-						resolvedValidationError.value = res;
-						isValidating.value = false;
-					}
-				}).catch((err) => {
-					if (validationErrorPromise.value === promise) {
-						toasts.showErrorToast("fm-validity-error", () => i18n.t("validated-field.validation-error"), err);
-						resolvedValidationError.value = i18n.t("validated-field.validation-error");
-						isValidating.value = false;
-					}
-				});
-			} else {
-				validationErrorPromise.value = undefined;
-				resolvedValidationError.value = result;
-				isValidating.value = false;
-			}
-		} catch (err: any) {
-			toasts.showErrorToast("fm-validity-error", () => i18n.t("validated-field.validation-error"), err);
-			validationErrorPromise.value = undefined;
-			resolvedValidationError.value = i18n.t("validated-field.validation-error");
-			isValidating.value = false;
-		}
-	});
+	const validation = useValidation(reactive({
+		validatedForm,
+		validators: toRef(() => props.validators),
+		value: toRef(() => props.value),
+		reportValid: toRef(() => props.reportValid),
+		immediate: toRef(() => props.immediate),
+		debounceMs: toRef(() => props.debounceMs)
+	}));
 
 	watchEffect(() => {
 		if (inputRef.value) {
-			inputRef.value.setCustomValidity(resolvedValidationError.value ?? "");
+			inputRef.value.setCustomValidity(validation.validationError ?? "");
 		}
 	});
-
-	watchEffect(() => {
-		if (validatedForm.value && inputRef.value) {
-			validatedForm.value.setValidationPromise(inputRef.value, validationErrorPromise.value);
-		}
-	});
-
-	const touched = ref(false);
 
 	function handleTouched() {
-		setTimeout(() => { // Give validators a chance to run on the updated value first
-			touched.value = true;
-		}, 0);
+		console.log("touch");
+		validation.touch();
 	}
 
 	useDomEventListener(inputRef, "input", handleTouched);
 	useDomEventListener(inputRef, "blur", handleTouched);
 	useDomEventListener(inputRef, "focusout", handleTouched);
-	useDomEventListener(formRef, "submit", handleTouched);
-
-	const wasValidated = computed(() => !isValidating.value && (props.immediate || touched.value) && (props.reportValid || !!resolvedValidationError.value));
 
 	function setInputRef(el: any | null): void {
 		inputRef.value = el as FormElement ?? undefined;
 	}
 
-	const expose = readonly({
-		isValidating,
-		validationError: resolvedValidationError
+	defineExpose(readonly(validation));
+
+	defineSlots<{
+		default(props: typeof validation & {
+			/**
+			 * A reference to the input element that needs to be set by consumers of this component. This must be set,
+			 * otherwise validation will not work. To add a validation without an input element, use <Validation> instead.
+			 * Validation will be triggered when it the input field is edited, or when focus leaves it, or when its form
+			 * is submitted. The corresponding form will be determined based on its `form` attribute (if set). The
+			 * custom validity of the input field will be set to the validation result.
+			 */
+			inputRef: (ref: Element | ComponentPublicInstance | null) => void;
+		}): any;
+	}>();
+
+	watchEffect(() => {
+		console.log(validation.showStatus);
 	});
-	defineExpose(expose);
 </script>
 
 <template>
 	<component
 		:is="props.tag"
 		:class="{
-			'was-validated': wasValidated
+			'was-validated': validation.showStatus
 		}"
 	>
 		<slot
-			:isValidating="isValidating"
-			:validationError="resolvedValidationError"
+			v-bind="validation"
 			:inputRef="setInputRef"
 		></slot>
 	</component>

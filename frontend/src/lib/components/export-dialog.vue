@@ -7,7 +7,7 @@
 	import CopyToClipboardInput from "./ui/copy-to-clipboard-input.vue";
 	import type { ComponentProps } from "../utils/vue";
 	import type { ID } from "facilmap-types";
-	import validatedField from "./ui/validated-form/validated-field.vue";
+	import ValidatedField from "./ui/validated-form/validated-field.vue";
 	import { useToasts } from "./ui/toasts/toasts.vue";
 	import copyToClipboard from "copy-to-clipboard";
 	import type { CustomSubmitEvent } from "./ui/validated-form/validated-form.vue";
@@ -28,10 +28,6 @@
 	const id = getUniqueId("fm-export-map");
 
 	const orderedTypes = computed(() => getOrderedTypes(client.value.types));
-
-	const modalRef = ref<InstanceType<typeof ModalDialog>>();
-
-	const copyRef = ref<InstanceType<typeof CopyToClipboardInput>>();
 
 	const formatOptions = computed(() => ({
 		gpx: i18n.t("export-dialog.format-option-gpx"),
@@ -205,7 +201,6 @@
 		:title="i18n.t('export-dialog.title')"
 		size="lg"
 		class="fm-export-dialog"
-		ref="modalRef"
 		v-bind="modalProps"
 		@submit="handleSubmit"
 		@hidden="emit('hidden')"
@@ -300,7 +295,7 @@
 			<label class="col-sm-3 col-form-label" :for="`${id}-type-select`">
 				{{i18n.t("export-dialog.type")}}
 			</label>
-			<validatedField
+			<ValidatedField
 				:value="typeId"
 				:validators="[
 					validateTypeId
@@ -358,7 +353,6 @@
 			<CopyToClipboardInput
 				:modelValue="url"
 				readonly
-				ref="copyRef"
 				variant="primary"
 			></CopyToClipboardInput>
 		</template>
