@@ -85,7 +85,7 @@
 			@click="aboutDialogOpen = true"
 		>
 			?
-			<Badge v-if="hasNews" positioned colour="danger"></Badge>
+			<Badge v-if="hasNews" positioned colour="fm-donate"></Badge>
 		</button>
 
 		<AboutDialog

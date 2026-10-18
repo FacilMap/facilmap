@@ -9,7 +9,7 @@ export function getPersonalNews(lastNews = storage.lastNews): PersonalNews[] {
 	const news = getNews();
 
 	let lastReadIdx = lastNews && news.findIndex((n) => n.id === lastNews!.id);
-	if (!lastReadIdx && lastNews) {
+	if (lastNews && lastReadIdx === -1) {
 		// If last read news ID does not exist anymore (because it was deleted or its content and
 		// thus ID was changed), fall back to resolution by date.
 		lastReadIdx = news.findLastIndex((n) => n.date <= lastNews!.date);

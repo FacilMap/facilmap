@@ -42,7 +42,7 @@
 		<dl v-if="newsNew.length > 0">
 			<template v-for="item in newsNew" :key="item.id">
 				<dt>
-					<Badge colour="danger"></Badge>
+					<Badge colour="fm-donate" :size="1"></Badge>
 					<span v-html="`${quoteHtml(item.date)}: ${item.headingHtml}`"></span>
 				</dt>
 				<dd v-html="item.contentHtml"></dd>
@@ -54,7 +54,7 @@
 		<dl v-if="newsOld.length > 0" class="text-body-secondary">
 			<template v-for="item in newsOld" :key="item.id">
 				<dt>
-					<Badge colour="secondary"></Badge>
+					<Badge colour="secondary" :size="1"></Badge>
 					<span v-html="`${quoteHtml(item.date)}: ${item.headingHtml}`"></span>
 				</dt>
 				<dd v-html="item.contentHtml"></dd>
@@ -77,7 +77,7 @@
 				<dl class="text-body-secondary mt-3">
 					<template v-for="item in newsOldMore" :key="item.id">
 						<dt>
-							<Badge colour="secondary"></Badge>
+							<Badge colour="secondary" :size="1"></Badge>
 							<span v-html="`${quoteHtml(item.date)}: ${item.headingHtml}`"></span>
 						</dt>
 						<dd v-html="item.contentHtml"></dd>

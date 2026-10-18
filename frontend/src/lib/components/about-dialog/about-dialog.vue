@@ -79,7 +79,7 @@
 				<template #header>
 					<span class="position-relative pe-2">
 						{{i18n.t('about-dialog.news-header')}}
-						<Badge v-if="hasNews" positioned colour="danger"></Badge>
+						<Badge v-if="hasNews" positioned colour="fm-donate" :size="1"></Badge>
 					</span>
 				</template>
 				<AboutDialogNews></AboutDialogNews>
