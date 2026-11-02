@@ -7,6 +7,7 @@
 	import DropdownMenu from "../ui/dropdown-menu.vue";
 	import { injectContextRequired, requireClientContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
 	import ExportDialog from "../export-dialog.vue";
+	import CloneMapDialog from "../clone-map-dialog.vue";
 	import UserPreferencesDialog from "../user-preferences-dialog/user-preferences-dialog.vue";
 	import { useI18n } from "../../utils/i18n";
 
@@ -27,6 +28,7 @@
 		| "edit-map"
 		| "share"
 		| "export"
+		| "clone-map"
 		| "edit-filter"
 		| "history"
 		| "user-preferences"
@@ -67,6 +69,15 @@
 				@click="dialog = 'export'; emit('hide-sidebar')"
 				draggable="false"
 			>{{i18n.t("toolbox-tools-dropdown.export")}}</a>
+		</li>
+
+		<li v-if="client.mapData">
+			<a
+				class="dropdown-item"
+				href="javascript:"
+				@click="dialog = 'clone-map'; emit('hide-sidebar')"
+				draggable="false"
+			>{{i18n.t("toolbox-tools-dropdown.clone-map")}}</a>
 		</li>
 
 		<li v-if="client.mapData">
@@ -130,6 +141,11 @@
 			@hidden="dialog = undefined"
 		></ExportDialog>
 	</KeepAlive>
+
+	<CloneMapDialog
+		v-if="dialog === 'clone-map' && client.mapData"
+		@hidden="dialog = undefined"
+	></CloneMapDialog>
 
 	<EditFilterDialog
 		v-if="dialog === 'edit-filter' && client.mapData"
