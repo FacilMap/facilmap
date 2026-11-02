@@ -5,6 +5,8 @@
         "first": "First",
         "previous": "Previous",
         "next": "Next",
+        "back": "Back",
+        "create": "Create copy",
         "last": "Last"
     },
     "about-dialog": {
@@ -408,6 +410,26 @@
         "include-columns": "Include columns",
         "apply-filter": "Apply filter",
         "apply-filter-label": "Only include objects visible under current filter"
+    },
+    "clone-map-dialog": {
+        "title-step-1": "Clone map: Choose what to copy",
+        "title-step-2": "Clone map: Set name, links, and details",
+        "next": "Next",
+        "back": "Back",
+        "create": "Create copy",
+        "default-name": "Copy of {{name}}",
+        "marker-types": "Marker types",
+        "line-types": "Line types",
+        "views": "Saved views",
+        "not-copied": "Markers and lines are not copied.",
+        "success-title": "Map copied",
+        "success-message-tab": "The copy has been opened in a new tab.",
+        "success-message-link": "Use the button below to open the copy.",
+        "success-message-dropped-filters_one": "The filter of {{count}} view could not be copied and was removed.",
+        "success-message-dropped-filters_other": "The filters of {{count}} views could not be copied and were removed.",
+        "open-copy": "Open copy",
+        "error-title": "Error copying map",
+        "connection-lost": "The connection to the server was lost."
     },
     "export-dropdown": {
         "export-error": "Error exporting route",
@@ -1076,6 +1098,7 @@
         "share": "Share",
         "open-file": "Open file",
         "export": "Export",
+        "clone-map": "Clone map",
         "filter": "Filter",
         "settings": "Map settings",
         "history": "History",
