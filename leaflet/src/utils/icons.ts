@@ -11,6 +11,34 @@ export const iconList: string[] = Object.values(iconKeys).flat();
 
 export const RAINBOW_STOPS = `<stop offset="0" stop-color="red"/><stop offset="33%" stop-color="#ff0"/><stop offset="50%" stop-color="#0f0"/><stop offset="67%" stop-color="cyan"/><stop offset="100%" stop-color="blue"/>`;
 
+/**
+ * Returns the SVG gradient stops for a colour that is rendered as a gradient: "rainbow", or a comma-separated list of
+ * colours, each optionally followed by a weight (for example "#888888 10,#ff0000 1"). The colours blend into each other,
+ * each taking up a share of the gradient proportional to its weight. Returns undefined for a single colour.
+ */
+export function getGradientStops(colour: string): string | undefined {
+	if (colour === "rainbow") {
+		return RAINBOW_STOPS;
+	}
+
+	const entries = colour.split(",").map((entry) => {
+		const [c, weight] = entry.trim().split(/\s+/);
+		return { colour: c, weight: weight ? Number(weight) : 1 };
+	});
+	if (entries.length < 2) {
+		return undefined;
+	}
+
+	// Each colour is placed in the middle of its share, the gradient blends between them
+	const total = entries.reduce((sum, e) => sum + e.weight, 0);
+	let start = 0;
+	return entries.map((e) => {
+		const offset = (start + e.weight / 2) * 100 / total;
+		start += e.weight;
+		return `<stop offset="${Math.round(offset * 100) / 100}%" stop-color="${quoteHtml(e.colour)}"/>`;
+	}).join("");
+}
+
 interface ShapeInfo {
 	/** An SVG path that defines the shape of the marker and has a height of 36px. */
 	path: string;
@@ -303,7 +331,8 @@ export function getMarkerCodeMeta(height: number, shape?: Shape, highlight = fal
 export function getMarkerCodeSync(colour: string, height: number, icon?: Icon, shape?: Shape, highlight = false): string {
 	const iconColour = makeTextColour(colour, 0.3);
 	const id = `${idCounter++}`;
-	const colourCode = colour == "rainbow" ? `url(#fm-rainbow-${id})` : colour;
+	const gradientStops = getGradientStops(colour);
+	const colourCode = gradientStops ? `url(#fm-rainbow-${id})` : colour;
 	const shapeObj = getShapeInfo(shape);
 	const iconCode = getIconCodeSync(iconColour, shapeObj.iconSize, icon);
 	const iconTranslateX = `${Math.floor(shapeObj.center[0] - shapeObj.iconSize / 2)}`;
@@ -311,7 +340,7 @@ export function getMarkerCodeSync(colour: string, height: number, icon?: Icon, s
 	const { offsetX, offsetY, scale } = getMarkerCodeMeta(height, shape, highlight);
 	return (
 		`<g transform="translate(${offsetX}, ${offsetY}) scale(${scale})">` +
-			(colour == "rainbow" ? `<defs><linearGradient id="fm-rainbow-${id}" x2="0" y2="100%">${RAINBOW_STOPS}</linearGradient></defs>` : '') +
+			(gradientStops ? `<defs><linearGradient id="fm-rainbow-${id}" x2="0" y2="100%">${gradientStops}</linearGradient></defs>` : '') +
 			(highlight ? `<path style="stroke: #fff; stroke-width: ${MARKER_HIGHLIGHT_WIDTH * 2 / scale}; stroke-linecap: round;" d="${quoteHtml(shapeObj.path)}"/>"/>` : "") +
 			`<path id="shape-${id}" style="stroke: #000; stroke-width: ${MARKER_BORDER_WIDTH * 2}; stroke-linecap: round; fill: ${colourCode}; clip-path: url(#clip-${id})" d="${quoteHtml(shapeObj.path)}"/>"/>` +
 			`<clipPath id="clip-${id}"><use xlink:href="#shape-${id}"/></clipPath>` + // Don't increase the size by increasing the border: https://stackoverflow.com/a/32162431/242365

@@ -1,5 +1,8 @@
 import type { ID, Shape, Stroke, Icon, Type } from "facilmap-types";
 import { iconList } from "facilmap-leaflet";
+import { countBy, uniq } from "lodash-es";
+import { bounds, LineUtil, point, type LatLngBounds } from "leaflet";
+import type { LineWithTrackPoints } from "facilmap-client";
 import { formatTypeName, getDefaultFieldShowInLegend, getOrderedTypes, isBright } from "facilmap-utils";
 import type { FacilMapContext } from "../facil-map-context-provider/facil-map-context";
 import { requireClientContext, requireMapContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
@@ -36,6 +39,17 @@ export interface LegendMapItem extends LegendItem {
 	value: string;
 }
 
+/**
+ * Whether the line as drawn on the map crosses the given bounds. Like in the lines layer, routed lines are drawn from
+ * their loaded track points and straight lines from their route points.
+ */
+function isLineInBounds(line: LineWithTrackPoints, latLngBounds: LatLngBounds): boolean {
+	const rect = bounds([latLngBounds.getWest(), latLngBounds.getSouth()], [latLngBounds.getEast(), latLngBounds.getNorth()]);
+	const linePoints = line.mode ? Object.values(line.trackPoints).filter((p) => typeof p === "object") : line.routePoints;
+	const points = linePoints.map((p) => point(p.lon, p.lat));
+	return points.some((p, i) => rect.contains(p) || (i > 0 && LineUtil.clipSegment(points[i - 1], p, rect) !== false));
+}
+
 export function getLegendItems(context: FacilMapContext): LegendType[] {
 	const client = requireClientContext(context).value;
 	const mapContext = requireMapContext(context).value;
@@ -56,17 +70,36 @@ export function getLegendItems(context: FacilMapContext): LegendType[] {
 			filtered: true
 		};
 
+		// The objects of this type in the current map view, for showing the colours and shapes in use if they are not fixed
+		const visibleMarkers = type.type === "marker" ? Object.values(client.markers).filter((m) => (
+			m.typeId === type.id && mapContext.bounds.contains([m.lat, m.lon])
+		)) : [];
+		const visibleLines = type.type === "line" ? Object.values(client.lines).filter((l) => (
+			l.typeId === type.id && isLineInBounds(l, mapContext.bounds)
+		)) : [];
+
 		if (type.colourFixed) {
 			mainItem.colour = type.defaultColour ? `#${type.defaultColour}` : undefined;
+		} else {
+			// Blend the colours in use by how often they are used, most used first. If nothing is visible, the rainbow is shown.
+			const counts = Object.entries(countBy([...visibleMarkers, ...visibleLines], (o) => `#${o.colour}`)).sort((a, b) => b[1] - a[1]);
+			mainItem.colour = counts.length > 1 ? counts.map(([c, count]) => `${c} ${count}`).join(",") : counts[0]?.[0];
 		}
-		if (type.type == "marker" && type.iconFixed && type.defaultIcon && (iconList.includes(type.defaultIcon) || type.defaultIcon.length == 1)) {
-			mainItem.icon = type.defaultIcon;
+		if (type.type == "marker") {
+			// If the icon is not fixed, show the icon in use if all visible markers have the same one
+			const icons = uniq(visibleMarkers.map((m) => m.icon));
+			const icon = type.iconFixed ? type.defaultIcon : icons.length === 1 ? icons[0] : undefined;
+			if (icon && (iconList.includes(icon) || icon.length == 1)) {
+				mainItem.icon = icon;
+			}
 		}
 		if (type.type == "marker") {
 			if (type.shapeFixed) {
 				mainItem.shape = type.defaultShape ?? "";
 			} else {
-				mainItem.shape = "drop";
+				// Show the shape in use if all visible markers have the same one
+				const shapes = uniq(visibleMarkers.map((m) => m.shape));
+				mainItem.shape = shapes.length === 1 ? shapes[0] : "drop";
 			}
 		}
 		if (type.type == "line" && type.widthFixed) {

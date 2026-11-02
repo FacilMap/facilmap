@@ -1,4 +1,4 @@
-import { RAINBOW_STOPS } from "facilmap-leaflet";
+import { getGradientStops } from "facilmap-leaflet";
 import { getUniqueId } from "./utils";
 import type { Stroke } from "facilmap-types";
 
@@ -52,7 +52,8 @@ function getLinePlaceholderDashArray(width: number, length: number, stroke: Stro
 }
 
 export function createLinePlaceholderHtml(options: { colour: string; width: number; length: number; stroke: Stroke; arrowRight?: boolean; border?: boolean }): string {
-	const rainbowId = (options.colour == "rainbow" && getUniqueId("fm-line-rainbow"));
+	const gradientStops = getGradientStops(options.colour);
+	const rainbowId = (gradientStops && getUniqueId("fm-line-rainbow"));
 	const renderBorder = options.border ?? true;
 	const borderWidth = renderBorder ? 0.5 : 0;
 
@@ -78,7 +79,7 @@ export function createLinePlaceholderHtml(options: { colour: string; width: numb
 
 	return (
 		`<svg width="${options.length}" height="${height}">` +
-			(rainbowId ? `<defs><linearGradient id="${rainbowId}" x2="100%" y2="0" gradientUnits="userSpaceOnUse">${RAINBOW_STOPS}</linearGradient></defs>` : ``) +
+			(rainbowId ? `<defs><linearGradient id="${rainbowId}" x2="100%" y2="0" gradientUnits="userSpaceOnUse">${gradientStops}</linearGradient></defs>` : ``) +
 			(renderBorder ? (
 				`<path d="${path}" style="${borderStyle}"/>` +
 				`<path d="${arrowPath}" style="stroke: #000; stroke-width: ${borderWidth * 2}; paint-order: stroke fill"/>`
