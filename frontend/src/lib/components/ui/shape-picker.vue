@@ -6,7 +6,7 @@
 	import { arrowNavigation } from "../../utils/ui";
 	import PrerenderedList from "./prerendered-list.vue";
 	import { computed, nextTick, ref } from "vue";
-	import type { Validator } from "./validated-form/validated-field.vue";
+	import type { Validator } from "./validated-form/validation-utils";
 	import { computedAsync } from "../../utils/vue";
 	import { useI18n } from "../../utils/i18n";
 

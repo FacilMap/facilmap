@@ -1,6 +1,6 @@
 {
     "about-dialog": {
-        "header": "关于 FacilMap {{version}}",
+        "about-header": "关于 FacilMap",
         "license-text": "{{facilmap}} 根据 {{license}} 提供。",
         "license-text-facilmap": "FacilMap",
         "license-text-license": "GNU Affero 通用公共许可证，版本 3"

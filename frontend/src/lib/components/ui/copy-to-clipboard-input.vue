@@ -6,7 +6,7 @@
 	import Popover from "./popover.vue";
 	import Icon from "./icon.vue";
 	import vTooltip from "../../utils/tooltip";
-	import type { Validator } from "./validated-form/validated-field.vue";
+	import type { Validator } from "./validated-form/validation-utils";
 	import ValidatedField from "./validated-form/validated-field.vue";
 	import type { ThemeColour } from "../../utils/bootstrap";
 	import { useI18n } from "../../utils/i18n";

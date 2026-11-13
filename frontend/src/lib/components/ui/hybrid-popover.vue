@@ -3,7 +3,7 @@
 	import { useModal } from "../../utils/modal";
 	import { useMaxBreakpoint } from "../../utils/bootstrap";
 	import Popover from "./popover.vue";
-	import { useRefWithOverride } from "../../utils/vue";
+	import { useModelWithFallback } from "../../utils/vue";
 	import AttributePreservingElement from "./attribute-preserving-element.vue";
 	import { useI18n } from "../../utils/i18n";
 
@@ -33,8 +33,9 @@
 		hidden: [];
 	}>();
 
-	const showModel = defineModel<boolean>("show");
-	const show = useRefWithOverride(false, showModel);
+	const showModel = defineModel<boolean>("show", { default: undefined });
+
+	const show = useModelWithFallback(showModel, false);
 	const showModal = ref(false);
 	const showPopover = ref(false);
 

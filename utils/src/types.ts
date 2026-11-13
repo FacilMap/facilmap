@@ -20,4 +20,5 @@ export interface InjectedConfig {
 	supportsRoutes: boolean;
 	supportsAdvancedRoutes: boolean;
 	donateUrl: string;
+	basePath: string;
 }

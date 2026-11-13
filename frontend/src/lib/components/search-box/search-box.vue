@@ -243,8 +243,8 @@
 			min-height: 6rem;
 			width: 29.5rem;
 
-			transition: opacity .7s,background-color .7s,border-color .7s;
-			opacity: .7;
+			transition: opacity var(--fm-control-opacity-fade);
+			opacity: var(--fm-control-opacity);
 
 			&:hover,&.hasFocus {
 				opacity: 1;

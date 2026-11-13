@@ -5,7 +5,7 @@
 	import { getZoomDestinationForMarker } from "../../utils/zoom";
 	import Icon from "../ui/icon.vue";
 	import Coordinates from "../ui/coordinates.vue";
-	import { canManageObject, canUpdateAnyField, formatFieldName, formatFieldValue, formatTypeName, normalizeMarkerName } from "facilmap-utils";
+	import { canManageObject, canUpdateAnyField, formatFieldValue, formatTypeName, normalizeMarkerName } from "facilmap-utils";
 	import { computed, ref } from "vue";
 	import { useToasts } from "../ui/toasts/toasts.vue";
 	import { showConfirm } from "../ui/alert.vue";
@@ -16,6 +16,7 @@
 	import { useI18n } from "../../utils/i18n";
 	import DropdownMenu from "../ui/dropdown-menu.vue";
 	import { vKeyboardShortcut } from "../../utils/vue";
+	import FieldName from "../ui/field-name.vue";
 	import type { MapResult } from "../../utils/search";
 
 	const context = injectContextRequired();
@@ -103,8 +104,12 @@
 			<dd class="pos"><Coordinates :point="marker" :ele="marker.ele" :zoom="props.zoom"></Coordinates></dd>
 
 			<template v-for="field in type.fields" :key="field.name">
-				<dt>{{formatFieldName(field.name)}}</dt>
-				<dd v-html="formatFieldValue(clientSub.data.mapData, clientSub.data.types[marker.typeId], field, marker, true)"></dd>
+				<template v-if="field.visibility !== 'edit'">
+					<dt>
+						<FieldName :field="field"></FieldName>
+					</dt>
+					<dd v-html="formatFieldValue(clientSub.data.mapData, clientSub.data.types[marker.typeId], field, marker, true)"></dd>
+				</template>
 			</template>
 		</dl>
 

@@ -4,7 +4,7 @@
         "donate": "Пожертвувати"
     },
     "about-dialog": {
-        "header": "Про FacilMap {{version}}",
+        "about-header": "Про FacilMap",
         "license-text": "{{facilmap}} доступний за ліцензією {{license}}.",
         "license-text-license": "Загальна публічна ліцензія GNU Affero, версія 3",
         "issues-text": "Якщо щось не працює або у вас є пропозиції щодо покращення, будь ласка, повідомте про це на {{tracker}}.",

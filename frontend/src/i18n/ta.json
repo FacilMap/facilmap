@@ -1,10 +1,14 @@
 {
     "common": {
-        "coordinates": "ஒருங்கிணைப்புகள்"
+        "coordinates": "ஒருங்கிணைப்புகள்",
+        "first": "முதல்",
+        "previous": "முந்தைய",
+        "next": "அடுத்தது",
+        "last": "கடைசி"
     },
     "about-dialog": {
         "map-data-search": "தேடல்",
-        "header": "FacilMap பற்றி {{version}}",
+        "about-header": "FacilMap பற்றி",
         "license-text": "{{facilmap}}} {{license}}இன் கீழ் கிடைக்கிறது.",
         "license-text-facilmap": "வசதி",
         "license-text-license": "குனு பொது பொதுமக்கள் உரிமம் பதிப்பு 3",
@@ -122,17 +126,17 @@
         "field-name": "பெயர்",
         "field-type": "வகை",
         "field-delete": "நீக்கு",
-        "field-type-input": "உரை புலம்",
-        "field-type-textarea": "உரை பகுதி",
-        "field-type-dropdown": "கீழ்தோன்றும்",
-        "field-type-checkbox": "தேர்வுப்பெட்டி",
-        "field-edit": "தொகு",
-        "field-default-value": "இயல்புநிலை மதிப்பு",
         "field-reorder": "மறுவரிசை",
         "field-add": "கூட்டு"
     },
-    "edit-type-dropdown-dialog": {
-        "title-dropdown": "கீழ்தோன்றும் திருத்து",
+    "field-type-picker": {
+        "input": "உரை புலம்",
+        "textarea": "உரை பகுதி",
+        "dropdown": "கீழ்தோன்றும்",
+        "checkbox": "தேர்வுப்பெட்டி"
+    },
+    "edit-field-dialog": {
+        "default-value": "இயல்புநிலை மதிப்பு",
         "ok-button": "சரி",
         "control": "கட்டுப்பாடு",
         "control-interpolation-marker": "மார்க்கர்",
@@ -141,7 +145,6 @@
         "unique-value-error": "பல விருப்பங்கள் ஒரே லேபிளைக் கொண்டிருக்க முடியாது.",
         "delete-option-message": "“{{value}}” என்ற விருப்பத்தை நீக்க விரும்புகிறீர்களா?",
         "no-options-error": "கட்டுப்படுத்தும் புலங்களுக்கு குறைந்தது ஒரு விருப்பத்தோ இருக்க வேண்டும்.",
-        "title-checkbox": "தேர்வுப்பெட்டியைத் திருத்தவும்",
         "control-interpolation-line": "வரி",
         "control-colour": "கட்டுப்பாடு {{type}} வண்ணம்",
         "control-size": "கட்டுப்பாடு {{type}} அளவு",
@@ -762,12 +765,6 @@
         "copied-message": "The map இணைப்பு was copied பெறுநர் the clipboard.",
         "random-tooltip": "சீரற்ற ஐடியை உருவாக்குங்கள்",
         "random-alt": "சீரற்ற"
-    },
-    "pagination": {
-        "first-label": "முதல்",
-        "previous-label": "முந்தைய",
-        "next-label": "அடுத்தது",
-        "last-label": "கடைசி"
     },
     "results": {
         "zoom-alt": "பெரிதாக்கு",

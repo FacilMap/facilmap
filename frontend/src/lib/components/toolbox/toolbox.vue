@@ -131,11 +131,15 @@
 		}
 
 		.fm-sidebar:not(.isNarrow) {
-			opacity: .5;
-			transition: opacity .7s;
+			opacity: var(--fm-control-opacity);
+			transition: opacity var(--fm-control-opacity-fade);
 
 			&:hover {
 				opacity: 1;
+			}
+
+			.navbar {
+				border-radius: var(--bs-border-radius)
 			}
 		}
 
@@ -162,8 +166,6 @@
 			text-align: right;
 
 			> a {
-				color: #ff00f6;
-				font-weight: bold;
 				text-decoration: none;
 			}
 		}

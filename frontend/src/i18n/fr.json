@@ -3,7 +3,7 @@
         "license-text-facilmap": "FacilMap",
         "map-data-pois": "Points d'intérêt",
         "map-data-directions": "Itinéraire",
-        "header": "À propos de FacilMap {{version}}",
+        "about-header": "À propos de FacilMap",
         "license-text": "{{facilmap}} est disponible sous licence {{license}}.",
         "icons": "Icônes",
         "attribution-osm-contributors": "Contributeurs OSM",

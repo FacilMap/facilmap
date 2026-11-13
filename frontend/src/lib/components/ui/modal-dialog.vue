@@ -1,7 +1,7 @@
 <script setup lang="ts">
-	import { computed, readonly, ref, toRef } from "vue";
-	import { useModal } from "../../utils/modal";
-	import ValidatedForm, { type CustomSubmitEvent } from "./validated-form/validated-form.vue";
+	import { computed, readonly, ref, toRef, type DeepReadonly } from "vue";
+	import { useModal, type ModalActions } from "../../utils/modal";
+	import ValidatedForm, { type CustomSubmitEvent, type ValidatedFormData } from "./validated-form/validated-form.vue";
 	import type { ThemeColour } from "../../utils/bootstrap";
 	import { useUnloadHandler } from "../../utils/utils";
 	import AttributePreservingElement from "./attribute-preserving-element.vue";
@@ -24,9 +24,9 @@
 		size?: "sm" | "default" | "lg" | "xl";
 		okLabel?: string;
 		okVariant?: ThemeColour;
-		formValidationError?: string | undefined;
 		action?: string;
 		target?: string;
+		animationReference?: HTMLElement;
 	}>(), {
 		isModified: false,
 		size: "lg"
@@ -55,7 +55,8 @@
 			emit("hidden");
 		},
 		static: computed(() => isSubmitting.value || props.isBusy || props.noCancel || props.isModified || props.noBackdropClick),
-		noEscape: computed(() => isSubmitting.value || props.isBusy || props.noCancel)
+		noEscape: computed(() => isSubmitting.value || props.isBusy || props.noCancel),
+		animationReference: toRef(() => props.animationReference)
 	});
 
 	useUnloadHandler(() => props.isModified);
@@ -75,7 +76,11 @@
 		}
 	}
 
-	const expose = readonly({
+	const expose: DeepReadonly<{
+		// Explicit type annotation needed by TypeScript compiler
+		formData: ValidatedFormData | undefined;
+		modal: ModalActions;
+	}> = readonly({
 		formData: toRef(() => validatedFormRef.value?.formData),
 		modal
 	});
@@ -103,7 +108,6 @@
 					@submit="handleSubmit"
 					ref="validatedFormRef"
 					:noValidate="isCloseButton"
-					:formValidationError="formValidationError"
 				>
 					<div class="modal-header">
 						<h1 class="modal-title fs-5">{{props.title}}</h1>

@@ -19,7 +19,7 @@
         "example": "Пример"
     },
     "about-dialog": {
-        "header": "О FacilMap {{version}}",
+        "about-header": "О FacilMap",
         "license-text": "{{facilmap}} доступен под лицензией {{license}}.",
         "license-text-facilmap": "FacilMap",
         "license-text-license": "GNU Affero General Public License, Version 3",
@@ -75,7 +75,7 @@
         "bing-maps": "Bing Maps",
         "google-maps-satellite": "Google Карты (Спутник)"
     },
-    "edit-type-dropdown-dialog": {
+    "edit-field-dialog": {
         "option-add": "Добавить"
     },
     "common": {

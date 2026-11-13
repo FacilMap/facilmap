@@ -33,7 +33,7 @@
 			<a
 				:href="isPrevDisabled ? undefined : 'javascript:'"
 				class="page-link"
-				:aria-label="i18n.t('pagination.first-label')"
+				:aria-label="i18n.t('common.first')"
 				@click="handleClick(0)"
 			>
 				<span aria-hidden="true">«</span>
@@ -44,7 +44,7 @@
 			<a
 				:href="isPrevDisabled ? undefined : 'javascript:'"
 				class="page-link"
-				:aria-label="i18n.t('pagination.previous-label')"
+				:aria-label="i18n.t('common.previous')"
 				@click="handleClick(props.modelValue - 1)"
 			>
 				<span aria-hidden="true">‹</span>
@@ -69,7 +69,7 @@
 			<a
 				:href="isNextDisabled ? undefined : 'javascript:'"
 				class="page-link"
-				:aria-label="i18n.t('pagination.next-label')"
+				:aria-label="i18n.t('common.next')"
 				@click="handleClick(props.modelValue + 1)"
 			>
 				<span aria-hidden="true">›</span>
@@ -80,7 +80,7 @@
 			<a
 				:href="isNextDisabled ? undefined : 'javascript:'"
 				class="page-link"
-				:aria-label="i18n.t('pagination.last-label')"
+				:aria-label="i18n.t('common.last')"
 				@click="handleClick(pages - 1)"
 			>
 				<span aria-hidden="true">»</span>

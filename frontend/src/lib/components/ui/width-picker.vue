@@ -1,5 +1,5 @@
 <script setup lang="ts">
-	import type { Validator } from "./validated-form/validated-field.vue";
+	import type { Validator } from "./validated-form/validation-utils";
 	import NumberInput from "./number-input.vue";
 
 	const props = defineProps<{

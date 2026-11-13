@@ -28,8 +28,9 @@ function mockForm({ onSubmit, validationError }: {
 	app.mount(div);
 
 	if (isPromise(validationError)) {
-		getValidatedForm(inputRef.value!.form!)!.setValidationPromise(inputRef.value!, validationError.then((res) => {
+		getValidatedForm(inputRef.value!.form!)!.setValidationResult(inputRef.value!, validationError.then((res) => {
 			inputRef.value!.setCustomValidity(res || "");
+			return res || "";
 		}));
 	} else if (validationError) {
 		inputRef.value!.setCustomValidity(validationError);

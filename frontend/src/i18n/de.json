@@ -1,10 +1,14 @@
 {
     "common": {
         "coordinates": "Koordinaten",
-        "donate": "Spenden"
+        "donate": "Spenden",
+        "first": "Erste Seite",
+        "previous": "Vorige Seite",
+        "next": "Nächste Seite",
+        "last": "Letzte Seite"
     },
     "about-dialog": {
-        "header": "Über FacilMap {{version}}",
+        "about-header": "Über FacilMap",
         "license-text": "{{facilmap}} is unter der {{license}} verfügbar.",
         "license-text-facilmap": "FacilMap",
         "license-text-license": "GNU Affero General Public License, Version 3",
@@ -23,7 +27,23 @@
         "map-data-geoip-description": "Dieses Produkt enthält GeoLite2-Daten von Maxmind, verfügbar unter {{maxmind}}.",
         "attribution-osm-contributors": "OSM-Mitwirkende",
         "programs-libraries": "Programme/Bibliotheken",
-        "icons": "Symbole"
+        "icons": "Symbole",
+        "header": "Willkommen bei {{appName}}!",
+        "introduction": "FacilMap ist eine vielseitige und datenschutzfreundliche Open-Source-Online-Landkarte, die verschiedene auf OpenStreetMap basierende Dienste kombiniert und es leicht macht, Orte zu finden, Reisen zu planen und eigene Karten mit Markern, Linien und Routen zu erstellen und daran in Echtzeit zusammen zu arbeiten.",
+        "start-header": "Erste Schritte",
+        "start-explore": "Orte und Routen **entdecken**.",
+        "start-create": "Eigene Karten mit Markern, Linien und Routen **erstellen**.",
+        "start-share": "Private Links mit Freunden **teilen** oder veröffentlichen.",
+        "help-header": "Hilfe bekommen",
+        "news-header": "Neuigkeiten",
+        "help-documentation": "Dokumentation",
+        "help-issues": "Ein Problem melden",
+        "help-questions": "Eine Frage stellen",
+        "help-chat": "Chat beitreten",
+        "donate-introduction": "FacilMap ist ein nicht-kommerzielles und kostenloses Open-Source-Projekt und wird von [Candid Dauth](https://github.com/cdauth) entwickelt. Beiträge in Form von Code, Verbesserungen der Dokumentation, Ideenvorschlägen auf [GitHub](https://github.com/FacilMap/facilmap/issues) und in Form von finanziellen Spenden sind willkommen.",
+        "donate-more-options": "Mehr Optionen",
+        "news-show-more": "Ältere Neuigkeiten anzeigen",
+        "news-hide-more": "Ältere Neuigkeiten verstecken"
     },
     "add": {
         "hidden-markers-added-title_one": "Marker erstellt",
@@ -219,7 +239,14 @@
         "lower-description": "Zu Kleinbuchstaben konvertieren",
         "round-description": "Runden ({{round}}: kaufmännisch runden, {{ceil}}: aufrunden, {{floor}}: abrunden)",
         "functions-description": "Mathematische Funktionen ({{abs}}: Betrag, {{log}}: Natürlicher Logarithmus, {{sqrt}}: Quadratwurzel)",
-        "min-max-description": "Kleinster/größter Wert"
+        "min-max-description": "Kleinster/größter Wert",
+        "expression": "Ausdruck",
+        "comparison": "Vergleich",
+        "number": "Zahl",
+        "plus-description-1": "Addition (wenn alle Werte Zahlen sind) oder Textverkettung.",
+        "plus-description-2": "Mit {{code}} kann Text zu einer Zahl konvertiert werden.",
+        "null-description": "Ob der Wert null oder undefined ist.",
+        "log-description": "Loggt die Parameter zu Debug-Zwecken in die Browserkonsole."
     },
     "edit-line-dialog": {
         "save-error": "Fehler beim Speichern der Linie",
@@ -272,24 +299,25 @@
         "fields": "Felder",
         "field-name": "Name",
         "field-type": "Art",
-        "field-default-value": "Standardwert",
         "field-delete": "Löschen",
-        "field-type-input": "Textfeld einzeilig",
-        "field-type-textarea": "Textfeld mehrzeilig",
-        "field-type-dropdown": "Dropdown",
-        "field-type-checkbox": "Checkbox",
-        "field-edit": "Bearbeiten",
         "field-reorder": "Umordnen",
         "field-add": "Erstellen"
     },
-    "edit-type-dropdown-dialog": {
+    "field-type-picker": {
+        "input": "Textfeld einzeilig",
+        "textarea": "Textfeld mehrzeilig",
+        "dropdown": "Dropdown",
+        "checkbox": "Checkbox",
+        "formula": "Formel"
+    },
+    "edit-field-dialog": {
+        "default-value": "Standardwert",
         "delete-option-title": "Option löschen",
         "delete-option-message": "Wollen Sie die Option „{{value}}“ wirklich löschen?",
         "delete-option-button": "Löschen",
         "unique-value-error": "Mehrere Optionen können nicht den selben Wert haben.",
         "no-options-error": "Felder mit Attributkontrolle müssen mindestens eine Option haben.",
-        "title-checkbox": "Checkbox-Feld bearbeiten",
-        "title-dropdown": "Dropdown-Feld bearbeiten",
+        "title": "Feld „{{name}}“ bearbeiten",
         "ok-button": "OK",
         "control": "Attributkontrolle",
         "control-interpolation-marker": "des Markers",
@@ -311,7 +339,8 @@
         "stroke": "Kontur",
         "option-remove": "Löschen",
         "option-reorder": "Umordnen",
-        "option-add": "Erstellen"
+        "option-add": "Erstellen",
+        "formula-introduction": "Formeln ermöglichen es, Werte automatisch aus anderen Feldwerten oder Eigenschaften des selben Markers oder der selben Linie zu generieren. Hier ist eine Übersicht der Möglichkeiten. Bei Anwendungsfällen, für die die verfügbaren Funktionen nicht ausreichen, bitte ein [Issue](https://github.com/FacilMap/facilmap/issues) öffnen."
     },
     "elevation-stats": {
         "ascent-alt": "Aufstieg",
@@ -543,7 +572,12 @@
     "leaflet-map": {
         "open-full-size": "{{appName}} als ganze Seite öffnen",
         "loading": "Wird geladen…",
-        "attribution-notice": "Diese App basiert auf Kartendaten von [OpenStreetMap](https://www.openstreetmap.org/copyright/de). Mehr Details im Dialog „[Über {{appName}}](#about-dialog)“ im Hilfe-Menü."
+        "attribution-notice": "Diese App basiert auf Kartendaten von [OpenStreetMap](https://www.openstreetmap.org/copyright/de). Mehr Details im Dialog „[Über {{appName}}](#about-dialog)“ im Hilfe-Menü.",
+        "zoom-in": "Hineinzoomen",
+        "zoom-out": "Herauszoomen",
+        "locate": "Meinen Standort anzeigen",
+        "about": "Über {{appName}}",
+        "about-news": "Neuigkeiten anzeigen"
     },
     "leaflet-map-components": {
         "pois-too-many-results": "Nicht alle POIs konnten geladen werden, weil zu viele gefunden wurden. Zoom Sie weiter hinein, um alle POIs anzuzeigen.",
@@ -720,15 +754,34 @@
         "delete-map-button": "Karte löschen",
         "delete-description": "Um die Karte zu löschen, tippen Sie {{code}} in das Feld und klicken Sie „Karte löschen“.",
         "delete-code": "LÖSCHEN",
+        "tab-general": "Allgemein",
+        "tab-formulas": "Formeln",
+        "tab-delete-map": "Karte löschen",
+        "custom-functions-heading": "Eigene Funktionen",
+        "custom-functions-introduction": "Funktionen, die hier definiert werden, können in Formelfeldern, Routenformeln und Filtern verwendet werden. Sie können auf die gleichen Variablen wie gewöhnliche Formeln/Filter zugreifen und einander auch referenzieren. Mit `prop(args, 0)` usw. kann auf die Parameter zugegriffen werden. Funktionen können auch einfache konstante Werte zurück liefern und so als globale Variablen verwendet werden.",
+        "custom-function-name": "Name",
+        "custom-function-formula": "Formel",
+        "custom-function-delete": "Löschen",
+        "custom-function-reorder": "Umsortieren",
+        "custom-function-add": "Erstellen",
+        "delete-custom-function-title": "Eigene Funktion löschen",
+        "delete-custom-function-message": "Wollen Sie die eigene Funktion „{{name}}“ wirklich löschen?",
+        "delete-custom-function-button": "Löschen",
+        "unique-custom-function-name-error": "Namen eigener Funktionen dürfen nur einmal vorkommen.",
+        "route-formulas-heading": "Routenformeln",
+        "route-formulas-introduction": "Diese werden als zusätzliche Felder angezeigt, wenn eine Route berechnet wird, während diese Karte offen ist. In den Foreln sind nur die Routenattribute (`mode`, `distance`, `time`, `ascent`, `descent` und `routePoints`) als Variablen verfügbar. `data` enthält die Ergebnisse anderer Routenformeln. Formeln, die ein leeres Ergebnis haben, werden nicht angezeigt.",
+        "route-formula-name": "Name",
+        "route-formula-formula": "Formel",
+        "route-formula-delete": "Löschen",
+        "route-formula-reorder": "Umsortieren",
+        "route-formula-add": "Erstellen",
+        "delete-route-formula-title": "Routenformel löschen",
+        "delete-route-formula-message": "Wollen Sie die Routenformel „{{name}}“ wirklich löschen?",
+        "delete-route-formula-button": "Löschen",
+        "unique-route-formula-name-error": "Namen von Routenformeln dürfen nur einmal vorkommen.",
         "add-favourite": "Zu Favoriten hinzufügen",
         "add-favourite-persist": "Zu Favoriten hinzufügen (Browser wird um Zugriff auf lokalen Speicher bitten)",
         "add-favourite-tooltip": "Favoriten sind im Menü „Kollaborative Karten“ verfügbar und ermöglichen einen schnellen Zugriff auf Karten, ohne sich den Link merken zu müssen. Sie werden im lokalen Speicher des Browsers abgespeichert."
-    },
-    "pagination": {
-        "first-label": "Erste Seite",
-        "previous-label": "Vorige Seite",
-        "next-label": "Nächste Seite",
-        "last-label": "Letzte Seite"
     },
     "results": {
         "zoom-alt": "Zoomen",

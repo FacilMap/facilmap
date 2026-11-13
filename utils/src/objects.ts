@@ -1,4 +1,4 @@
-import { lineValidator, markerValidator, type CRU, type DeepReadonly, type Field, type FieldOption, type Line, type LineTemplate, type Marker, type Type } from "facilmap-types";
+import { lineValidator, markerValidator, type CRU, type DeepReadonly, type Field, type FieldOption, type FieldUpdate, type Line, type LineTemplate, type Marker, type Type } from "facilmap-types";
 import { omit } from "lodash-es";
 import { getI18n } from "./i18n.js";
 
@@ -47,6 +47,21 @@ export function getSelectedOption(field: DeepReadonly<Field>, value: string | un
 	return (value != null && get(value)) || (!ignoreDefault && field.default != null && get(field.default)) || field.options?.[0];
 }
 
+export function getControlNumber(type: Type<CRU.READ | CRU.CREATE_VALIDATED>, field: Field | FieldUpdate): number {
+	return [
+		field.controlColour,
+		...(type.type == "marker" ? [
+			field.controlSize,
+			field.controlIcon,
+			field.controlShape
+		] : []),
+		...(type.type == "line" ? [
+			field.controlWidth,
+			field.controlStroke
+		] : [])
+	].filter((v) => v).length;
+}
+
 export function normalizeFieldValue(field: DeepReadonly<Field>, value: string | undefined, ignoreDefault = false): string {
 	if (field.type === "dropdown") {
 		return getSelectedOption(field, value, ignoreDefault)?.value ?? "";
@@ -55,7 +70,7 @@ export function normalizeFieldValue(field: DeepReadonly<Field>, value: string | 
 	} else if (field.type === "formula") {
 		return "";
 	} else {
-		return value ?? "";
+		return value ?? (ignoreDefault ? "" : (field.default ?? ""));
 	}
 }
 

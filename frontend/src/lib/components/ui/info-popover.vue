@@ -3,7 +3,7 @@
 	import Icon from "./icon.vue";
 	import Popover from "./popover.vue";
 	import type { Tooltip } from "bootstrap";
-import { useRefWithOverride } from "../../utils/vue";
+	import { useModelWithFallback } from "../../utils/vue.js";
 
 	const props = withDefaults(defineProps<{
 		tag?: string;
@@ -19,7 +19,7 @@ import { useRefWithOverride } from "../../utils/vue";
 	const buttonRef = ref<HTMLElement>();
 
 	const showModel = defineModel<boolean>("show");
-	const show = useRefWithOverride(false, showModel);
+	const show = useModelWithFallback(showModel, false);
 </script>
 
 <template>

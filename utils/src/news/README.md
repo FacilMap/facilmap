@@ -1,0 +1,1 @@
+The `news.json` and `i18n/en.json` files are generated from the [CHANGELOG.md](../../../CHANGELOG.md) file at the root of this repository. After making changes to the changelog, run `yarn generate-news` to regenerate those files. The other files under `i18n/` are managed by Weblate.

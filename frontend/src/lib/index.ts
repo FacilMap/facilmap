@@ -27,7 +27,7 @@ export * from "./utils/vue";
 export * from "./utils/zoom";
 
 export { default as EditTypeDialog } from "./components/edit-type-dialog/edit-type-dialog.vue";
-export { default as EditTypeDropdownDialog } from "./components/edit-type-dialog/edit-type-dropdown-dialog.vue";
+export { default as EditFieldDialog } from "./components/edit-type-dialog/edit-field-dialog/edit-field-dialog.vue";
 export * from "./components/edit-type-dialog/edit-type-utils";
 export * from "./components/facil-map-context-provider/click-marker-tab-context";
 export * from "./components/facil-map-context-provider/client-context";
@@ -107,7 +107,7 @@ export { default as UseAsDropdown } from "./components/ui/use-as-dropdown.vue";
 export { default as WidthPicker } from "./components/ui/width-picker.vue";
 export { default as ZoomToObjectButton } from "./components/ui/zoom-to-object-button.vue";
 
-export { default as AboutDialog } from "./components/about-dialog.vue";
+export { default as AboutDialog } from "./components/about-dialog/about-dialog.vue";
 export { default as ClickMarkerTab } from "./components/click-marker-tab.vue";
 export { default as ClientContext } from "./components/client-provider.vue";
 export { default as EditFilterDialog } from "./components/edit-filter-dialog.vue";

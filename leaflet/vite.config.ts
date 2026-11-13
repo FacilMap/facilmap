@@ -5,6 +5,7 @@ import cssInjectedByJsPlugin from "vite-plugin-css-injected-by-js";
 import dtsPlugin from "vite-plugin-dts";
 import iconsPlugin from "./rollup-icons";
 import languagesPlugin from "facilmap-utils/rollup-languages";
+import newsMtimesPlugin from "facilmap-utils/rollup-news-mtimes";
 import { appendFile, readFile } from "fs/promises";
 import tsconfigPaths from "vite-tsconfig-paths";
 import { isAbsolute } from "node:path";
@@ -25,6 +26,7 @@ export default defineConfig({
 		}),
 		iconsPlugin(),
 		languagesPlugin(),
+		newsMtimesPlugin(),
 		tsconfigPaths({ loose: true })
 	],
 	build: {

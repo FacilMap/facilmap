@@ -55,13 +55,17 @@ const storageValidator2 = z.record(z.any()).transform((val) => renameProperty(va
 	autoZoom: z.boolean().catch(true),
 	routeQueries: z.boolean().catch(true),
 	favourites: arrayIgnoringInvalids(favouriteValidator).catch(() => []),
-	baseLayer: z.string().optional(),
-	overlays: z.array(z.string()).optional(),
-	customLinks: z.array(customLinkValidator).optional(),
+	baseLayer: z.string().optional().catch(undefined),
+	overlays: z.array(z.string()).optional().catch(undefined),
+	customLinks: z.array(customLinkValidator).optional().catch(undefined),
 	presetLinks: z.record(z.object({
 		enabled: z.boolean().optional(),
 		idx: z.number().optional()
-	})).optional(),
+	})).optional().catch(undefined),
+	lastNews: z.object({
+		id: z.string(),
+		date: z.string()
+	}).optional().catch(undefined),
 	salt: z.string().default(() => getStorageSalt()),
 	identities: z.record(stringifiedIdValidator, z.object({
 		links: z.array(z.object({

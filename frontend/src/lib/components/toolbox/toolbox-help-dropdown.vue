@@ -1,5 +1,5 @@
 <script setup lang="ts">
-	import AboutDialog from "../about-dialog.vue";
+	import AboutDialog from "../about-dialog/about-dialog.vue";
 	import { ref } from "vue";
 	import DropdownMenu from "../ui/dropdown-menu.vue";
 	import { injectContextRequired } from "../facil-map-context-provider/facil-map-context-provider.vue";

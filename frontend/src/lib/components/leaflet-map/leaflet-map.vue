@@ -1,12 +1,13 @@
 <script setup lang="ts">
-	import { type Ref, computed, onMounted, ref } from "vue";
+	import { type Ref, onMounted, ref } from "vue";
 	import { useMapContext } from "./leaflet-map-components";
-	import vTooltip from "../../utils/tooltip";
 	import type { WritableMapContext } from "../facil-map-context-provider/map-context";
 	import { injectContextRequired, requireClientContext } from "../facil-map-context-provider/facil-map-context-provider.vue";
 	import { useI18n, vReplaceLinks } from "../../utils/i18n";
-	import AboutDialog from "../about-dialog.vue";
+	import AboutDialog from "../about-dialog/about-dialog.vue";
 	import { markdownInline, quoteMarkdown } from "facilmap-utils";
+	import MapControls from "./map-controls.vue";
+	import Logo from "./logo.vue";
 	import { ClientContextMapState } from "../facil-map-context-provider/client-context";
 	import { ClientStateType } from "facilmap-client";
 
@@ -21,10 +22,6 @@
 	const fatalError = ref<string>();
 	const showNarrowAttribution = ref(true);
 	const aboutDialogOpen = ref(false);
-
-	const selfUrl = computed(() => {
-		return `${location.origin}${location.pathname}${mapContext.value?.hash ? `#${mapContext.value.hash}` : ''}`;
-	});
 
 	const mapContext = ref<WritableMapContext>();
 
@@ -69,18 +66,13 @@
 					{{mapContext.overpassMessage}}
 				</div>
 
-				<a
-					v-if="context.settings.linkLogo"
-					:href="selfUrl"
-					target="_blank"
-					class="fm-open-external"
-					v-tooltip.right="i18n.t('leaflet-map.open-full-size', { appName: context.appName })"
-				></a>
-				<div class="fm-logo">
-					<img src="./logo.png"/>
+				<div v-if="mapContext" class="fm-leaflet-map-logo">
+					<Logo></Logo>
 				</div>
 
 				<div class="spinner-border fm-leaflet-map-spinner" v-show="clientContext.client.runningOperations > 0 || (mapContext && mapContext.loading > 0)"></div>
+
+				<MapControls :tooltipPlacement="context.isNarrow ? 'left' : 'right'"></MapControls>
 
 				<slot v-if="mapContext"></slot>
 			</div>
@@ -121,13 +113,9 @@
 
 		.fm-leaflet-map {
 			position: absolute;
-			top: 0;
-			right: 0;
-			left: 0;
-			bottom: 0;
+			inset: 0;
 			z-index: 0;
 			user-select: none;
-			-webkit-user-select: none;
 
 			.leaflet-control-container {
 				> .leaflet-top {
@@ -191,30 +179,6 @@
 				}
 			}
 
-			.leaflet-control-locate.leaflet-control-locate {
-				a, a > span {
-					font-size: inherit;
-					display: inline-flex;
-					align-items: center;
-					justify-content: center;
-				}
-
-				&.active a {
-					color: rgb(32, 116, 182);
-				}
-
-				&.following a {
-					color: rgb(252, 132, 40);
-				}
-			}
-
-			.leaflet-control-attribution.leaflet-control-attribution {
-				.fm-donate {
-					color: #ff00f6;
-					font-weight: bold;
-				}
-			}
-
 			path.leaflet-interactive {
 				// Do not show focus ring
 				outline: none;
@@ -224,32 +188,22 @@
 				color-scheme: only light;
 			}
 
+			.leaflet-control-attribution, .leaflet-control-mouseposition {
+				background: rgba(var(--bs-body-bg-rgb), var(--fm-control-opacity));
+				color: var(--bs-body-color);
+
+				a:not(.fm-donate) {
+					color: rgba(var(--bs-link-color-rgb), var(--bs-link-opacity, 1));
+				}
+			}
+
+			.leaflet-control-mouseposition {
+				border-top-left-radius: var(--bs-border-radius);
+			}
+
 		}
 
 		&.isNarrow {
-			.leaflet-control-locate {
-				float: none;
-				position: absolute;
-				bottom: 0px;
-				right: 44px;
-			}
-
-			.leaflet-control-zoom {
-				border: none;
-
-				.leaflet-control-zoom-in {
-					margin-bottom: 10px;
-				}
-
-				.leaflet-control-zoom-in,.leaflet-control-zoom-out {
-					border: 2px solid rgba(0,0,0,0.2);
-					width: 34px;
-					height: 34px;
-					border-radius: 4px;
-					background-clip: padding-box;
-				}
-			}
-
 			.leaflet-control.leaflet-control-graphicscale {
 				opacity: 0.6;
 			}
@@ -265,7 +219,7 @@
 			pointer-events: none;
 
 			// Style like attribution control
-			background: rgba(255, 255, 255, 0.8);
+			background: rgba(255, 255, 255, var(--fm-control-opacity));
 			padding: 0 5px;
 			color: #333;
 			line-height: 1.4;
@@ -326,6 +280,16 @@
 			}
 		}
 
+		.fm-leaflet-map-controls {
+			position: absolute;
+			inset: calc(var(--fm-leaflet-map-inset-top, 0px) + 10px) auto auto calc(var(--facilmap-inset-left, 0px) + 10px);
+		}
+
+		&.isNarrow .fm-leaflet-map-controls {
+			inset: auto calc(var(--facilmap-inset-right, 0px) + 10px) calc(var(--fm-leaflet-map-inset-bottom, 0px) + 10px) auto;
+		}
+
+
 		.fm-leaflet-map-spinner {
 			position:absolute;
 			bottom: 20px;
@@ -333,27 +297,13 @@
 			color: #00272a;
 		}
 
-		.fm-logo {
+		.fm-leaflet-map-logo {
 			position: absolute;
-			bottom: var(--fm-leaflet-map-inset-bottom, 0px);
-			left: calc(var(--facilmap-inset-left, 0px) - 25px);
-			pointer-events: none;
+			padding: 40px 40px calc(var(--fm-leaflet-map-inset-bottom, 0px) + 15px) calc(var(--facilmap-inset-left, 0px) + 15px);
 			overflow: hidden;
-			user-select: none;
-			-webkit-user-select: none;
-			color-scheme: only light;
-
-			img {
-				margin-bottom: -24px;
-			}
-		}
-
-		.fm-open-external {
-			position: absolute;
-			bottom: 15px;
-			left: 15px;
-			width: 90px;
-			height: 50px;
+			bottom: 0;
+			left: 0;
+			pointer-events: none;
 		}
 
 	}

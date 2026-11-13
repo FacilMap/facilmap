@@ -7,6 +7,7 @@ import vuePlugin from "@vitejs/plugin-vue";
 import tsconfigPaths from "vite-tsconfig-paths";
 import iconsPlugin from "facilmap-leaflet/rollup-icons";
 import languagesPlugin from "facilmap-utils/rollup-languages";
+import newsMtimesPlugin from "facilmap-utils/rollup-news-mtimes";
 import definePlugin from "./vite-define";
 
 export default defineConfig({
@@ -16,6 +17,7 @@ export default defineConfig({
 		tsconfigPaths({ loose: true }),
 		iconsPlugin(),
 		languagesPlugin(),
+		newsMtimesPlugin(),
 		definePlugin()
 	],
 	assetsInclude: [

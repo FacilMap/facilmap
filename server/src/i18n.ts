@@ -142,6 +142,8 @@ setCurrentUnitsGetter(() => getDomainUnits());
 export function getI18n(): {
 	t: i18n["t"];
 	changeLanguage: (lang: string) => Promise<void>;
+	currentLanguage: string;
+	isExplicit: boolean;
 } {
 	return {
 		t: getRawI18n().getFixedT(null, namespace),
@@ -153,6 +155,12 @@ export function getI18n(): {
 
 			await domainLang.i18n.changeLanguage(lang);
 			domainLang.isExplicit = true;
+		},
+		get currentLanguage() {
+			return getRawI18n().language;
+		},
+		get isExplicit() {
+			return getDomainLang()?.isExplicit ?? false;
 		}
 	};
 }

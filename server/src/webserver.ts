@@ -12,10 +12,12 @@ import config from "./config";
 import * as z from "zod";
 import cookieParser from "cookie-parser";
 import { i18nMiddleware } from "./i18n.js";
+import { getNewsAtom } from "./news.js";
 import { getApiMiddleware } from "./api/api.js";
 import { writableToWeb } from "./utils/streams.js";
 import finalhandler from "finalhandler";
 import { ApiV3Backend } from "./api/api-v3.js";
+import { Writable } from "stream";
 
 function getBaseUrl(req: Request): string {
 	return config.baseUrl ?? `${req.protocol}://${req.host}/`;
@@ -129,6 +131,11 @@ export async function initWebserver(database: Database, port: number, host?: str
 		res.header("Content-type", "application/json");
 
 		res.send(getOembedJson(baseUrl, mapData, query));
+	});
+
+	app.get(`${paths.base}news.atom`, async (req, res) => {
+		res.header("Content-type", "application/atom+xml");
+		void getNewsAtom(getBaseUrl(req)).pipeTo(Writable.toWeb(res));
 	});
 
 	app.use(await getStaticFrontendMiddleware());

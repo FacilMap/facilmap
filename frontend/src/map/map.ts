@@ -1,6 +1,6 @@
 import { computed, createApp, defineComponent, h, ref, watch, watchEffect } from "vue";
-import { FacilMap } from "../lib";
-import { decodeQueryString, encodeQueryString, normalizeMapName } from "facilmap-utils";
+import { FacilMap, theme, useI18n } from "../lib";
+import { decodeQueryString, encodeQueryString, LANG_QUERY, normalizeMapName } from "facilmap-utils";
 import decodeURIComponent from "decode-uri-component";
 import "../lib/bootstrap.scss"; // Not imported in lib/index.ts because we don't want it to be bundled
 import { setLayerOptions } from "facilmap-leaflet";
@@ -68,6 +68,8 @@ const facilMapRef = ref<InstanceType<typeof FacilMap>>();
 
 const Root = defineComponent({
 	setup() {
+		const i18n = useI18n();
+
 		const mapSlug = ref(initialMapSlug);
 		const mapName = ref<string | undefined>(undefined);
 
@@ -81,6 +83,25 @@ const Root = defineComponent({
 			// We have to call history.replaceState() in order for the new title to end up in the browser history
 			window.history && history.replaceState({ }, pageTitle.value);
 			document.title = pageTitle.value;
+		});
+
+		watchEffect(() => {
+			let atomLink = document.getElementById("fm-news-atom-link") as HTMLLinkElement | null;
+			if (mapSlug.value == null) {
+				// Link atom feed only when no map is open
+				if (!atomLink) {
+					atomLink = document.head.appendChild(Object.assign(document.createElement("link"), {
+						id: "fm-news-atom-link",
+						rel: "alternate",
+						type: "application/atom+xml",
+					}));
+				}
+
+				// Set href separately to keep language up to date
+				atomLink.href = `.${config.basePath}news.atom?${encodeURIComponent(LANG_QUERY)}=${encodeURIComponent(i18n.currentLanguage)}`;
+			} else if (atomLink) {
+				atomLink.remove();
+			}
 		});
 
 		return () => h(FacilMap, {
@@ -129,4 +150,8 @@ watchEffect(() => {
 			});
 		}
 	}
+});
+
+watchEffect(() => {
+	document.documentElement.setAttribute("data-bs-theme", theme.value);
 });

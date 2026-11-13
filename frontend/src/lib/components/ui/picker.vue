@@ -2,7 +2,8 @@
 	import { type StyleValue, computed, ref } from "vue";
 	import HybridPopover, { hybridPopoverShouldUseModal } from "./hybrid-popover.vue";
 	import { useDomEventListener, useNonClickFocusHandler, useNonDragClickHandler } from "../../utils/utils";
-	import ValidatedField, { type Validator } from "./validated-form/validated-field.vue";
+	import ValidatedField from "./validated-form/validated-field.vue";
+	import type { Validator } from "./validated-form/validation-utils.js";
 
 	const props = withDefaults(defineProps<{
 		id?: string;

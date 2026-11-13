@@ -1,6 +1,6 @@
 <script setup lang="ts">
 	import type { Stroke } from 'facilmap-types';
-	import type { Validator } from './validated-form/validated-field.vue';
+	import type { Validator } from './validated-form/validation-utils.js';
 	import { computed } from 'vue';
 	import { useI18n } from '../../utils/i18n';
 

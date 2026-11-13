@@ -2,10 +2,22 @@
     "common": {
         "coordinates": "Coordinates",
         "ok": "OK",
-        "donate": "Donate"
+        "donate": "Donate",
+        "first": "First",
+        "previous": "Previous",
+        "next": "Next",
+        "last": "Last"
     },
     "about-dialog": {
-        "header": "About FacilMap {{version}}",
+        "header": "Welcome to {{appName}}!",
+        "introduction": "FacilMap is a privacy-friendly, open-source versatile online map that combines different services based on OpenStreetMap and makes it easy to find places, plan trips and add markers, lines and routes to custom maps with live collaboration.",
+        "start-header": "Get started",
+        "start-explore": "**Explore** places, routes and community-sourced points of interest.",
+        "start-create": "**Create** a custom map. Add your own markers, lines and routes.",
+        "start-share": "**Share** private links with your friends or publish to everyone.",
+        "help-header": "Get help",
+        "about-header": "About FacilMap",
+        "news-header": "What’s new",
         "license-text": "{{facilmap}} is available under the {{license}}.",
         "license-text-facilmap": "FacilMap",
         "license-text-license": "GNU Affero General Public License, Version 3",
@@ -24,7 +36,16 @@
         "map-data-geoip-description": "This product includes GeoLite2 data created by MaxMind, available from {{maxmind}}.",
         "attribution-osm-contributors": "OSM Contributors",
         "programs-libraries": "Programs/libraries",
-        "icons": "Icons"
+        "icons": "Icons",
+        "help-documentation": "Documentation",
+        "help-issues": "Report a problem",
+        "help-questions": "Ask a question",
+        "help-chat": "Join our chat",
+        "donate-introduction": "FacilMap is a non-commercial free and open-source project developed by [Candid Dauth](https://github.com/cdauth). You are welcome to contribute code, improve the documentation, raise ideas on [GitHub](https://github.com/FacilMap/facilmap/issues) or contribute financially.",
+        "donate-more-options": "More options",
+        "news-show-more": "Show older news",
+        "news-hide-more": "Hide older news",
+        "news-atom-feed": "Atom feed"
     },
     "add": {
         "hidden-markers-added-title_one": "Marker added",
@@ -286,25 +307,37 @@
         "fields": "Fields",
         "field-name": "Name",
         "field-type": "Type",
-        "field-default-value": "Default value",
         "field-delete": "Delete",
-        "field-type-input": "Text field",
-        "field-type-textarea": "Text area",
-        "field-type-dropdown": "Dropdown",
-        "field-type-checkbox": "Checkbox",
-        "field-type-formula": "Formula",
-        "field-edit": "Edit",
+        "field-settings": "Settings",
         "field-reorder": "Reorder",
         "field-add": "Add"
     },
-    "edit-type-dropdown-dialog": {
+    "field-type-picker": {
+        "input": "Text field",
+        "textarea": "Text area",
+        "dropdown": "Dropdown",
+        "checkbox": "Checkbox",
+        "formula": "Formula"
+    },
+    "field-visibility-picker": {
+        "always": "Always",
+        "view": "Only when viewing object",
+        "edit": "Only when editing object"
+    },
+    "edit-field-dialog": {
+        "field-type": "Field type",
+        "visibility": "Visibility",
+        "description": "Description",
+        "description-description": "A small info icon with this description will be shown when viewing or editing objects.",
+        "edit-hint": "Edit hint",
+        "edit-hint-description": "Will be shown under the field when editing its content.",
+        "default-value": "Default value",
         "delete-option-title": "Delete option",
         "delete-option-message": "Do you really want to delete the option “{{value}}”?",
         "delete-option-button": "Delete",
         "unique-value-error": "Multiple options cannot have the same label.",
         "no-options-error": "Controlling fields need to have at least one option.",
-        "title-checkbox": "Edit Checkbox",
-        "title-dropdown": "Edit Dropdown",
+        "title": "Edit Field “{{name}}”",
         "ok-button": "OK",
         "control": "Control",
         "control-interpolation-marker": "marker",
@@ -316,6 +349,7 @@
         "control-width": "Control {{type}} width",
         "control-stroke": "Control {{type}} stroke",
         "show-in-legend": "Show in legend",
+        "options": "Options",
         "option": "Option",
         "label": "Label (for legend)",
         "colour": "Colour",
@@ -326,12 +360,9 @@
         "stroke": "Stroke",
         "option-remove": "Remove",
         "option-reorder": "Reorder",
-        "option-add": "Add"
-    },
-    "edit-type-formula-dialog": {
-        "title": "Edit Formula",
-        "ok-button": "OK",
-        "introduction": "Formulas allow you to automatically generate values out of other field values or properties of the same marker or line. Here is an overview over the possibilities. If some functionality is missing for your use case, please [report an issue](https://github.com/FacilMap/facilmap/issues)."
+        "option-add": "Add",
+        "formula-introduction": "Formulas allow you to automatically generate values out of other field values or properties of the same marker or line. Here is an overview over the possibilities. If some functionality is missing for your use case, please [report an issue](https://github.com/FacilMap/facilmap/issues).",
+        "formula": "Formula"
     },
     "elevation-stats": {
         "ascent-alt": "Ascent",
@@ -564,7 +595,12 @@
         "open-full-size": "Open {{appName}} in full size",
         "loading": "Loading…",
         "attribution-notice": "This app is based on map data from [OpenStreetMap](https://www.openstreetmap.org/copyright). Find out more in the “[About {{appName}}](#about-dialog)” dialog in the Help menu.",
-        "locate-error-title": "Error getting your position"
+        "locate-error-title": "Error getting your position",
+        "zoom-in": "Zoom in",
+        "zoom-out": "Zoom out",
+        "locate": "Show my location",
+        "about": "About {{appName}}",
+        "about-news": "What’s new?"
     },
     "leaflet-map-components": {
         "pois-too-many-results": "Not all POIs are shown because there are too many results. Zoom in to show all results.",
@@ -865,12 +901,6 @@
         "min-error": "Please enter a number not smaller than {{min}}.",
         "max-error": "Please enter a number not greater than {{max}}."
     },
-    "pagination": {
-        "first-label": "First",
-        "previous-label": "Previous",
-        "next-label": "Next",
-        "last-label": "Last"
-    },
     "results": {
         "zoom-alt": "Zoom",
         "show-details-alt": "Details"
@@ -1125,5 +1155,8 @@
         "bing-maps-satellite": "Bing Maps (Satellite)",
         "mapy-cz": "Mapy.cz",
         "park4night": "park4night"
+    },
+    "field-description": {
+        "field-description-alt": "Show description"
     }
 }

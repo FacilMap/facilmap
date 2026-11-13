@@ -1,6 +1,6 @@
 import { DefaultReactiveObjectProvider } from "facilmap-client";
 import { cloneDeep, isEqual, sortBy } from "lodash-es";
-import { type ComponentPublicInstance, type DeepReadonly, type Directive, type Ref, computed, onScopeDispose, readonly, ref, shallowReadonly, shallowRef, watch, type ComputedGetter, type Component, type VNodeProps, type AllowedComponentProps, onBeforeUnmount, onMounted, toRaw, type FunctionDirective, effectScope, toRef, reactive, type DebuggerOptions, type ComputedRef, type WatchSource, toValue } from "vue";
+import { type ComponentPublicInstance, type DeepReadonly, type Directive, type Ref, computed, onScopeDispose, readonly, ref, shallowReadonly, shallowRef, watch, type ComputedGetter, type Component, type VNodeProps, type AllowedComponentProps, onBeforeUnmount, onMounted, toRaw, type FunctionDirective, effectScope, toRef, type DirectiveBinding, reactive, type DebuggerOptions, type ComputedRef, type WatchSource, toValue } from "vue";
 // eslint-disable-next-line vue/prefer-import-from-vue, import/no-extraneous-dependencies
 import { pauseTracking, resetTracking } from "@vue/reactivity";
 import { shouldHandleGlobalShortcut, useDomEventListener, type AnyRef } from "./utils";
@@ -9,6 +9,19 @@ import { shouldHandleGlobalShortcut, useDomEventListener, type AnyRef } from "./
 export type ComponentProps<C extends Component> = C extends new (...args: any) => any
   ? Omit<InstanceType<C>['$props'], keyof VNodeProps | keyof AllowedComponentProps>
   : never;
+
+/**
+ * Attempts to reverse the Vue type UnwrapNestedRefs<T>. This can be used to fix the typings anywhere Vue uses that type.
+ * For example, `const test: MyType = reactive(myObject);` will unwrap any nested refs in `myObject`, but the type check
+ * will fail for them, as `reactive()` expects `myObject` to be of type `MyType`. This can be fixed by using
+ * `const test: MyType = reactive<WrapNestedRefs<MyType>>(myObject);`.
+ *
+ * For now, this type is still very basic and only implements a fraction of the types that UnwrapNestedRefs<T> supports.
+ * It should be refined whenever the need for it arises.
+ */
+export type WrapNestedRefs<T> = T extends object ? {
+	[P in keyof T]: T[P] | Ref<T[P]>;
+} : T;
 
 /**
  * A directive that scrolls its element into view when its binding value becomes true.
@@ -38,25 +51,19 @@ export function computedOnResize<T>(getValue: () => T): Readonly<Ref<T>> {
 }
 
 /**
- * A ref that maintains an internal state that can be overridden by a specified prop. Changing the value will both change the internal state
- * and emit an event.
- * This allows specifying hybrid stateful/stateless components, where the prop is used when specified and otherwise the internal state.
- * @param fallbackValue The initial value of the internal state if the prop is not defined. If the prop is defined, its current value will
- *     be used as the initial value instead.
- * @param getProp Should return the value of the prop. If this returns a value, it is used. If this returns undefined, the prop is assumed
- *     to not be defined and the value of the internal state is returned.
- * @param onUpdate Should emit the change event. Called when the value changes, in addition to updating the internal state.
- * @returns A computed ref with a setter.
+ * Returns a ref to a model value that falls back to an internal state if it is undefined. This can be used to create hybrid stateless/stateful components.
+ * @param modelRef The ref to the model. Usually created using defineModel() (using `required: false` and for boolean values `default: undefined`).
+ * @param initialValue The initial value if the model is undefined.
  */
-export function useRefWithOverride<Value>(fallbackValue: Value, override: Ref<Value | undefined>): Ref<Value> {
-	const internalValue = ref(override.value ?? fallbackValue);
+export function useModelWithFallback<Value>(modelRef: Ref<Value | undefined>, initialValue: Value): Ref<Value> {
+	const internalValue = ref(modelRef.value ?? initialValue);
 	return computed({
 		get: (): Value => {
-			return override.value !== undefined ? override.value : internalValue.value as Value;
+			return modelRef.value !== undefined ? modelRef.value : internalValue.value as Value;
 		},
 		set: (val: Value) => {
 			internalValue.value = val as any;
-			override.value = val;
+			modelRef.value = val;
 		}
 	});
 }
@@ -102,7 +109,7 @@ export function mapRef<K>(map: Map<K, Element | ComponentPublicInstance>, key: K
 export function useResizeObserver(
 	element: Ref<HTMLElement | undefined>,
 	callback?: (entry: ResizeObserverEntry) => void
-): DeepReadonly<Ref<ResizeObserverEntry | undefined>> {
+): Readonly<Ref<ResizeObserverEntry | undefined>> {
 	const entry = ref<ResizeObserverEntry>();
 	const observer = new ResizeObserver((entries) => {
 		entry.value = entries[0];
@@ -118,7 +125,7 @@ export function useResizeObserver(
 		}
 	}, { immediate: true });
 
-	return readonly(entry);
+	return shallowReadonly(entry);
 }
 
 /**
@@ -235,14 +242,16 @@ export function useIsMounted(): Readonly<Ref<boolean>> {
  * to the returned ref. When the returned ref is updated (deep watch), a deep clone is applied to the model ref.
  * Use this as `useImmutableModel(defineModel(...))` to allow changing nested properties of the model without mutating
  * the actual object passed as the model value.
+ * @param prepareValue If defined, can make some modifications to the model value when it is deep cloned into the internal
+ * state.
  */
-export function useImmutableModel<T>(modelRef: Ref<T>): Ref<T> {
+export function useImmutableModel<T>(modelRef: Ref<T>, prepareValue = (value: T) => value): Ref<T> {
 	const value = ref() as Ref<T>;
 	watch(modelRef, () => {
-		value.value = cloneDeep(modelRef.value);
-	}, { immediate: true });
+		value.value = prepareValue(cloneDeep(modelRef.value));
+	}, { immediate: true, deep: true });
 	watch(value, () => {
-		if (!isEqual(toRaw(value.value), toRaw(modelRef.value))) {
+		if (!isEqual(toRaw(value.value), toRaw(prepareValue(cloneDeep(modelRef.value))))) {
 			modelRef.value = cloneDeep(value.value);
 		}
 	}, { deep: true });
@@ -331,6 +340,50 @@ export const vKeyboardShortcut = vDirectiveWithScope<HTMLElement, string[] | str
 	}
 });
 
+function adjustBinding(binding: DirectiveBinding, modifiers: Ref<Record<string, boolean>>): DirectiveBinding {
+	return {
+		...binding,
+		modifiers: new Proxy({}, {
+			get(_, prop) {
+				return Object.hasOwn(binding.modifiers, prop) ? binding.modifiers[prop as any] : modifiers.value[prop as any];
+			},
+			ownKeys() {
+				return [...new Set([...Object.keys(modifiers.value), ...Object.keys(binding.modifiers)])];
+			},
+			getOwnPropertyDescriptor(target, prop) {
+				return Object.hasOwn(modifiers.value, prop) || Object.hasOwn(binding.modifiers, prop) ? {
+					enumerable: true,
+					configurable: true
+				} : undefined;
+			},
+			has(target, prop) {
+				return prop in modifiers.value || prop in binding.modifiers;
+			}
+		})
+	};
+}
+
+/**
+ * Wraps a Vue directive with modifiers applied to it in a reactive way.
+ */
+export function dynamicModifiers<M extends string, D extends Directive<any, any, M, any>>(directive: D, modifiers: Ref<Record<M, boolean>>): D {
+	if (typeof directive === "function") {
+		return ((el, binding, ...rest) => {
+			directive(el, adjustBinding(binding, modifiers), ...rest);
+		}) as D;
+	} else {
+		return Object.fromEntries(["created", "beforeMount", "mounted", "beforeUpdate", "updated", "beforeUnmount", "unmounted"].flatMap((k) => {
+			if (k in directive) {
+				return [[k, (el: any, binding: DirectiveBinding, ...rest: any[]) => {
+					(directive as any)[k](el, adjustBinding(binding, modifiers), ...rest);
+				}]];
+			} else {
+				return [];
+			}
+		})) as any;
+	}
+}
+
 export function getReactiveMediaQuery(query: string): Ref<boolean> {
 	const update = ref(0);
 	const match = matchMedia(query);
@@ -344,3 +397,22 @@ export function getReactiveMediaQuery(query: string): Ref<boolean> {
 };
 
 export const canHover = getReactiveMediaQuery("(hover: hover)");
+
+export function usePointerOver(options: { filter?: (e: PointerEvent) => void } = {}): {
+	handleEnter: (e: PointerEvent) => void;
+	handleLeave: (e: PointerEvent) => void;
+	isOver: boolean;
+} {
+	const over = reactive<Record<number, boolean>>({});
+	return reactive({
+		handleEnter: (e: PointerEvent) => {
+			if (!options.filter || options.filter(e)) {
+				over[e.pointerId] = true;
+			}
+		},
+		handleLeave: (e: PointerEvent) => {
+			over[e.pointerId] = false;
+		},
+		isOver: computed(() => Object.values(over).some((v) => v))
+	});
+}

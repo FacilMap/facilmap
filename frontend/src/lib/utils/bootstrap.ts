@@ -1,4 +1,4 @@
-import { computed, type Ref } from "vue";
+import { computed, ref, type Ref } from "vue";
 import maxSize from "popper-max-size-modifier";
 import type { Modifier, ModifierArguments } from "@popperjs/core";
 import { getReactiveMediaQuery } from "./vue";
@@ -49,6 +49,18 @@ export function useMinBreakpoint(breakpoint: Breakpoint): Ref<boolean> {
 export type ThemeColour = "primary" | "secondary" | "success" | "danger" | "warning" | "info" | "light" | "dark";
 export type ButtonVariant = ThemeColour | "link" | "outline-primary" | "outline-secondary" | "outline-success" | "outline-danger" | "outline-warning" | "outline-info" | "outline-light" | "outline-dark";
 export type ButtonSize = "lg" | "sm";
+
+const prefersDarkModeQuery = matchMedia('(prefers-color-scheme: dark)');
+const prefersDarkModeUpdate = ref(0);
+const prefersDarkMode = computed(() => {
+	prefersDarkModeUpdate.value;
+	return prefersDarkModeQuery.matches;
+});
+prefersDarkModeQuery.addEventListener("change", () => {
+	prefersDarkModeUpdate.value++;
+});
+
+export const theme = computed(() => prefersDarkMode.value ? "dark" : "light");
 
 /**
  * An array of popper modifiers that uses popper-max-size-modifier to shrink the popover to prevent overflow
